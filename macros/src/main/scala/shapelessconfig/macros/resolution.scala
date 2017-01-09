@@ -27,9 +27,9 @@ object resolution {
         else fieldType.typeSymbol
       }.filter(_.asClass.isCaseClass).
         map(_.asType.toType).
-        flatMap(x => x :: findCaseClasses(x))
+        flatMap(x => x :: findCaseClasses(x)).distinct
 
-    val caseClasses = findCaseClasses(`type`).distinct
+    val caseClasses = findCaseClasses(`type`)
 
     c.info(
       c.enclosingPosition,
@@ -51,6 +51,7 @@ object resolution {
         import primitiveResolvers._
 
         ..${caseClassResolvers(includePrefix)}
+
         shapelessconfig.core.ConfigConstructor[$typeSymbol]().resolve
       }
     """

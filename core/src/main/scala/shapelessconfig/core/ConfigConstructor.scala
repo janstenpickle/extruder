@@ -53,7 +53,7 @@ case class ConfigConstructor[T <: Product with Serializable](prefix: Option[Seq[
 object ConfigConstructor {
   object readConfig extends Poly1 {
     implicit def caseAny[A <: Symbol, B](implicit resolver: Resolver[B]): Case.Aux[((A, Seq[String]), Option[B]), ConfigValidation[B]] =
-      at[((A, Seq[String]), Option[B])]{ case ((key, prefix), default) => resolver.read(prefix :+ key.name, default)}
+      at[((A, Seq[String]), Option[B])]{ case ((key, prefix), default) => resolver.read(prefix :+ key.name, default) }
   }
 
   object folder extends Poly2 {

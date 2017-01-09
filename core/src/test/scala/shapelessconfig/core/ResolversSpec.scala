@@ -48,7 +48,6 @@ class ResolversSpec extends Specification with EitherMatchers with ScalaCheck {
       a.head === "Could not find configuration at 'test' and no default available"
     )
 
-
   def failing[T](resolverSelector: Resolvers => Resolver[T]): Prop =
     tester(Gen.alphaStr, runTest(resolverSelector, failure))
 

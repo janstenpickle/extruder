@@ -1,5 +1,3 @@
-name := "shapeless-config"
-
 val specs2Ver = "3.8.6"
 
 val commonSettings = Seq(
@@ -25,8 +23,6 @@ val commonSettings = Seq(
   )
 )
 
-commonSettings
-
 lazy val core = (project in file("core")).
   settings(
     commonSettings ++
@@ -51,7 +47,11 @@ lazy val macros = (project in file("macros")).
         "org.specs2" %% "specs2-core" % specs2Ver % "test"
       )
     )
-  ).
-  dependsOn(core)
+  ).dependsOn(core)
 
 lazy val examples = (project in file("examples")).settings(commonSettings).dependsOn(macros)
+
+lazy val root = (project in file(".")).
+  settings(
+    commonSettings ++ Seq(name := "shapeless-config")
+  ).dependsOn(core, macros)
