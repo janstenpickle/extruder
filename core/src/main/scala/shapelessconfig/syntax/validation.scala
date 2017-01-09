@@ -1,4 +1,4 @@
-package shapelessconfig.core
+package shapelessconfig.syntax
 
 import cats.data.ValidatedNel
 
