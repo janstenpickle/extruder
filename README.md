@@ -2,7 +2,7 @@
 
 # Shapeless Config
 
-This library uses [shapeless](https://github.com/milessabin/shapeless) to provide a neat syntax to instantiate Scala case classes from a configuration source. 
+This library uses [shapeless](https://github.com/milessabin/shapeless) and [cats](https://github.com/typelevel/cats) to provide a neat syntax to instantiate Scala case classes from a configuration source. 
 
 **Rules for configuration resolution are encoded in the declaration of the case class itself**
 

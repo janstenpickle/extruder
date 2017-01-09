@@ -5,11 +5,17 @@ import shapelessconfig.syntax.validation.ConfigValidation
 
 import scala.reflect.macros.whitebox
 
-object resolution {
-  def resolve[T <: Product with Serializable]: AggregateResolver[T] = macro materializeTopLevelConfig[T]
+import macrocompat.bundle
 
-  def materializeTopLevelConfig[T <: Product with Serializable : c.WeakTypeTag](c: whitebox.Context): c.Expr[AggregateResolver[T]] = {
-    import c.universe._
+object resolution {
+  def resolve[T <: Product with Serializable]: AggregateResolver[T] = macro ResolutionMacro.resolve[T]
+}
+
+@bundle
+class ResolutionMacro(val c: whitebox.Context) {
+  import c.universe._
+
+  def resolve[T <: Product with Serializable : c.WeakTypeTag]: Tree = {
     val `type` = weakTypeOf[T]
     val typeSymbol = `type`.typeSymbol
 
@@ -56,14 +62,12 @@ object resolution {
       }
     """
 
-    c.Expr[AggregateResolver[T]](
-      q"""
-        new shapelessconfig.macros.AggregateResolver[$typeSymbol] {
-          ${method("apply", includePrefix = true)}
-          ${method("singletons", includePrefix = false)}
-        }
-      """
-    )
+    q"""
+      new shapelessconfig.macros.AggregateResolver[$typeSymbol] {
+        ${method("apply", includePrefix = true)}
+        ${method("singletons", includePrefix = false)}
+      }
+    """
   }
 }
 

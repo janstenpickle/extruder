@@ -44,6 +44,7 @@ lazy val macros = (project in file("macros")).
     Seq(
       name := "shapeless-config-macros",
       libraryDependencies ++= Seq(
+        "org.typelevel" %% "macro-compat" % "1.1.1",
         "org.specs2" %% "specs2-core" % specs2Ver % "test"
       )
     )
