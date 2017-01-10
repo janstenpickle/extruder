@@ -1,11 +1,10 @@
-package shapelessconfig.macros
+package shapelessconfig
 
+import macrocompat.bundle
 import shapelessconfig.core.Resolvers
 import shapelessconfig.syntax.validation.ConfigValidation
 
 import scala.reflect.macros.whitebox
-
-import macrocompat.bundle
 
 object resolution {
   def resolve[T <: Product with Serializable]: AggregateResolver[T] = macro ResolutionMacro.resolve[T]
@@ -63,7 +62,7 @@ class ResolutionMacro(val c: whitebox.Context) {
     """
 
     q"""
-      new shapelessconfig.macros.AggregateResolver[$typeSymbol] {
+      new shapelessconfig.AggregateResolver[$typeSymbol] {
         ${method("apply", includePrefix = true)}
         ${method("singletons", includePrefix = false)}
       }

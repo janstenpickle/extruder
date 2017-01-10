@@ -59,4 +59,4 @@ lazy val examples = (project in file("examples")).
 lazy val root = (project in file(".")).
   settings(
     commonSettings ++ Seq(name := "shapeless-config")
-  ).dependsOn(core, macros)
+  ).aggregate(core, macros)

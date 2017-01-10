@@ -47,8 +47,7 @@ object ConfigConstructorSpec {
 
   val resolvers =  new Resolvers {
     override def pathToString(path: Seq[String]): String = path.mkString(".").toLowerCase
-
-    override def resolveConfig(path: Seq[String]): ConfigValidation[Option[String]] =
+    override def lookupValue(path: Seq[String]): ConfigValidation[Option[String]] =
       validConfig.get(pathToString(path)).validNel
   }
 

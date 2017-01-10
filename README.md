@@ -41,7 +41,7 @@ libraryDependencies += "shapelessconfig" %% "shaplessconfig" % "0.1.0"
 
 ```scala
 import shapelessconfig.core.SystemPropertiesResolvers
-import shapelessconfig.macros.resolution._
+import shapelessconfig.resolution._
 
 object Main extends App {
   case class Example(defaultedString: String = "default", configuredString: String, optionalString: Option[String])
@@ -60,7 +60,7 @@ object Main extends App {
 
 ```scala
 import shapelessconfig.core.SystemPropertiesResolvers
-import shapelessconfig.macros.resolution._
+import shapelessconfig.resolution._
 
 object Main extends App {
   case class Example(a: NestedOne, b: NestedTwo)
@@ -111,6 +111,7 @@ The `Resolvers` trait assumes your configuration source will simply be providing
 object MyResolvers extends Resolvers {
   override def pathToString(path: Seq[String]): String = ???
   override def resolveConfig(path: Seq[String]): ConfigValidation[Option[String]] = ???
+  override def splitValue(value: String): ConfigValidation[Traversable[String]] = ???
 }
 ```    
 

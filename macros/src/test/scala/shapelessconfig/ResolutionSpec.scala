@@ -1,4 +1,4 @@
-package shapelessconfig.macros
+package shapelessconfig
 
 import cats.data.NonEmptyList
 import cats.syntax.validated._
@@ -6,7 +6,7 @@ import org.specs2.Specification
 import org.specs2.matcher.{EitherMatchers, MatchResult}
 import org.specs2.specification.core.SpecStructure
 import shapelessconfig.core.{Resolvers, ValidationFailure}
-import shapelessconfig.macros.resolution._
+import resolution._
 import shapelessconfig.syntax.validation.ConfigValidation
 
 class ResolutionSpec extends Specification with EitherMatchers {
@@ -37,7 +37,7 @@ object ResolutionSpec {
 
   val resolver = new Resolvers {
     override def pathToString(path: Seq[String]): String = path.mkString(".").toLowerCase
-    override def resolveConfig(path: Seq[String]): ConfigValidation[Option[String]] =
+    override def lookupValue(path: Seq[String]): ConfigValidation[Option[String]] =
       config.get(pathToString(path)).valid
   }
 

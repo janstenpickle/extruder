@@ -5,7 +5,7 @@ import cats.data.{NonEmptyList, Reader}
 import org.zalando.grafter.GenericReader._
 import org.zalando.grafter._
 import shapelessconfig.core.{SystemPropertiesResolvers, ValidationFailure}
-import shapelessconfig.macros.resolution._
+import shapelessconfig.resolution._
 
 case class ApplicationConfig(http: HttpConfig, db: DbConfig)
 
