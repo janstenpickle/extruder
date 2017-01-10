@@ -45,7 +45,7 @@ case class ConfigConstructor[T <: Product with Serializable](prefix: Option[Seq[
     keys.zip(keys.mapConst(realPrefix)).
       zip(Default.AsOptions[T].apply()).
       map(readConfig).
-      foldRight((HNil :: HNil).tail.validNel[String])(folder).
+      foldRight((HNil :: HNil).tail.validNel[ValidationFailure])(folder).
       map(Generic[T].from)
   }
 }

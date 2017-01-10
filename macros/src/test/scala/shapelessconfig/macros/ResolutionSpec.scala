@@ -5,7 +5,7 @@ import cats.syntax.validated._
 import org.specs2.Specification
 import org.specs2.matcher.{EitherMatchers, MatchResult}
 import org.specs2.specification.core.SpecStructure
-import shapelessconfig.core.Resolvers
+import shapelessconfig.core.{Resolvers, ValidationFailure}
 import shapelessconfig.macros.resolution._
 import shapelessconfig.syntax.validation.ConfigValidation
 
@@ -23,11 +23,11 @@ class ResolutionSpec extends Specification with EitherMatchers {
   def singletons: Result = test(resolve[Test1].singletons(resolver), Test1(Test2(Test3("test3")), Test3("test3")))
 
   def test(result: ConfigValidation[Test1], expected: Test1): Result =
-    result.toEither must beRight.which(_ === expected)
+    result.toEither must beRight(expected)
 }
 
 object ResolutionSpec {
-  type Result = MatchResult[Either[NonEmptyList[String], Test1]]
+  type Result = MatchResult[Either[NonEmptyList[ValidationFailure], Test1]]
 
   val config = Map(
     "test1.a.test2.a.test3.a" -> "test1-test2-test3",

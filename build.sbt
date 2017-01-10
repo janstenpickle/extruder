@@ -50,7 +50,11 @@ lazy val macros = (project in file("macros")).
     )
   ).dependsOn(core)
 
-lazy val examples = (project in file("examples")).settings(commonSettings).dependsOn(macros)
+lazy val examples = (project in file("examples")).
+  settings (
+    commonSettings ++
+    Seq(libraryDependencies += "org.zalando" %% "grafter" % "1.3.1")
+  ).dependsOn(macros)
 
 lazy val root = (project in file(".")).
   settings(

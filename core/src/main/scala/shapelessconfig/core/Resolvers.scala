@@ -12,18 +12,20 @@ trait Resolvers extends Serializable {
   def pathToString(path: Seq[String]): String
 
   def errorMsg[T](path: Seq[String]): ConfigValidation[T] =
-    s"Could not find configuration at '${pathToString(path)}' and no default available".invalidNel[T]
+    ValidationFailure(s"Could not find configuration at '${pathToString(path)}' and no default available")
 
   def resolveEither[T](parser: String => Either[Throwable, T])
                       (path: Seq[String], default: Option[T]): ConfigValidation[T] =
     resolve(parser.andThen(
-      _.leftMap(ex => s"Could not parse value for '${pathToString(path)}': ${ex.getMessage}").toValidatedNel
+      _.leftMap(ex =>
+        new ValidationFailure(s"Could not parse value for '${pathToString(path)}': ${ex.getMessage}", Some(ex))
+      ).toValidatedNel
     ))(path, default)
 
   def resolve[T](parser: String => ConfigValidation[T])(path: Seq[String], default: Option[T]): ConfigValidation[T] =
     (resolveConfig(path), default) match {
       case (Valid(None), None) => errorMsg[T](path)
-      case (Valid(None), Some(v)) => v.validNel[String]
+      case (Valid(None), Some(v)) => v.validNel[ValidationFailure]
       case (Valid(Some(str)), _) => parser(str)
       case (err @ Invalid(_), _) => err
     }

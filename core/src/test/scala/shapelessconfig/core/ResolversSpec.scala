@@ -45,7 +45,7 @@ class ResolversSpec extends Specification with EitherMatchers with ScalaCheck {
   def emptyNoDefault: Result[String] =
     testResolve(failingResolvers.string, None) must beLeft.which(a =>
       a.toList.size === 1 and
-      a.head === "Could not find configuration at 'test' and no default available"
+      a.head === new ValidationFailure("Could not find configuration at 'test' and no default available", None)
     )
 
   def failing[T](resolverSelector: Resolvers => Resolver[T]): Prop =
@@ -66,8 +66,8 @@ class ResolversSpec extends Specification with EitherMatchers with ScalaCheck {
 }
 
 object ResolversSpec {
-  type Result[T] = MatchResult[Either[NonEmptyList[String], T]]
-  type Test[T] = (Either[NonEmptyList[String], T], String) => Result[T]
+  type Result[T] = MatchResult[Either[NonEmptyList[ValidationFailure], T]]
+  type Test[T] = (Either[NonEmptyList[ValidationFailure], T], String) => Result[T]
 
   val failingResolvers = new Resolvers {
     override def pathToString(path: Seq[String]): String = path.mkString("").toLowerCase
@@ -79,6 +79,6 @@ object ResolversSpec {
     override def resolveConfig(path: Seq[String]): ConfigValidation[Option[String]] = Some(value).validNel
   }
 
-  def testResolve[T](resolver: Resolver[T], default: Option[T]): Either[NonEmptyList[String], T] =
+  def testResolve[T](resolver: Resolver[T], default: Option[T]): Either[NonEmptyList[ValidationFailure], T] =
     resolver.read(Seq("test"), default).toEither
 }

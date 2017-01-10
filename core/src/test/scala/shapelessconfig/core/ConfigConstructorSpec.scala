@@ -23,10 +23,10 @@ class ConfigConstructorSpec extends Specification with EitherMatchers {
       Configuration cannot be parsed correctly ${testFailure(ConfigConstructor[WithDefaults](failPrefixVal).resolve, 1)}
   """
 
-  def testSuccess[T](input: ConfigValidation[T], expected: T): MatchResult[Either[NonEmptyList[String], T]] =
+  def testSuccess[T](input: ConfigValidation[T], expected: T): MatchResult[Either[NonEmptyList[ValidationFailure], T]] =
     input.toEither must beRight.which(_ === expected)
 
-  def testFailure[T](input: ConfigValidation[T], errors: Int): MatchResult[Either[NonEmptyList[String], T]] =
+  def testFailure[T](input: ConfigValidation[T], errors: Int): MatchResult[Either[NonEmptyList[ValidationFailure], T]] =
     input.toEither must beLeft.which(_.toList.size === errors)
 }
 

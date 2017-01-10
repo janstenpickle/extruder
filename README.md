@@ -1,19 +1,28 @@
-[![Build Status](https://travis-ci.org/janstenpickle/shapeless-config.svg?branch=master)](https://travis-ci.org/janstenpickle/shapeless-config)
 
-# Shapeless Config
+# Shape Sorter
+
+[![Build Status](https://travis-ci.org/janstenpickle/shapeless-config.svg?branch=master)](https://travis-ci.org/janstenpickle/shapeless-config)
 
 This library uses [shapeless](https://github.com/milessabin/shapeless) and [cats](https://github.com/typelevel/cats) to provide a neat syntax to instantiate Scala case classes from a configuration source. 
 
 **Rules for configuration resolution are encoded in the declaration of the case class itself**
 
 ```scala
-case class ApplicationConfig(default: Int = 100, noDefault: String, optional: Option[Float])
+case class ApplicationConfig(default: Int = 100, noDefault: String, optional: Option[Double])
 
-val config: ValidatedNel[String, ApplicationConfig] = resolve[ApplicationConfig](Resolvers)
+val config: ValidatedNel[ValidationFailure, ApplicationConfig] = resolve[ApplicationConfig](Resolvers)
 
 ```
 
 In `ApplicationConfig` above `default` will be set to `100`, `noDefault` will cause a validation failure to be logged and `optional` will be set to None, should the configuration source not contain a value for each parameter.
+
+## Motivation
+
+Shape Sorter complements applications which use [Grafter](https://github.com/zalando/grafter) or other dependency injection frameworks or patterns.
+
+Specifically Grafter requires that all configuration be part single case class to be passed to the entry point of the application. Structuring the config in classes like this works well, but leaves the question of how are these classes populated with config?
+
+This is where Shape Sorter comes in, the [example here](examples/src/main/scala/shapelessconfig/examples/Grafter.scala) shows how they may be used together.
 
 ## Quick Start Guide
 
@@ -37,7 +46,7 @@ import shapelessconfig.macros.resolution._
 object Main extends App {
   case class Example(defaultedString: String = "default", configuredString: String, optionalString: Option[String])
   
-  println(resolve[Example](SystemPropertiesResolvers)) // Invalid(NonEmptyList("Could not find configuration at 'example.configuredstring' and no default available"))
+  println(resolve[Example](SystemPropertiesResolvers)) // Invalid(NonEmptyList(ValidationFailure("Could not find configuration at 'example.configuredstring' and no default available", None)))
   
   System.setProperty("example.configuredstring", "configured")
   println(resolve[Example](SystemPropertiesResolvers)) // Valid(Example("default", "configured", None))
@@ -128,7 +137,7 @@ Again, I'm using case insensitivity here so convert the path to lower case.
 override def pathToString(path: Seq[String]): String = path.mkString(".").toLowerCase
 ```                                                                                                                                                                       
 #####Implementing `resolveConfig`                                                                                                                                                                       
-Note the return type of `resolveConfig` is `ConfigValidation[Option[String]]` which expands to `cats.data.ValidatedNel[String, Option[String]]`. This allows for any errors in looking up configuration to be handled differently to the configuration value not being present. For example, a connection error to a remote configuration source should be handled as an `InvalidNel[String]`, where the error message is a string. Whereas the configuration value not being present should be an empty `Option[String]`. 
+Note the return type of `resolveConfig` is `ConfigValidation[Option[String]]` which expands to `cats.data.ValidatedNel[ValidationFailure, Option[String]]`. This allows for any errors in looking up configuration to be handled differently to the configuration value not being present. For example, a connection error to a remote configuration source should be handled as an `InvalidNel[String]`, where the error message is a string. Whereas the configuration value not being present should be an empty `Option[String]`. 
 
 ```scala
 override def resolveConfig(path: Seq[String]): ConfigValidation[Option[String]] = props.get(pathToString(path)).validNel
