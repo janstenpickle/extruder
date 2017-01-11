@@ -110,20 +110,20 @@ The `Resolvers` trait assumes your configuration source will simply be providing
 ```scala
 object MyResolvers extends Resolvers {
   override def pathToString(path: Seq[String]): String = ???
-  override def resolveConfig(path: Seq[String]): ConfigValidation[Option[String]] = ???
-  override def splitValue(value: String): ConfigValidation[Traversable[String]] = ???
+  override def lookupValue(path: Seq[String]): ConfigValidation[Option[String]] = ???
+  override def lookupList(path: Seq[String]): ConfigValidation[Option[List[String]]] = ???
 }
 ```    
 
 Notice both methods accept the parameter `path` which is a `Seq[String]`, this is essentially the long name of the configuration you are trying to resolve. It is made up of the name of the case class and the name of the parameter.
 
-For example `case class Example(a: String, b: Int)` will evaluate to the paths `Seq("Example", "a")` and `Seq("Example", "b")`, at this point everything is case sensitive, it is up to the implementer as to whether they want their configuration to base case sensistive or not.
+For example `case class Example(a: String, b: Int)` will evaluate to the paths `Seq("Example", "a")` and `Seq("Example", "b")`, at this point everything is case sensitive, it is up to the implementer as to whether they want their configuration to base case sensitive or not.
 
 ####Example Implementation
 
 What will follow is a break down of the implementation of the [`SystemPropertiesResolver`](core/src/main/scala/shapelessconfig/core/SystemPropertiesResolver.scala) provided by the core library.
 
-First create a map from system properties to act as the configuration source, notice that in this implementation I have chosen to be case insensitive by making all the property keys lower case: 
+First create a map from system properties to act as the configuration source, notice that in this implementation we have chosen to be case insensitive by making all the property keys lower case: 
 
 ```scala
 val props: Map[String, String] = System.getProperties.asScala.toMap.map { case (k, v) => k.toLowerCase -> v }
@@ -132,21 +132,51 @@ val props: Map[String, String] = System.getProperties.asScala.toMap.map { case (
 #####Implementing `pathToString`
 The `pathToString` method is used internally for meaningful error messages on failure of config resolution, using it in `resolveConfig` is optional.
 
-Again, I'm using case insensitivity here so convert the path to lower case.
+Again, we're using case insensitivity here so convert the path to lower case.
           
 ```scala
 override def pathToString(path: Seq[String]): String = path.mkString(".").toLowerCase
 ```                                                                                                                                                                       
-#####Implementing `resolveConfig`                                                                                                                                                                       
-Note the return type of `resolveConfig` is `ConfigValidation[Option[String]]` which expands to `cats.data.ValidatedNel[ValidationFailure, Option[String]]`. This allows for any errors in looking up configuration to be handled differently to the configuration value not being present. For example, a connection error to a remote configuration source should be handled as an `InvalidNel[String]`, where the error message is a string. Whereas the configuration value not being present should be an empty `Option[String]`. 
+#####Implementing `lookupValue`                                                                                                                                                                       
+Note the return type of `lookupValue` is `ConfigValidation[Option[String]]` which expands to `cats.data.ValidatedNel[ValidationFailure, Option[String]]`. This allows for any errors in looking up configuration to be handled differently to the configuration value not being present. For example, a connection error to a remote configuration source should be handled as an `InvalidNel[String]`, where the error message is a string. Whereas the configuration value not being present should be an empty `Option[String]`. 
 
 ```scala
-override def resolveConfig(path: Seq[String]): ConfigValidation[Option[String]] = props.get(pathToString(path)).validNel
+override def lookupValue(path: Seq[String]): ConfigValidation[Option[String]] = props.get(pathToString(path)).validNel
 
 ```
 
 The `.validNel` on the end of the lookup is from the `cats.syntax.validated._` package and simply lifts the result of `props.get(pathToString(path))` into the right of `cats.data.ValidatedNel[String, Option[String]]`.
 
+#####Overriding `lookupList`
+_Note that this will override the default implementation in [`Resolvers`](core/src/main/scala/shapelessconfig/core/Resolvers.scala), if you're happy with the default implementation and just want to change the separator see [Overriding `listSeparator`](#overriding-listseparator)._
+
+The return type for this function is `ConfigValidation[Option[List[String]]]`, this allows for any errors looking up or converting to a list the value. Some sources may provide list or array types natively, if they don't you may implement it here.
+
+```scala
+override def lookupList(path: Seq[String]): ConfigValidation[Option[List[String]]] =
+  lookupValue(path).map(_.map(_.split(",").toList.map(_.trim)))
+```
+
+As this config source does not provide a means of looking up a list we look up the value using `lookupValue` and turn the string inside `ConfigValidation[Option[String]]` into a list of strings, where each element is separated by a `,`.
+
+It is also possible to add some validation when converting the string value to a list: 
+
+```scala
+override def lookupList(path: Seq[String]): ConfigValidation[Option[List[String]]] =
+  lookupValue(path).fold(
+    _.invalid,
+    _.fold[ConfigValidation[Option[List[String]]]](None.validNel)(value => 
+      if (value.contains(",")) Some(value.split(",").toList.map(_.trim)).validNel
+      else ValidationFailure(
+        s"No separator (,) found in value '$value' when attempting to create a list for '${pathToString(path)}'"
+      )
+    )                    
+  )
+```
+
+#####Overriding `listSeparator`
+
+TBD
 
 ###Extending an Existing Set of Resolvers
 
@@ -156,10 +186,10 @@ Say you wanted to add a resolver for a certain type it is possible to extend an 
 import cats.syntax.either._
 import java.net.URL
 import shapelessconfig.core.SystemPropertiesResolvers
-import shapelessconfig.core.Resolver
+import shapelessconfig.core.Resolvers.Parser
 
 class WithURL extends SystemPropertiesResolvers {
-  implicit val url: Resolver[URL] = Resolver(resolveEither(value => Either.catchNonFatal(new URL(value))))
+  implicit val url: Parser[URL] = value => Either.catchNonFatal(new URL(value))
 }
 
 ```

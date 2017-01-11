@@ -10,10 +10,12 @@ import scala.collection.generic.CanBuildFrom
 trait Resolvers extends Serializable {
   import Resolvers._
 
+  val listSeparator: String = ","
+
   def lookupValue(path: Seq[String]): ConfigValidation[Option[String]]
   def pathToString(path: Seq[String]): String
   def lookupList(path: Seq[String]): ConfigValidation[Option[List[String]]] =
-    lookupValue(path).map(_.map(_.split(",").toList.map(_.trim)))
+    lookupValue(path).map(_.map(_.split(listSeparator).toList.map(_.trim)))
 
   implicit val string: Parser[String] = Right(_)
   implicit val int: Parser[Int] = _.parseInt
