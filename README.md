@@ -5,7 +5,7 @@
 
 This library uses [shapeless](https://github.com/milessabin/shapeless) and [cats](https://github.com/typelevel/cats) to provide a neat syntax to instantiate Scala case classes from a configuration source. 
 
-**Rules for configuration resolution are encoded in the declaration of the case class itself**
+**Rules for configuration resolution are specified in the declaration of the case class itself:**
 
 ```scala
 case class ApplicationConfig(default: Int = 100, noDefault: String, optional: Option[Double])
@@ -14,19 +14,28 @@ val config: ValidatedNel[ValidationFailure, ApplicationConfig] = resolve[Applica
 
 ```
 
-In `ApplicationConfig` above `default` will be set to `100`, `noDefault` will cause a validation failure to be logged and `optional` will be set to None, should the configuration source not contain a value for each parameter.
+In `ApplicationConfig` above `default` will be set to `100`, `noDefault` will cause a validation failure to be logged and `optional` will be set to `None`, should the configuration source not contain a value for each parameter.
 
-## Motivation
+#Contents of This Readme
 
-Shape Sorter complements applications which use [Grafter](https://github.com/zalando/grafter) or other dependency injection frameworks or patterns.
+- [Motivation](#motivation)
+- [Quick Start Guide](#quick-start-guide)
+- [Extending](#extending)
+  - [Resolving Configuration](#resolving-configuration)
+
+#Motivation
+
+Learn more about [shapeless](https://github.com/milessabin/shapeless) having read Dave Gurnell's excellent introduction: ["The Type Astronaut's Guide to Shapeless"](http://underscore.io/books/shapeless-guide/).
+
+Try out [Grafter](https://github.com/zalando/grafter). This project complements applications which use [Grafter](https://github.com/zalando/grafter) or other dependency injection frameworks and techniques by providing a way of resolving values in case classes from a configuration source.
 
 Specifically Grafter requires that all configuration be part single case class to be passed to the entry point of the application. Structuring the config in classes like this works well, but leaves the question of how are these classes populated with config?
 
 This is where Shape Sorter comes in, the [example here](examples/src/main/scala/shapelessconfig/examples/Grafter.scala) shows how they may be used together.
 
-## Quick Start Guide
+#Quick Start Guide
 
-### Install with SBT
+##Install with SBT
 Add the following to your sbt `project/plugins.sbt` file:
 ```scala
 addSbtPlugin("me.lessis" % "bintray-sbt" % "0.3.0")
@@ -37,7 +46,7 @@ resolvers += Resolver.bintrayRepo("janstenpickle", "maven")
 libraryDependencies += "shapelessconfig" %% "shaplessconfig" % "0.1.0"
 ```
 
-###Simple Case Class
+##Simple Case Class
 
 ```scala
 import shapelessconfig.core.SystemPropertiesResolvers
@@ -56,7 +65,7 @@ object Main extends App {
 }
 ```
 
-###Nested Case Classes
+##Nested Case Classes
 
 ```scala
 import shapelessconfig.core.SystemPropertiesResolvers
@@ -83,7 +92,7 @@ object Main extends App {
 }
 ```
 
-####Important Caveats
+###Important Caveats
 
 **No cyclical references**
 ```scala
@@ -97,9 +106,11 @@ case class NestedTwo(n: NestedOne)
 resolve[NestedOne] // won't compile
 ```
 
-## Resolving Configuration
+#Extending
 
-The main project ships with a [`Resolvers`](core/src/main/scala/shapelessconfig/core/Resolvers.scala) trait and an implementation which uses Java system properties as a configuration source, called `SystemPropertiesResolvers` and shown in the examples above.
+##Resolving Configuration
+
+The core project ships with a [`Resolvers`](core/src/main/scala/shapelessconfig/core/Resolvers.scala) trait and an implementation which uses Java system properties as a configuration source, called `SystemPropertiesResolvers` and shown in the examples above.
 
 The `Resolvers` trait is responsible for providing a set of implicit `Resolver` instances for primitive Scala types. These resolvers are used during the case class construction in [`ConfigConstructor`](core/src/main/scala/shapelessconfig/core/ConfigConstructor.scala), if a resolver cannot be found for a certain type then the compiler will error.
 
