@@ -1,4 +1,6 @@
 
+![Extruder](https://i.imgur.com/yFYmS5q.jpg)
+
 # Extruder
 
 [![Build Status](https://travis-ci.org/janstenpickle/extruder.svg?branch=master)](https://travis-ci.org/janstenpickle/extruder)
