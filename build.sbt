@@ -1,7 +1,8 @@
 val specs2Ver = "3.8.6"
 
 val commonSettings = Seq(
-  version := "0.1.0",
+  version := "0.0.1",
+  organization := "extruder",
   scalaVersion := "2.12.1",
   crossScalaVersions := Seq("2.11.8", "2.12.1"),
   addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
@@ -20,7 +21,14 @@ val commonSettings = Seq(
     "-language:_",
     "-target:jvm-1.8",
     "-encoding", "UTF-8"
-  )
+  ),
+  publishMavenStyle := true,
+  licenses += ("MIT license", url("http://opensource.org/licenses/MIT")),
+  homepage := Some(url("https://github.com/janstenpickle/extruder")),
+  developers := List(Developer("janstenpickle", "Chris Jansen", "janstenpickle@users.noreply.github.com", url = url("https://github.com/janstepickle"))),
+  publishArtifact in Test := false,
+  pomIncludeRepository := { _ => false },
+  bintrayReleaseOnPublish := false
 )
 
 lazy val core = (project in file("core")).
@@ -34,7 +42,8 @@ lazy val core = (project in file("core")).
         "com.chuusai" %% "shapeless" % "2.3.2",
         "org.specs2" %% "specs2-core" % specs2Ver % "test",
         "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test"
-      )
+      ),
+      publishArtifact := false
     )
   )
 
@@ -46,17 +55,34 @@ lazy val macros = (project in file("macros")).
       libraryDependencies ++= Seq(
         "org.typelevel" %% "macro-compat" % "1.1.1",
         "org.specs2" %% "specs2-core" % specs2Ver % "test"
-      )
+      ),
+      publishArtifact := false
     )
   ).dependsOn(core)
 
 lazy val examples = (project in file("examples")).
   settings (
     commonSettings ++
-    Seq(libraryDependencies += "org.zalando" %% "grafter" % "1.3.1")
+    Seq(
+      name := "extruder-examples",
+      libraryDependencies += "org.zalando" %% "grafter" % "1.3.1",
+      publishArtifact := false
+    )
   ).dependsOn(macros)
 
 lazy val root = (project in file(".")).
   settings(
-    commonSettings ++ Seq(name := "extruder")
+    commonSettings ++
+    Seq(
+      name := "extruder",
+      unmanagedSourceDirectories in Compile := unmanagedSourceDirectories.all(aggregateCompile).value.flatten,
+      sources in Compile  := sources.all(aggregateCompile).value.flatten,
+      libraryDependencies := libraryDependencies.all(aggregateCompile).value.flatten
+    )
   ).aggregate(core, macros)
+
+lazy val aggregateCompile =
+  ScopeFilter(
+    inProjects(core, macros),
+    inConfigurations(Compile)
+  )
