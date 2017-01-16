@@ -3,13 +3,10 @@ package extruder.core
 import cats.data.Validated.{Invalid, Valid}
 import cats.implicits._
 import mouse.string._
-import extruder.syntax.validation.ConfigValidation
 
 import scala.collection.generic.CanBuildFrom
 
 trait Resolvers extends Serializable {
-  import Resolvers._
-
   val listSeparator: String = ","
 
   def lookupValue(path: Seq[String]): ConfigValidation[Option[String]]
@@ -74,10 +71,6 @@ trait Resolvers extends Serializable {
     parser(value).leftMap(ex =>
        new ValidationFailure(s"Could not parse value '$value' at '${pathToString(path)}': ${ex.getClass.getName}", Some(ex))
     ).toValidatedNel
-}
-
-object Resolvers {
-  type Parser[T] = String => Either[Throwable, T]
 }
 
 trait Resolver[T] {

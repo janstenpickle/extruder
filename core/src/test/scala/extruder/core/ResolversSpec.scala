@@ -3,14 +3,12 @@ package extruder.core
 import cats.data.NonEmptyList
 import org.specs2.{ScalaCheck, Specification}
 import org.specs2.specification.core.SpecStructure
-import extruder.syntax.validation.ConfigValidation
 import cats.syntax.validated._
 import org.scalacheck.{Gen, Prop}
 import org.specs2.matcher.{EitherMatchers, MatchResult}
 
 class ResolversSpec extends Specification with EitherMatchers with ScalaCheck {
   import ResolversSpec._
-  import Resolvers._
 
   override def is: SpecStructure = s2"""
       Succeeds when configuration is present

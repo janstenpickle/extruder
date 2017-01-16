@@ -5,9 +5,8 @@ import cats.syntax.validated._
 import org.specs2.Specification
 import org.specs2.matcher.{EitherMatchers, MatchResult}
 import org.specs2.specification.core.SpecStructure
-import extruder.core.{Resolvers, ValidationFailure}
+import extruder.core.{ConfigValidation, Resolvers, ValidationFailure}
 import resolution._
-import extruder.syntax.validation.ConfigValidation
 
 class ResolutionSpec extends Specification with EitherMatchers {
   import ResolutionSpec._

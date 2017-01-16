@@ -1,8 +1,6 @@
 package extruder.core
 
 import cats.syntax.validated._
-import extruder.syntax.validation.ConfigValidation
-
 import scala.collection.JavaConverters._
 
 class SystemPropertiesResolvers extends Resolvers {

@@ -5,7 +5,6 @@ import org.specs2.Specification
 import org.specs2.matcher.{EitherMatchers, MatchResult}
 import org.specs2.specification.core.SpecStructure
 import cats.syntax.validated._
-import extruder.syntax.validation.ConfigValidation
 
 class ExtruderSpec extends Specification with EitherMatchers {
   import ExtruderSpec._

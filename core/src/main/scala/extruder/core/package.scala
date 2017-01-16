@@ -1,8 +1,8 @@
-package extruder.syntax
+package extruder
 
 import cats.data.ValidatedNel
-import extruder.core.ValidationFailure
 
-object validation {
+package object core {
   type ConfigValidation[T] = ValidatedNel[ValidationFailure, T]
+  type Parser[T] = String => Either[Throwable, T]
 }

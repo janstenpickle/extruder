@@ -199,7 +199,7 @@ Say you wanted to add a resolver for a certain type it is possible to extend an 
 import cats.syntax.either._
 import java.net.URL
 import extruder.core.SystemPropertiesResolvers
-import extruder.core.Resolvers.Parser
+import extruder.core.Parser
 
 class WithURL extends SystemPropertiesResolvers {
   implicit val url: Parser[URL] = value => Either.catchNonFatal(new URL(value))

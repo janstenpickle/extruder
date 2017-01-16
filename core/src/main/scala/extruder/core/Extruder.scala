@@ -6,7 +6,6 @@ import shapeless._
 import shapeless.ops.hlist.{ConstMapper, Mapper, RightFolder, Zip}
 import shapeless.ops.record._
 import shapeless.syntax.std.tuple._
-import extruder.syntax.validation.ConfigValidation
 
 import scala.reflect.runtime.universe.TypeTag
 

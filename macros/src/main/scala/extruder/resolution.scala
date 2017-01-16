@@ -1,8 +1,7 @@
 package extruder
 
 import macrocompat.bundle
-import extruder.core.Resolvers
-import extruder.syntax.validation.ConfigValidation
+import extruder.core.{ConfigValidation, Resolvers}
 
 import scala.reflect.macros.whitebox
 
@@ -52,7 +51,7 @@ class ResolutionMacro(val c: whitebox.Context) {
     )
 
     def method(name: String, includePrefix: Boolean): Tree = q"""
-      override def ${TermName(name)}(primitiveResolvers: extruder.core.Resolvers): extruder.syntax.validation.ConfigValidation[$typeSymbol] = {
+      override def ${TermName(name)}(primitiveResolvers: extruder.core.Resolvers): extruder.core.ConfigValidation[$typeSymbol] = {
         import primitiveResolvers._
 
         ..${caseClassResolvers(includePrefix)}

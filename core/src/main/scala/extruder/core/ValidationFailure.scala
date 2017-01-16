@@ -1,7 +1,6 @@
 package extruder.core
 
 import cats.syntax.validated._
-import extruder.syntax.validation.ConfigValidation
 
 case class ValidationFailure(message: String, exception: Option[Throwable])
 
