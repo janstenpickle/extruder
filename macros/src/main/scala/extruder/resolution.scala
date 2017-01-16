@@ -1,8 +1,8 @@
-package shapelessconfig
+package extruder
 
 import macrocompat.bundle
-import shapelessconfig.core.Resolvers
-import shapelessconfig.syntax.validation.ConfigValidation
+import extruder.core.Resolvers
+import extruder.syntax.validation.ConfigValidation
 
 import scala.reflect.macros.whitebox
 
@@ -44,25 +44,25 @@ class ResolutionMacro(val c: whitebox.Context) {
 
     def caseClassResolvers(includePrefix: Boolean): List[Tree] = caseClasses.map(cc =>
       q"""
-        implicit lazy val ${TermName(cc.typeSymbol.asClass.name + "Resolver")}: shapelessconfig.core.Resolver[$cc] =
-          shapelessconfig.core.Resolver[$cc]((path, _) =>
-            shapelessconfig.core.ConfigConstructor[$cc](${if (includePrefix) q"Some(path)" else q"None"}).resolve
+        implicit lazy val ${TermName(cc.typeSymbol.asClass.name + "Resolver")}: extruder.core.Resolver[$cc] =
+          extruder.core.Resolver[$cc]((path, _) =>
+            extruder.core.ConfigConstructor[$cc](${if (includePrefix) q"Some(path)" else q"None"}).resolve
           )
       """
     )
 
     def method(name: String, includePrefix: Boolean): Tree = q"""
-      override def ${TermName(name)}(primitiveResolvers: shapelessconfig.core.Resolvers): shapelessconfig.syntax.validation.ConfigValidation[$typeSymbol] = {
+      override def ${TermName(name)}(primitiveResolvers: extruder.core.Resolvers): extruder.syntax.validation.ConfigValidation[$typeSymbol] = {
         import primitiveResolvers._
 
         ..${caseClassResolvers(includePrefix)}
 
-        shapelessconfig.core.ConfigConstructor[$typeSymbol]().resolve
+        extruder.core.ConfigConstructor[$typeSymbol]().resolve
       }
     """
 
     q"""
-      new shapelessconfig.AggregateResolver[$typeSymbol] {
+      new extruder.AggregateResolver[$typeSymbol] {
         ${method("apply", includePrefix = true)}
         ${method("singletons", includePrefix = false)}
       }

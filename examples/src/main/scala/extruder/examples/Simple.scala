@@ -1,7 +1,7 @@
-package shapelessconfig.examples
+package extruder.examples
 
-import shapelessconfig.core.SystemPropertiesResolvers
-import shapelessconfig.resolution._
+import extruder.core.SystemPropertiesResolvers
+import extruder.resolution._
 
 import scala.util.Try
 

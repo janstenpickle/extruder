@@ -1,11 +1,11 @@
-package shapelessconfig.examples
+package extruder.examples
 
 import cats.Eval
 import cats.data.{NonEmptyList, Reader}
 import org.zalando.grafter.GenericReader._
 import org.zalando.grafter._
-import shapelessconfig.core.{SystemPropertiesResolvers, ValidationFailure}
-import shapelessconfig.resolution._
+import extruder.core.{SystemPropertiesResolvers, ValidationFailure}
+import extruder.resolution._
 
 case class ApplicationConfig(http: HttpConfig, db: DbConfig)
 

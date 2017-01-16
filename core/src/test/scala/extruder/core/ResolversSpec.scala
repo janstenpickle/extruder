@@ -1,9 +1,9 @@
-package shapelessconfig.core
+package extruder.core
 
 import cats.data.NonEmptyList
 import org.specs2.{ScalaCheck, Specification}
 import org.specs2.specification.core.SpecStructure
-import shapelessconfig.syntax.validation.ConfigValidation
+import extruder.syntax.validation.ConfigValidation
 import cats.syntax.validated._
 import org.scalacheck.{Gen, Prop}
 import org.specs2.matcher.{EitherMatchers, MatchResult}

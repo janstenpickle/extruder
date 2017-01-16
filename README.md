@@ -1,7 +1,7 @@
 
-# Shape Sorter
+# Extruder
 
-[![Build Status](https://travis-ci.org/janstenpickle/shapeless-config.svg?branch=master)](https://travis-ci.org/janstenpickle/shapeless-config)
+[![Build Status](https://travis-ci.org/janstenpickle/extruder.svg?branch=master)](https://travis-ci.org/janstenpickle/extruder)
 
 This library uses [shapeless](https://github.com/milessabin/shapeless) and [cats](https://github.com/typelevel/cats) to provide a neat syntax to instantiate Scala case classes from a configuration source. 
 
@@ -31,7 +31,7 @@ Try out [Grafter](https://github.com/zalando/grafter). This project complements 
 
 Specifically Grafter requires that all configuration be part single case class to be passed to the entry point of the application. Structuring the config in classes like this works well, but leaves the question of how are these classes populated with config?
 
-This is where Shape Sorter comes in, the [example here](examples/src/main/scala/shapelessconfig/examples/Grafter.scala) shows how they may be used together.
+This is where Extruder comes in, the [example here](examples/src/main/scala/extruder/examples/Grafter.scala) shows how they may be used together.
 
 #Quick Start Guide
 
@@ -43,14 +43,14 @@ addSbtPlugin("me.lessis" % "bintray-sbt" % "0.3.0")
 Then add the following to your `build.sbt`
 ```scala
 resolvers += Resolver.bintrayRepo("janstenpickle", "maven")
-libraryDependencies += "shapelessconfig" %% "shaplessconfig" % "0.1.0"
+libraryDependencies += "extruder" %% "extruder" % "0.1.0"
 ```
 
 ##Simple Case Class
 
 ```scala
-import shapelessconfig.core.SystemPropertiesResolvers
-import shapelessconfig.resolution._
+import extruder.core.SystemPropertiesResolvers
+import extruder.resolution._
 
 object Main extends App {
   case class Example(defaultedString: String = "default", configuredString: String, optionalString: Option[String])
@@ -68,8 +68,8 @@ object Main extends App {
 ##Nested Case Classes
 
 ```scala
-import shapelessconfig.core.SystemPropertiesResolvers
-import shapelessconfig.resolution._
+import extruder.core.SystemPropertiesResolvers
+import extruder.resolution._
 
 object Main extends App {
   case class Example(a: NestedOne, b: NestedTwo)
@@ -110,9 +110,9 @@ resolve[NestedOne] // won't compile
 
 ##Resolving Configuration
 
-The core project ships with a [`Resolvers`](core/src/main/scala/shapelessconfig/core/Resolvers.scala) trait and an implementation which uses Java system properties as a configuration source, called `SystemPropertiesResolvers` and shown in the examples above.
+The core project ships with a [`Resolvers`](core/src/main/scala/extruder/core/Resolvers.scala) trait and an implementation which uses Java system properties as a configuration source, called `SystemPropertiesResolvers` and shown in the examples above.
 
-The `Resolvers` trait is responsible for providing a set of implicit `Resolver` instances for primitive Scala types. These resolvers are used during the case class construction in [`ConfigConstructor`](core/src/main/scala/shapelessconfig/core/ConfigConstructor.scala), if a resolver cannot be found for a certain type then the compiler will error.
+The `Resolvers` trait is responsible for providing a set of implicit `Resolver` instances for primitive Scala types. These resolvers are used during the case class construction in [`ConfigConstructor`](core/src/main/scala/extruder/core/ConfigConstructor.scala), if a resolver cannot be found for a certain type then the compiler will error.
 
 ###Implementing a new Set of Resolvers
 
@@ -132,7 +132,7 @@ For example `case class Example(a: String, b: Int)` will evaluate to the paths `
 
 ####Example Implementation
 
-What will follow is a break down of the implementation of the [`SystemPropertiesResolver`](core/src/main/scala/shapelessconfig/core/SystemPropertiesResolver.scala) provided by the core library.
+What will follow is a break down of the implementation of the [`SystemPropertiesResolver`](core/src/main/scala/extruder/core/SystemPropertiesResolver.scala) provided by the core library.
 
 First create a map from system properties to act as the configuration source, notice that in this implementation we have chosen to be case insensitive by making all the property keys lower case: 
 
@@ -159,7 +159,7 @@ override def lookupValue(path: Seq[String]): ConfigValidation[Option[String]] = 
 The `.validNel` on the end of the lookup is from the `cats.syntax.validated._` package and simply lifts the result of `props.get(pathToString(path))` into the right of `cats.data.ValidatedNel[String, Option[String]]`.
 
 #####Overriding `lookupList`
-_Note that this will override the default implementation in [`Resolvers`](core/src/main/scala/shapelessconfig/core/Resolvers.scala), if you're happy with the default implementation and just want to change the separator see [Overriding `listSeparator`](#overriding-listseparator)._
+_Note that this will override the default implementation in [`Resolvers`](core/src/main/scala/extruder/core/Resolvers.scala), if you're happy with the default implementation and just want to change the separator see [Overriding `listSeparator`](#overriding-listseparator)._
 
 The return type for this function is `ConfigValidation[Option[List[String]]]`, this allows for any errors looking up or converting to a list the value. Some sources may provide list or array types natively, if they don't you may implement it here.
 
@@ -187,7 +187,7 @@ override def lookupList(path: Seq[String]): ConfigValidation[Option[List[String]
 
 #####Overriding `listSeparator`
 
-TBD
+If you are happy with the default implementation of `lookupList`, but want to change the list separator then you can simply override `listSeparator` and set it to anything you like.
 
 ###Extending an Existing Set of Resolvers
 
@@ -196,8 +196,8 @@ Say you wanted to add a resolver for a certain type it is possible to extend an 
 ```scala
 import cats.syntax.either._
 import java.net.URL
-import shapelessconfig.core.SystemPropertiesResolvers
-import shapelessconfig.core.Resolvers.Parser
+import extruder.core.SystemPropertiesResolvers
+import extruder.core.Resolvers.Parser
 
 class WithURL extends SystemPropertiesResolvers {
   implicit val url: Parser[URL] = value => Either.catchNonFatal(new URL(value))

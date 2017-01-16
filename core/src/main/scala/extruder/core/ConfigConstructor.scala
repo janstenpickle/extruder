@@ -1,4 +1,4 @@
-package shapelessconfig.core
+package extruder.core
 
 import cats.syntax.cartesian._
 import cats.syntax.validated._
@@ -6,7 +6,7 @@ import shapeless._
 import shapeless.ops.hlist.{ConstMapper, Mapper, RightFolder, Zip}
 import shapeless.ops.record._
 import shapeless.syntax.std.tuple._
-import shapelessconfig.syntax.validation.ConfigValidation
+import extruder.syntax.validation.ConfigValidation
 
 import scala.reflect.runtime.universe.TypeTag
 

@@ -27,7 +27,7 @@ lazy val core = (project in file("core")).
   settings(
     commonSettings ++
     Seq(
-      name := "shapeless-config-core",
+      name := "extruder-core",
       libraryDependencies ++= Seq(
         "org.typelevel" %% "cats" % "0.8.1",
         "com.github.benhutchison" %% "mouse" % "0.6",
@@ -42,7 +42,7 @@ lazy val macros = (project in file("macros")).
   settings(
     commonSettings ++
     Seq(
-      name := "shapeless-config-macros",
+      name := "extruder-macros",
       libraryDependencies ++= Seq(
         "org.typelevel" %% "macro-compat" % "1.1.1",
         "org.specs2" %% "specs2-core" % specs2Ver % "test"
@@ -58,5 +58,5 @@ lazy val examples = (project in file("examples")).
 
 lazy val root = (project in file(".")).
   settings(
-    commonSettings ++ Seq(name := "shapeless-config")
+    commonSettings ++ Seq(name := "extruder")
   ).aggregate(core, macros)

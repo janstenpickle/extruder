@@ -1,7 +1,7 @@
-package shapelessconfig.core
+package extruder.core
 
 import cats.syntax.validated._
-import shapelessconfig.syntax.validation.ConfigValidation
+import extruder.syntax.validation.ConfigValidation
 
 case class ValidationFailure(message: String, exception: Option[Throwable])
 

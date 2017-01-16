@@ -1,9 +1,9 @@
-package shapelessconfig.core
+package extruder.core
 
 import cats.data.Validated.{Invalid, Valid}
 import cats.implicits._
 import mouse.string._
-import shapelessconfig.syntax.validation.ConfigValidation
+import extruder.syntax.validation.ConfigValidation
 
 import scala.collection.generic.CanBuildFrom
 
