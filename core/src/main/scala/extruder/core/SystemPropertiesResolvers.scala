@@ -4,7 +4,7 @@ import cats.syntax.validated._
 import scala.collection.JavaConverters._
 
 class SystemPropertiesResolvers extends Resolvers {
-  val props: Map[String, String] = System.getProperties.asScala.toMap.map { case (k, v) => k.toLowerCase -> v }
+  def props: Map[String, String] = System.getProperties.asScala.toMap.map { case (k, v) => k.toLowerCase -> v }
 
   override def lookupValue(path: Seq[String]): ConfigValidation[Option[String]] =
     props.get(pathToString(path)).validNel

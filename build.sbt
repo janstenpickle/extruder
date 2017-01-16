@@ -43,7 +43,8 @@ lazy val core = (project in file("core")).
         "org.specs2" %% "specs2-core" % specs2Ver % "test",
         "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test"
       ),
-      publishArtifact := false
+      publishArtifact := false,
+      publishArtifact in Test := true
     )
   )
 
@@ -70,6 +71,19 @@ lazy val examples = (project in file("examples")).
     )
   ).dependsOn(macros)
 
+lazy val typesafe = (project in file("typesafe")).
+  settings (
+    commonSettings ++
+    Seq(
+      name := "extruder-typesafe",
+      libraryDependencies ++= Seq(
+        "com.typesafe" % "config" % "1.3.1",
+        "org.specs2" %% "specs2-core" % specs2Ver % "test",
+        "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test"
+      )
+    )
+  ).dependsOn(core % "compile->compile;test->test")
+
 lazy val root = (project in file(".")).
   settings(
     commonSettings ++
@@ -79,7 +93,7 @@ lazy val root = (project in file(".")).
       sources in Compile  := sources.all(aggregateCompile).value.flatten,
       libraryDependencies := libraryDependencies.all(aggregateCompile).value.flatten
     )
-  ).aggregate(core, macros)
+  ).aggregate(core, macros, typesafe)
 
 lazy val aggregateCompile =
   ScopeFilter(
