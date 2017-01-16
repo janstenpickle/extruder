@@ -112,7 +112,7 @@ resolve[NestedOne] // won't compile
 
 The core project ships with a [`Resolvers`](core/src/main/scala/extruder/core/Resolvers.scala) trait and an implementation which uses Java system properties as a configuration source, called `SystemPropertiesResolvers` and shown in the examples above.
 
-The `Resolvers` trait is responsible for providing a set of implicit `Resolver` instances for primitive Scala types. These resolvers are used during the case class construction in [`ConfigConstructor`](core/src/main/scala/extruder/core/ConfigConstructor.scala), if a resolver cannot be found for a certain type then the compiler will error.
+The `Resolvers` trait is responsible for providing a set of implicit `Resolver` instances for primitive Scala types. These resolvers are used during the case class construction in [`Extruder`](core/src/main/scala/extruder/core/Extruder.scala), if a resolver cannot be found for a certain type then the compiler will error.
 
 ###Implementing a new Set of Resolvers
 

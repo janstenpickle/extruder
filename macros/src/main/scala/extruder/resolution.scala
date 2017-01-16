@@ -46,7 +46,7 @@ class ResolutionMacro(val c: whitebox.Context) {
       q"""
         implicit lazy val ${TermName(cc.typeSymbol.asClass.name + "Resolver")}: extruder.core.Resolver[$cc] =
           extruder.core.Resolver[$cc]((path, _) =>
-            extruder.core.ConfigConstructor[$cc](${if (includePrefix) q"Some(path)" else q"None"}).resolve
+            extruder.core.Extruder[$cc](${if (includePrefix) q"Some(path)" else q"None"}).resolve
           )
       """
     )
@@ -57,7 +57,7 @@ class ResolutionMacro(val c: whitebox.Context) {
 
         ..${caseClassResolvers(includePrefix)}
 
-        extruder.core.ConfigConstructor[$typeSymbol]().resolve
+        extruder.core.Extruder[$typeSymbol]().resolve
       }
     """
 

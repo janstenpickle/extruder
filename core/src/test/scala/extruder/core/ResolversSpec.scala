@@ -8,7 +8,7 @@ import cats.syntax.validated._
 import org.scalacheck.{Gen, Prop}
 import org.specs2.matcher.{EitherMatchers, MatchResult}
 
-class ResolversSpecextends extends Specification with EitherMatchers with ScalaCheck {
+class ResolversSpec extends Specification with EitherMatchers with ScalaCheck {
   import ResolversSpec._
   import Resolvers._
 

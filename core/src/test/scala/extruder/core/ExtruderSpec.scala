@@ -7,20 +7,20 @@ import org.specs2.specification.core.SpecStructure
 import cats.syntax.validated._
 import extruder.syntax.validation.ConfigValidation
 
-class ConfigConstructorSpec extends Specification with EitherMatchers {
-  import ConfigConstructorSpec._
+class ExtruderSpec extends Specification with EitherMatchers {
+  import ExtruderSpec._
   import resolvers._
 
   override def is: SpecStructure = s2"""
     Can successfully construct a case class from
-      Config alone ${testSuccess(ConfigConstructor[NoDefaults]().resolve, NoDefaults("nic cage", 1, isAwesome = true))}
-      Defaults alone ${testSuccess(ConfigConstructor[WithDefaults]().resolve, WithDefaults())}
-      Config and defaults ${testSuccess(ConfigConstructor[SomeDefaults]().resolve, SomeDefaults("nic cage"))}
-      Overridden defaults ${testSuccess(ConfigConstructor[OverriddenDefaults]().resolve, OverriddenDefaults("nic cage", 1, isAwesome = true))}
+      Config alone ${testSuccess(Extruder[NoDefaults]().resolve, NoDefaults("nic cage", 1, isAwesome = true))}
+      Defaults alone ${testSuccess(Extruder[WithDefaults]().resolve, WithDefaults())}
+      Config and defaults ${testSuccess(Extruder[SomeDefaults]().resolve, SomeDefaults("nic cage"))}
+      Overridden defaults ${testSuccess(Extruder[OverriddenDefaults]().resolve, OverriddenDefaults("nic cage", 1, isAwesome = true))}
 
     Fails to construct a case class when
-      No config exists ${testFailure(ConfigConstructor[NoDefaults](failPrefixVal).resolve, 3)}
-      Configuration cannot be parsed correctly ${testFailure(ConfigConstructor[WithDefaults](failPrefixVal).resolve, 1)}
+      No config exists ${testFailure(Extruder[NoDefaults](failPrefixVal).resolve, 3)}
+      Configuration cannot be parsed correctly ${testFailure(Extruder[WithDefaults](failPrefixVal).resolve, 1)}
   """
 
   def testSuccess[T](input: ConfigValidation[T], expected: T): MatchResult[Either[NonEmptyList[ValidationFailure], T]] =
@@ -30,7 +30,7 @@ class ConfigConstructorSpec extends Specification with EitherMatchers {
     input.toEither must beLeft.which(_.toList.size === errors)
 }
 
-object ConfigConstructorSpec {
+object ExtruderSpec {
   val failPrefix = "fail"
   val failPrefixVal = Some(Seq(failPrefix))
 

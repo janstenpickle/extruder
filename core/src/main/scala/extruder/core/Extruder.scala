@@ -10,9 +10,9 @@ import extruder.syntax.validation.ConfigValidation
 
 import scala.reflect.runtime.universe.TypeTag
 
-case class ConfigConstructor[T <: Product with Serializable](prefix: Option[Seq[String]] = None)
-                                                            (implicit tag: TypeTag[T]) {
-  import ConfigConstructor._
+case class Extruder[T <: Product with Serializable](prefix: Option[Seq[String]] = None)
+                                                   (implicit tag: TypeTag[T]) {
+  import Extruder._
 
   val className: String = tag.tpe.typeSymbol.name.toString
   val realPrefix: Seq[String] = prefix.fold(Seq(className))(_ :+ className)
@@ -50,7 +50,7 @@ case class ConfigConstructor[T <: Product with Serializable](prefix: Option[Seq[
   }
 }
 
-object ConfigConstructor {
+object Extruder {
   object readConfig extends Poly1 {
     implicit def caseAny[A <: Symbol, B](implicit resolver: Resolver[B]): Case.Aux[((A, Seq[String]), Option[B]), ConfigValidation[B]] =
       at[((A, Seq[String]), Option[B])]{ case ((key, prefix), default) => resolver.read(prefix :+ key.name, default) }
