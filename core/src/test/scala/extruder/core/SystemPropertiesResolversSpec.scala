@@ -1,6 +1,9 @@
 package extruder.core
 
-class SystemPropertiesResolversSpec extends BaseResolversSpec {
+import cats.Show
+import cats.syntax.show._
+
+class SystemPropertiesResolversSpec extends BaseResolversSpec[String] {
   import BaseResolversSpec._
 
   override def failingResolvers: Resolvers = {
@@ -8,10 +11,12 @@ class SystemPropertiesResolversSpec extends BaseResolversSpec {
     new SystemPropertiesResolvers
   }
 
-  override def successfulResolvers(value: Any): Resolvers = {
-    System.setProperty(testKey, value.toString)
+  override def successfulResolvers[T : Show](value: T): Resolvers = {
+    System.setProperty(testKey, value.show)
     new SystemPropertiesResolvers
   }
 
-  override def makeList[T](list: List[T]): Any = list.mkString(",")
+  override def makeList[T](list: List[T]): String = list.mkString(",")
+
+  override implicit val showList: Show[String] = Show.show(identity)
 }

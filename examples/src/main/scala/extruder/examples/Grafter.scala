@@ -52,7 +52,7 @@ object Grafter extends App {
       failure.exception.fold[StartResult](StartFailure(failure.message))(ex => StartError(failure.message, ex))
     ))
 
-  val start: Eval[List[StartResult]] = resolve[ApplicationConfig](SystemPropertiesResolvers)
+  val start: Eval[List[StartResult]] = resolve[ApplicationConfig, SystemPropertiesResolvers](SystemPropertiesResolvers)
     .fold(convertToStartResult, app => Rewriter.start(GenericReader[ApplicationConfig, Application].run(app)))
 
   println(start.value)

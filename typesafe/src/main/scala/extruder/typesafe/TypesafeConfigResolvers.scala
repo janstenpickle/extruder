@@ -2,9 +2,9 @@ package extruder.typesafe
 
 import cats.syntax.either._
 import cats.syntax.validated._
-import com.typesafe.config.Config
 import com.typesafe.config.ConfigException.Missing
-import extruder.core.{ConfigValidation, Resolvers, ValidationFailure}
+import com.typesafe.config.{Config, ConfigList, ConfigObject, ConfigValue}
+import extruder.core._
 
 import scala.collection.JavaConverters._
 
@@ -24,4 +24,16 @@ case class TypesafeConfigResolvers(config: Config) extends Resolvers {
 
   override def lookupList(path: Seq[String]): ConfigValidation[Option[List[String]]] =
     lookup(_.getStringList(pathToString(path)).asScala.toList, path)
+
+  def resolve[T](lookup: Seq[String] => ConfigValidation[Option[T]]): (Seq[String], Option[T]) => ConfigValidation[T] =
+    resolve[T, T](_.validNel, lookup)
+
+  implicit val configValueResolver: Resolver[ConfigValue] =
+    Resolver(resolve[ConfigValue](path => lookup(_.getValue(pathToString(path)), path)))
+
+  implicit val configListResolver: Resolver[ConfigList] =
+    Resolver(resolve[ConfigList](path => lookup(_.getList(pathToString(path)), path)))
+
+  implicit val configObjectResolver: Resolver[ConfigObject] =
+    Resolver(resolve[ConfigObject](path => lookup(_.getObject(pathToString(path)), path)))
 }

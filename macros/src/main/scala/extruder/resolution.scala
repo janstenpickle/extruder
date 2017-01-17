@@ -1,21 +1,32 @@
 package extruder
 
-import macrocompat.bundle
 import extruder.core.{ConfigValidation, Resolvers}
+import shapeless.{SingletonTypeUtils}
 
 import scala.reflect.macros.whitebox
 
 object resolution {
-  def resolve[T <: Product with Serializable]: AggregateResolver[T] = macro ResolutionMacro.resolve[T]
+  def resolve[T, R <: Resolvers]: AggregateResolver[T, R] = macro ResolutionMacro.resolve[T, R]
 }
 
-@bundle
-class ResolutionMacro(val c: whitebox.Context) {
+@macrocompat.bundle
+class ResolutionMacro(val c: whitebox.Context) extends SingletonTypeUtils {
   import c.universe._
 
-  def resolve[T <: Product with Serializable : c.WeakTypeTag]: Tree = {
+  def resolve[T : c.WeakTypeTag, R : c.WeakTypeTag]: Tree = {
     val `type` = weakTypeOf[T]
     val typeSymbol = `type`.typeSymbol
+    val resolverTypeSymbol = weakTypeOf[R].typeSymbol
+
+    def findSealedMembers(symbol: Symbol): List[Type] =
+      if (symbol.asClass.isSealed)
+        symbol.asClass.knownDirectSubclasses.toList.filter(x => x.isModuleClass || x.isModule || x.asClass.isCaseClass || x.asClass.isSealed).
+          flatMap(x =>
+            if (x.asClass.isSealed) x.asType.toType :: findSealedMembers(x)
+            else if (x.asClass.isCaseClass) x.asType.toType :: findCaseClasses(x.asType.toType)
+            else List(x.asType.toType)
+          )
+      else List.empty
 
     def findCaseClasses(in: Type): List[Type] =
       in.decls.collectFirst {
@@ -29,47 +40,57 @@ class ResolutionMacro(val c: whitebox.Context) {
             case NoType => c.abort(c.enclosingPosition, "Options in case classes need a known type parameter.")
           }
         else fieldType.typeSymbol
-      }.filter(_.asClass.isCaseClass).
-        map(_.asType.toType).
-        flatMap(x => x :: findCaseClasses(x)).distinct
+      }.filter(x => (x.asClass.isCaseClass || x.asClass.isSealed) && !x.fullName.contains("scala.")).
+        flatMap(x =>
+          if (x.asClass.isSealed) x.asType.toType :: findSealedMembers(x)
+          else x.asType.toType :: findCaseClasses(x.asType.toType)
+        ).distinct
 
-    val caseClasses = findCaseClasses(`type`)
+    val caseClasses: List[Type] =
+      if (typeSymbol.asClass.isSealed) findSealedMembers(typeSymbol)
+      else if(typeSymbol.asClass.isCaseClass) findCaseClasses(`type`)
+      else c.abort(c.enclosingPosition, "Only case classes or sealed traits are permissible")
 
-    c.info(
-      c.enclosingPosition,
-      s"Creating implicit resolvers for case classes: '${caseClasses.map(_.typeSymbol.fullName).mkString("', '")}'",
-      force = false
+    if (caseClasses.nonEmpty)
+      c.info(
+        c.enclosingPosition,
+        s"Creating implicit resolvers for: '${caseClasses.map(_.typeSymbol.fullName).mkString("', '")}'",
+        force = false
+      )
+
+    def resolverMethod(t: Symbol): TermName = TermName(
+      if (t.asClass.isSealed) "unionResolver"
+      else "productResolver"
     )
 
-    def caseClassResolvers(includePrefix: Boolean): List[Tree] = caseClasses.map(cc =>
-      q"""
-        implicit lazy val ${TermName(cc.typeSymbol.asClass.name + "Resolver")}: extruder.core.Resolver[$cc] =
-          extruder.core.Resolver[$cc]((path, _) =>
-            extruder.core.Extruder[$cc](${if (includePrefix) q"Some(path)" else q"None"}).resolve
-          )
-      """
+    val resolvers: List[Tree] = caseClasses.map(tpe =>
+      if ((tpe.typeSymbol.asClass.isCaseClass && !(tpe.typeSymbol.isModuleClass || tpe.typeSymbol.isModule))
+          || tpe.typeSymbol.asClass.isSealed)
+        q"""
+          implicit lazy val ${TermName(tpe.typeSymbol.asClass.name + "Resolver")}: extruder.core.Resolver[$tpe] =
+            extruder.core.Extruder[$tpe](primitiveResolvers).${resolverMethod(tpe.typeSymbol)}
+        """
+      else
+        q"""
+          implicit lazy val ${TermName(tpe.typeSymbol.asClass.name + "Resolver")}: extruder.core.Resolver[$tpe] =
+            extruder.core.Resolver(cats.data.Validated.Valid(${c.parse(tpe.typeSymbol.asClass.fullName)}))
+        """
     )
-
-    def method(name: String, includePrefix: Boolean): Tree = q"""
-      override def ${TermName(name)}(primitiveResolvers: extruder.core.Resolvers): extruder.core.ConfigValidation[$typeSymbol] = {
-        import primitiveResolvers._
-
-        ..${caseClassResolvers(includePrefix)}
-
-        extruder.core.Extruder[$typeSymbol]().resolve
-      }
-    """
 
     q"""
-      new extruder.AggregateResolver[$typeSymbol] {
-        ${method("apply", includePrefix = true)}
-        ${method("singletons", includePrefix = false)}
+      new extruder.AggregateResolver[$typeSymbol, $resolverTypeSymbol] {
+        override def ${TermName("apply")}(primitiveResolvers: $resolverTypeSymbol): extruder.core.ConfigValidation[$typeSymbol] = {
+          import primitiveResolvers._
+
+          ..$resolvers
+
+          extruder.core.Extruder[$typeSymbol](primitiveResolvers).${resolverMethod(typeSymbol)}.read(Seq.empty, None)
+        }
       }
     """
   }
 }
 
-trait AggregateResolver[T <: Product with Serializable] {
-  def apply(primitiveResolvers: Resolvers): ConfigValidation[T]
-  def singletons(primitiveResolvers: Resolvers): ConfigValidation[T]
+trait AggregateResolver[T, R <: Resolvers] {
+  def apply(primitiveResolvers: R): ConfigValidation[T]
 }
