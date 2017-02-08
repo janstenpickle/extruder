@@ -1,46 +1,56 @@
 package extruder
 
 import cats.data.NonEmptyList
-import cats.syntax.validated._
+import extruder.core.{ConfigValidation, MapResolvers, ValidationFailure}
+import extruder.resolution._
 import org.specs2.Specification
 import org.specs2.matcher.{EitherMatchers, MatchResult}
 import org.specs2.specification.core.SpecStructure
-import extruder.core.{ConfigValidation, Resolvers, ValidationFailure}
-import resolution._
+
+object ResolutionSpec {
+  type Result[T] = MatchResult[Either[NonEmptyList[ValidationFailure], T]]
+
+  val config = Map(
+    "test1.a.test2.a.test3.a" -> "test1-test2-test3",
+    "test1.b.test3.a" -> "test1-test3",
+    "test3.a" -> "test3",
+    "type" -> "SealedObj",
+    "listtest.a" -> "a,b,c"
+  )
+
+  val resolver = MapResolvers(config)
+
+  case class Test1(a: Test2, b: Test3)
+  case class Test2(a: Test3)
+  case class Test3(a: String)
+
+  sealed trait Sealed
+  case object SealedObj extends Sealed
+  case class SealedCC(a: Test3) extends Sealed
+
+  case class OptTest(a: Option[String])
+  case class ListTest(a: List[String])
+}
 
 class ResolutionSpec extends Specification with EitherMatchers {
   import ResolutionSpec._
 
   override def is: SpecStructure = s2"""
-    Can resolve a case class from config
-      With full path $fullPath
-      As singletons $singletons
+    Can resolve a case class from config $caseClasses
+    Can resolve a sealed family $sealedClasses
+    Can resolve optional parameters in case classes $optionalParams
+    Can resolve traversable once parameters in case classes $listParams
   """
 
-  def fullPath: Result = test(resolve[Test1](resolver), Test1(Test2(Test3("test1-test2-test3")), Test3("test1-test3")))
+  def caseClasses: Result[Test1] =
+    test(resolve[Test1, MapResolvers](resolver), Test1(Test2(Test3("test1-test2-test3")), Test3("test1-test3")))
 
-  def singletons: Result = test(resolve[Test1].singletons(resolver), Test1(Test2(Test3("test3")), Test3("test3")))
+  def sealedClasses: Result[Sealed] = test(resolve[Sealed, MapResolvers](resolver), SealedObj)
 
-  def test(result: ConfigValidation[Test1], expected: Test1): Result =
+  def optionalParams: Result[OptTest] = test(resolve[OptTest, MapResolvers](resolver), OptTest(None))
+
+  def listParams: Result[ListTest] = test(resolve[ListTest, MapResolvers](resolver), ListTest(List("a", "b", "c")))
+
+  def test[T](result: ConfigValidation[T], expected: T): Result[T] =
     result.toEither must beRight(expected)
-}
-
-object ResolutionSpec {
-  type Result = MatchResult[Either[NonEmptyList[ValidationFailure], Test1]]
-
-  val config = Map(
-    "test1.a.test2.a.test3.a" -> "test1-test2-test3",
-    "test1.b.test3.a" -> "test1-test3",
-    "test3.a" -> "test3"
-  )
-
-  val resolver = new Resolvers {
-    override def pathToString(path: Seq[String]): String = path.mkString(".").toLowerCase
-    override def lookupValue(path: Seq[String]): ConfigValidation[Option[String]] =
-      config.get(pathToString(path)).valid
-  }
-
-  case class Test1(a: Test2, b: Test3)
-  case class Test2(a: Test3)
-  case class Test3(a: String)
 }

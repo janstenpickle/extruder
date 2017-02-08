@@ -1,27 +1,40 @@
 package extruder.examples
 
-import extruder.core.SystemPropertiesResolvers
+import extruder.core.MapResolvers
 import extruder.resolution._
 
-import scala.util.Try
+import scala.concurrent.duration.{Duration, FiniteDuration}
 
-case class CC(a: String = "test", b: String = "test2", c: Int, d: Option[CC2], e: CC3, f: Set[Int])
-
+case class CC(a: String = "test", b: String = "test2", c: Int, d: Option[CC2], e: CC3, f: Set[Int], dur: Duration, finDur: FiniteDuration)
 case class CC2(x: String = "test4", y: Option[Int] = Some(232), z: CC3)
-
-case class CC3(a: Option[String]) {
-  val tryA: Try[String] = Try(a.get)
-}
-
+case class CC3(a: Option[String])
 case class CC4(a: Option[CC3])
 
-object Simple extends App {
-  System.setProperty("cc.c", "2000")
-  System.setProperty("cc.e.cc3.a", "test3")
-  System.setProperty("cc.d.cc2.z.cc3.a", "shit")
-  System.setProperty("cc3.a", "hello")
-  System.setProperty("cc.f", "2, 3")
+sealed trait Sealed
+case object ObjImpl extends Sealed
+case class CCImpl(a: String) extends Sealed
 
-  println(resolve[CC](SystemPropertiesResolvers))
-  println(resolve[CC4].singletons(SystemPropertiesResolvers))
+object Simple extends App {
+  val ccResolvers = MapResolvers(Map(
+    "cc.c" -> "2000",
+    "cc.e.cc3.a" -> "test3",
+    "cc.d.cc2.z.cc3.a" -> "testing",
+    "cc3.a" -> "hello",
+    "cc.f" -> "2, 3",
+    "cc.dur" -> "Inf",
+    "cc.findur" -> "22 days"
+  ))
+
+  println(resolve[CC, MapResolvers](ccResolvers))
+
+  val sealedCCResolvers = MapResolvers(Map(
+    "type" -> "CCImpl",
+    "ccimpl.a" -> "testing"
+  ))
+
+  println(resolve[Sealed, MapResolvers](sealedCCResolvers))
+
+ val sealedObjResolvers = MapResolvers(Map("type" -> "ObjImpl"))
+
+  println(resolve[Sealed, MapResolvers](sealedObjResolvers))
 }

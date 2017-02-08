@@ -1,5 +1,6 @@
 package extruder.core
 
+import cats.data.Validated.{Invalid, Valid}
 import cats.syntax.cartesian._
 import cats.syntax.validated._
 import shapeless._
@@ -9,44 +10,51 @@ import shapeless.syntax.std.tuple._
 
 import scala.reflect.runtime.universe.TypeTag
 
-case class Extruder[T <: Product with Serializable](prefix: Option[Seq[String]] = None)
-                                                   (implicit tag: TypeTag[T]) {
+case class Extruder[T](resolvers: ResolversBase)
+                      (implicit tag: TypeTag[T]) {
   import Extruder._
 
-  val className: String = tag.tpe.typeSymbol.name.toString
-  val realPrefix: Seq[String] = prefix.fold(Seq(className))(_ :+ className)
+  lazy val className: String = tag.tpe.typeSymbol.name.toString
 
-  def resolve[GenRepr <: HList,
-              DefaultOptsRepr <: HList,
-              LGenRepr <: HList,
-              KeysRepr <: HList,
-              ConstRepr <: HList,
-              ZipperRepr <: HList,
-              PrefixZipperRepr <: HList,
-              MapperRepr <: HList](implicit gen: Generic[T],
-                                   genAux: Generic.Aux[T, GenRepr],
-                                   defaultOpts: Default.AsOptions[T],
-                                   defaultOptsAux: Default.AsOptions.Aux[T, DefaultOptsRepr],
-                                   lGenAux: LabelledGeneric.Aux[T, LGenRepr],
-                                   keys: Keys[LGenRepr],
-                                   keysAux: Keys.Aux[LGenRepr, KeysRepr],
-                                   constMapper: ConstMapper[Seq[String], KeysRepr],
-                                   constMapperAux: ConstMapper.Aux[Seq[String], KeysRepr, ConstRepr],
-                                   prefixZipper: Zip[KeysRepr :: ConstRepr :: HNil],
-                                   prefixZipperAux: Zip.Aux[KeysRepr :: ConstRepr :: HNil, PrefixZipperRepr],
-                                   zipper: Zip[PrefixZipperRepr :: DefaultOptsRepr :: HNil],
-                                   zipperAux: Zip.Aux[PrefixZipperRepr :: DefaultOptsRepr :: HNil, ZipperRepr],
-                                   mapper: Mapper[readConfig.type, ZipperRepr],
-                                   mapperAux: Mapper.Aux[readConfig.type, ZipperRepr, MapperRepr],
-                                   rightFolder: RightFolder[MapperRepr, ConfigValidation[HNil], folder.type],
-                                   rightFolderAux: RightFolder.Aux[MapperRepr, ConfigValidation[HNil], folder.type, ConfigValidation[GenRepr]]): ConfigValidation[T] = {
-    val keys = Keys[LGenRepr].apply()
-    keys.zip(keys.mapConst(realPrefix)).
-      zip(Default.AsOptions[T].apply()).
-      map(readConfig).
-      foldRight((HNil :: HNil).tail.validNel[ValidationFailure])(folder).
-      map(Generic[T].from)
+  def productResolver[GenRepr <: HList,
+                      DefaultOptsRepr <: HList,
+                      LGenRepr <: HList,
+                      KeysRepr <: HList,
+                      ConstRepr <: HList,
+                      ZipperRepr <: HList,
+                      PrefixZipperRepr <: HList,
+                      MapperRepr <: HList](implicit gen: Generic.Aux[T, GenRepr],
+                                           defaultOpts: Default.AsOptions.Aux[T, DefaultOptsRepr],
+                                           lGen: LabelledGeneric.Aux[T, LGenRepr],
+                                           keys: Keys.Aux[LGenRepr, KeysRepr],
+                                           constMapper: ConstMapper.Aux[Seq[String], KeysRepr, ConstRepr],
+                                           prefixZipper: Zip.Aux[KeysRepr :: ConstRepr :: HNil, PrefixZipperRepr],
+                                           zipper: Zip.Aux[PrefixZipperRepr :: DefaultOptsRepr :: HNil, ZipperRepr],
+                                           mapper: Mapper.Aux[readConfig.type, ZipperRepr, MapperRepr],
+                                           rightFolder: RightFolder.Aux[MapperRepr, ConfigValidation[HNil], folder.type, ConfigValidation[GenRepr]]): Resolver[T] = {
+    val keyNames = Keys[LGenRepr].apply()
+    Resolver((path, default) =>
+      keyNames.zip(keyNames.mapConst(path :+ className)).
+        zip(Default.AsOptions[T].apply()).
+        map(readConfig).
+        foldRight((HNil :: HNil).tail.validNel[ValidationFailure])(folder).
+        map(Generic[T].from)
+    )
   }
+
+  def unionResolver[C <: Coproduct](implicit gen: LabelledGeneric.Aux[T, C],
+                                    underlying: Strict[Resolver[Option[C]]]): Resolver[T] =
+    Resolver((path, default) =>
+      (underlying.value.read(path, None), default) match {
+        case (Valid(None), None) => ValidationFailure(
+          s"Could not resolve instance of '$className' at path '${resolvers.pathToStringWithType(path)}', " +
+          "please ensure the implementing children are case classes or case objects"
+        )
+        case (Valid(None), Some(v)) => v.validNel[ValidationFailure]
+        case (Valid(Some(v)), _) => gen.from(v).validNel[ValidationFailure]
+        case (x @ Invalid(_), _) => x
+      }
+    )
 }
 
 object Extruder {

@@ -1,7 +1,7 @@
 val specs2Ver = "3.8.6"
 
 val commonSettings = Seq(
-  version := "0.0.1",
+  version := "0.1.0",
   organization := "extruder",
   scalaVersion := "2.12.1",
   crossScalaVersions := Seq("2.11.8", "2.12.1"),
@@ -23,7 +23,7 @@ val commonSettings = Seq(
     "-encoding", "UTF-8"
   ),
   publishMavenStyle := true,
-  licenses += ("MIT license", url("http://opensource.org/licenses/MIT")),
+  licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
   homepage := Some(url("https://github.com/janstenpickle/extruder")),
   developers := List(Developer("janstenpickle", "Chris Jansen", "janstenpickle@users.noreply.github.com", url = url("https://github.com/janstepickle"))),
   publishArtifact in Test := false,
@@ -69,7 +69,7 @@ lazy val examples = (project in file("examples")).
       libraryDependencies += "org.zalando" %% "grafter" % "1.3.1",
       publishArtifact := false
     )
-  ).dependsOn(macros)
+  ).dependsOn(macros, typesafe)
 
 lazy val typesafe = (project in file("typesafe")).
   settings (
@@ -79,7 +79,8 @@ lazy val typesafe = (project in file("typesafe")).
       libraryDependencies ++= Seq(
         "com.typesafe" % "config" % "1.3.1",
         "org.specs2" %% "specs2-core" % specs2Ver % "test",
-        "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test"
+        "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test",
+        "org.scalacheck" %% "scalacheck" % "1.13.4" % "test"
       )
     )
   ).dependsOn(core % "compile->compile;test->test")
