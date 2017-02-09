@@ -43,9 +43,9 @@ case class Extruder[T](resolvers: ResolversBase)
   }
 
   def unionResolver[C <: Coproduct](implicit gen: LabelledGeneric.Aux[T, C],
-                                    underlying: Strict[Resolver[Option[C]]]): Resolver[T] =
+                                    underlying: Resolver[Option[C]]): Resolver[T] =
     Resolver((path, default) =>
-      (underlying.value.read(path, None), default) match {
+      (underlying.read(path, None), default) match {
         case (Valid(None), None) => ValidationFailure(
           s"Could not resolve instance of '$className' at path '${resolvers.pathToStringWithType(path)}', " +
           "please ensure the implementing children are case classes or case objects"

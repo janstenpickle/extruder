@@ -35,11 +35,16 @@ object ExtruderSpec {
   case object Obj extends Tst
 
   implicit val objResolver: Resolver[Obj.type] = Resolver(Valid(Obj))
+
+  case class WithSealed(t: Tst)
+  case class WithSealedDefault(t: Tst = Obj)
 }
 
 class ExtruderSpec extends Specification with EitherMatchers {
   import ExtruderSpec._
   import resolvers._
+
+  implicit val tstResolver: Resolver[Tst] = Extruder[Tst](resolvers).unionResolver
 
   override def is: SpecStructure = s2"""
     Can successfully construct a case class from
@@ -48,10 +53,13 @@ class ExtruderSpec extends Specification with EitherMatchers {
       Config and defaults ${testSuccess(Extruder[SomeDefaults](resolvers).productResolver, SomeDefaults("nic cage"))}
       Overridden defaults ${testSuccess(Extruder[OverriddenDefaults](resolvers).productResolver, OverriddenDefaults("nic cage", 1, isAwesome = true))}
       Sealed member ${testSuccess(Extruder[Tst](resolvers).unionResolver, Obj)}
+      Defaulted sealed member ${testSuccess(Extruder[WithSealedDefault](resolvers).productResolver, WithSealedDefault(Obj))}
 
     Fails to construct a case class when
       No config exists ${testFailure(Extruder[NoDefaultsFail](resolvers).productResolver, 3)}
       Configuration cannot be parsed correctly ${testFailure(Extruder[InvalidConfig](resolvers).productResolver, 1)}
+      Sealed type is not specified ${testFailure(Extruder[WithSealed](MapResolvers(Map.empty)).productResolver, 1)}
+      Sealed type does not exist ${testFailure(Extruder[WithSealed](MapResolvers(Map("withsealed.t.type" -> "nothing"))).productResolver, 1)}
   """
 
   def testSuccess[T](input: Resolver[T], expected: T): MatchResult[Either[NonEmptyList[ValidationFailure], T]] =

@@ -7,3 +7,8 @@ cache:
   directories:
    - ~/.ivy2
    - ~/.sbt
+script:
+  - sbt clean test coverageReport &&
+    sbt coverageAggregate
+after_success:
+  - sbt coveralls

@@ -28,7 +28,9 @@ val commonSettings = Seq(
   developers := List(Developer("janstenpickle", "Chris Jansen", "janstenpickle@users.noreply.github.com", url = url("https://github.com/janstepickle"))),
   publishArtifact in Test := false,
   pomIncludeRepository := { _ => false },
-  bintrayReleaseOnPublish := false
+  bintrayReleaseOnPublish := false,
+  coverageMinimum := 100,
+  coverageFailOnMinimum := true
 )
 
 lazy val core = (project in file("core")).
@@ -44,7 +46,8 @@ lazy val core = (project in file("core")).
         "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test"
       ),
       publishArtifact := false,
-      publishArtifact in Test := true
+      publishArtifact in Test := true,
+      coverageEnabled := true
     )
   )
 
@@ -57,7 +60,8 @@ lazy val macros = (project in file("macros")).
         "org.typelevel" %% "macro-compat" % "1.1.1",
         "org.specs2" %% "specs2-core" % specs2Ver % "test"
       ),
-      publishArtifact := false
+      publishArtifact := false,
+      coverageEnabled := true
     )
   ).dependsOn(core)
 
@@ -81,7 +85,8 @@ lazy val typesafe = (project in file("typesafe")).
         "org.specs2" %% "specs2-core" % specs2Ver % "test",
         "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test",
         "org.scalacheck" %% "scalacheck" % "1.13.4" % "test"
-      )
+      ),
+      coverageEnabled := true
     )
   ).dependsOn(core % "compile->compile;test->test")
 
@@ -92,7 +97,8 @@ lazy val root = (project in file(".")).
       name := "extruder",
       unmanagedSourceDirectories in Compile := unmanagedSourceDirectories.all(aggregateCompile).value.flatten,
       sources in Compile  := sources.all(aggregateCompile).value.flatten,
-      libraryDependencies := libraryDependencies.all(aggregateCompile).value.flatten
+      libraryDependencies := libraryDependencies.all(aggregateCompile).value.flatten,
+      coverageEnabled := false
     )
   ).aggregate(core, macros, typesafe)
 
