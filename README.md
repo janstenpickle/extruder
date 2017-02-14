@@ -2,12 +2,11 @@
 
 # Extruder
 
-[![Build Status](https://travis-ci.org/janstenpickle/extruder.svg?branch=master)](https://travis-ci.org/janstenpickle/extruder) [![Coverage Status](https://coveralls.io/repos/github/janstenpickle/extruder/badge.svg?branch=master)](https://coveralls.io/github/janstenpickle/extruder?branch=master) [ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder/_latestVersion)
+[![Build Status](https://travis-ci.org/janstenpickle/extruder.svg?branch=master)](https://travis-ci.org/janstenpickle/extruder) [![Coverage Status](https://coveralls.io/repos/github/janstenpickle/extruder/badge.svg?branch=master)](https://coveralls.io/github/janstenpickle/extruder?branch=master)
 
 This library uses [shapeless](https://github.com/milessabin/shapeless) and [cats](https://github.com/typelevel/cats) to provide a neat syntax to instantiate Scala case classes from a configuration source.
 
 **Rules for configuration resolution are specified in the declaration of the case class itself:**
-
 ```scala
 case class ApplicationConfig(default: Int = 100, noDefault: String, optional: Option[Double])
 
@@ -17,8 +16,9 @@ val config: ValidatedNel[ValidationFailure, ApplicationConfig] = resolve[Applica
 
 In `ApplicationConfig` above `default` will be set to `100`, `noDefault` will cause a validation failure to be logged and `optional` will be set to `None`, should the configuration source not contain a value for each parameter.
 
-#Contents of This Readme
+# Contents of This Readme
 
+- [Modules](#modules)
 - [Motivation](#motivation)
 - [Supported Functionality](#supported-functionality)
 - [Unsupported Functionality](#supported-functionality)
@@ -28,7 +28,31 @@ In `ApplicationConfig` above `default` will be set to `100`, `noDefault` will ca
   - [Resolving Configuration](#resolving-configuration)
 - [Participation](#participation)
 
-#Motivation
+# Modules
+|Module|Description|Download|
+|---|---|---|
+|**Extruder**|Main module, includes core functionality and basic resolvers.|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder/_latestVersion)|
+|**Typesafe Config**|Support for resolution from [Typesafe Config](https://github.com/typesafehub/config).|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder-typesafe/_latestVersion)|
+|**Fetch**|Support for lookup using [Fetch](https://github.com/47deg/fetch). [See the readme for more info](fetch/README.md).|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder-fetch/_latestVersion)|
+
+## Install with SBT
+Add the following to your sbt `project/plugins.sbt` file:
+```scala
+addSbtPlugin("me.lessis" % "bintray-sbt" % "0.3.0")
+```
+Then add the following to your `build.sbt`:
+```scala
+resolvers += Resolver.bintrayRepo("janstenpickle", "maven")
+libraryDependencies += "extruder" %% "extruder" % "0.2.0"
+
+// only if you require support for Typesafe config
+libraryDependencies += "extruder" %% "extruder-typesafe" % "0.2.0"
+
+// only if you require support for Fetch
+libraryDependencies += "extruder" %% "extruder-fetch" % "0.2.0"
+```
+
+# Motivation
 
 To learn more about [shapeless](https://github.com/milessabin/shapeless) having read Dave Gurnell's excellent introduction: ["The Type Astronaut's Guide to Shapeless"](http://underscore.io/books/shapeless-guide/).
 
@@ -39,7 +63,7 @@ Specifically Grafter requires that all configuration be part single case class t
 This is where Extruder comes in, the [example here](examples/src/main/scala/extruder/examples/Grafter.scala) shows how they may be used together.
 
 
-#Supported Functionality
+# Supported Functionality
 
 - [Parsing of primitive types](core/src/main/scala/extruder/core/Resolvers.scala):
   - String
@@ -59,6 +83,7 @@ This is where Extruder comes in, the [example here](examples/src/main/scala/extr
   - [Simple Map (`Map[String, String]`)](core/src/main/scala/extruder/core/MapResolvers.scala)
   - [System Properties](core/src/main/scala/extruder/core/SystemPropertiesResolvers.scala)
   - [Typesafe Config](typesafe/src/main/scala/extruder/typesafe/TypesafeConfigResolvers.scala)
+  - [Fetch](fetch/README.md)
 - [Pluggable configuration backends](#implementing-a-new-set-of-resolvers)
 - [Addition of more types](#extending-an-existing-set-of-resolvers)
 
@@ -99,17 +124,6 @@ resolve[Typed[Int], SystemPropertiesResolvers](SystemPropertiesResolvers) // won
 
 # Quick Start Guide
 
-## Install with SBT
-Add the following to your sbt `project/plugins.sbt` file:
-```scala
-addSbtPlugin("me.lessis" % "bintray-sbt" % "0.3.0")
-```
-Then add the following to your `build.sbt`
-```scala
-resolvers += Resolver.bintrayRepo("janstenpickle", "maven")
-libraryDependencies += "extruder" %% "extruder" % "0.1.0"
-```
-
 ## Simple Case Class
 
 ```scala
@@ -147,7 +161,6 @@ object Main extends App {
   println(resolve[Example, SystemPropertiesResolvers](SystemPropertiesResolvers)) // Valid(Example(NestedOne("nested-one", NestedTwo("nested-one-nested-two")), NestedTwo("nested-two"))
 }
 ```
-
 ## Sealed Type Families
 
 ```scala
@@ -183,7 +196,7 @@ object NestedSealed extends App {
 
   System.setProperty("example.a.type", "ExampleObj")
 
-  println(resolve[Example](SystemPropertiesResolvers)) // Valid(Example(ExampleObj))
+  println(resolve[Example, SystemPropertiesResolvers](SystemPropertiesResolvers)) // Valid(Example(ExampleObj))
 
   System.setProperty("example.a.type", "ExampleCC")
   System.setProperty("example.a.examplecc.a", "1")

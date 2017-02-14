@@ -1,7 +1,7 @@
 val specs2Ver = "3.8.6"
 
 val commonSettings = Seq(
-  version := "0.1.0",
+  version := "0.2.0",
   organization := "extruder",
   scalaVersion := "2.12.1",
   crossScalaVersions := Seq("2.11.8", "2.12.1"),
@@ -45,7 +45,6 @@ lazy val core = (project in file("core")).
         "org.specs2" %% "specs2-core" % specs2Ver % "test",
         "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test"
       ),
-      publishArtifact := false,
       publishArtifact in Test := true,
       coverageEnabled := true
     )
@@ -60,7 +59,6 @@ lazy val macros = (project in file("macros")).
         "org.typelevel" %% "macro-compat" % "1.1.1",
         "org.specs2" %% "specs2-core" % specs2Ver % "test"
       ),
-      publishArtifact := false,
       coverageEnabled := true
     )
   ).dependsOn(core)
@@ -83,8 +81,21 @@ lazy val typesafe = (project in file("typesafe")).
       libraryDependencies ++= Seq(
         "com.typesafe" % "config" % "1.3.1",
         "org.specs2" %% "specs2-core" % specs2Ver % "test",
-        "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test",
-        "org.scalacheck" %% "scalacheck" % "1.13.4" % "test"
+        "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test"
+      ),
+      coverageEnabled := true
+    )
+  ).dependsOn(core % "compile->compile;test->test")
+
+lazy val fetch = (project in file("fetch")).
+  settings (
+    commonSettings ++
+    Seq(
+      name := "extruder-fetch",
+      libraryDependencies ++= Seq(
+        "com.fortysevendeg" %% "fetch" % "0.4.0",
+        "org.specs2" %% "specs2-core" % specs2Ver % "test",
+        "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test"
       ),
       coverageEnabled := true
     )
@@ -100,7 +111,7 @@ lazy val root = (project in file(".")).
       libraryDependencies := libraryDependencies.all(aggregateCompile).value.flatten,
       coverageEnabled := false
     )
-  ).aggregate(core, macros, typesafe)
+  ).aggregate(core, macros, typesafe, fetch)
 
 lazy val aggregateCompile =
   ScopeFilter(
