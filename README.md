@@ -214,7 +214,7 @@ The core project ships with a [`Resolvers`](core/src/main/scala/extruder/core/Re
 
 The `Resolvers` trait is responsible for providing a set of implicit `Resolver` instances for primitive Scala types. These resolvers are used during the case class construction in [`Extruder`](core/src/main/scala/extruder/core/Extruder.scala), if a resolver cannot be found for a certain type then the compiler will produce an error.
 
-###Naive Implementation - Use a Map
+### Naive Implementation - Use a Map
 
 For every simple configuration sources, which can be loaded directly into memory, the most simple possible implementation may be to convert it to a map and pass that to [`MapResolvers`](core/src/main/scala/extruder/core/MapResolvers.scala):
 
@@ -244,7 +244,7 @@ Notice both methods accept the parameter `path` which is a `Seq[String]`, this i
 
 For example `case class Example(a: String, b: Int)` will evaluate to the paths `Seq("Example", "a")` and `Seq("Example", "b")`, at this point everything is case sensitive, it is up to the implementer as to whether they want their configuration to base case sensitive or not.
 
-####Example Implementation
+#### Example Implementation
 
 What will follow is a break down of the implementation of the [`SystemPropertiesResolver`](core/src/main/scala/extruder/core/SystemPropertiesResolver.scala) provided by the core library.
 
@@ -254,7 +254,7 @@ First create a map from system properties to act as the configuration source, no
 val props: Map[String, String] = System.getProperties.asScala.toMap.map { case (k, v) => k.toLowerCase -> v }
 ```
 
-#####Implementing `pathToString`
+##### Implementing `pathToString`
 The `pathToString` method is used internally for meaningful error messages on failure of config resolution, using it in `resolveConfig` is optional.
 
 Again, we're using case insensitivity here so convert the path to lower case.
@@ -272,7 +272,7 @@ override def lookupValue(path: Seq[String]): ConfigValidation[Option[String]] = 
 
 The `.validNel` on the end of the lookup is from the `cats.syntax.validated._` package and simply lifts the result of `props.get(pathToString(path))` into the right of `cats.data.ValidatedNel[String, Option[String]]`.
 
-#####Overriding `lookupList`
+##### Overriding `lookupList`
 _Note that this will override the default implementation in [`Resolvers`](core/src/main/scala/extruder/core/Resolvers.scala), if you're happy with the default implementation and just want to change the separator see [Overriding `listSeparator`](#overriding-listseparator)._
 
 The return type for this function is `ConfigValidation[Option[List[String]]]`, this allows for any errors looking up or converting to a list the value. Some sources may provide list or array types natively, if they don't you may implement it here.
