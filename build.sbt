@@ -1,20 +1,17 @@
 val specs2Ver = "3.8.6"
 
 val commonSettings = Seq(
-  version := "0.2.1",
+  version := "0.3.0-SNAPSHOT",
   organization := "extruder",
-  scalaVersion := "2.12.1",
-  crossScalaVersions := Seq("2.11.8", "2.12.1"),
+  scalaVersion := "2.12.2",
+  crossScalaVersions := Seq("2.11.11", "2.12.2"),
   addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
   scalacOptions ++= Seq(
     "-unchecked",
     "-feature",
     "-deprecation:false",
-    "-Xfatal-warnings",
     "-Xcheckinit",
-    "-Xlint",
     "-Xlint:-nullary-unit",
-    "-Ywarn-unused-import",
     "-Ywarn-numeric-widen",
     "-Ywarn-dead-code",
     "-Yno-adapted-args",
@@ -29,7 +26,7 @@ val commonSettings = Seq(
   publishArtifact in Test := false,
   pomIncludeRepository := { _ => false },
   bintrayReleaseOnPublish := false,
-  coverageMinimum := 100,
+  coverageMinimum := 90,
   coverageFailOnMinimum := true
 )
 
@@ -39,40 +36,28 @@ lazy val core = (project in file("core")).
     Seq(
       name := "extruder-core",
       libraryDependencies ++= Seq(
-        "org.typelevel" %% "cats" % "0.8.1",
+        "org.typelevel" %% "cats" % "0.9.0",
         "com.github.benhutchison" %% "mouse" % "0.6",
         "com.chuusai" %% "shapeless" % "2.3.2",
         "org.specs2" %% "specs2-core" % specs2Ver % "test",
-        "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test"
+        "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test",
+        "org.typelevel" %% "discipline" % "0.7.3" % "test",
+        "com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % "1.1.5" % "test"
       ),
       publishArtifact in Test := true,
       coverageEnabled := true
     )
   )
 
-lazy val macros = (project in file("macros")).
-  settings(
-    commonSettings ++
-    Seq(
-      name := "extruder-macros",
-      libraryDependencies ++= Seq(
-        "org.typelevel" %% "macro-compat" % "1.1.1",
-        "org.specs2" %% "specs2-core" % specs2Ver % "test"
-      ),
-      coverageEnabled := true,
-      coverageExcludedPackages := "extruder.ResolutionMacro"
-    )
-  ).dependsOn(core)
-
 lazy val examples = (project in file("examples")).
   settings (
     commonSettings ++
     Seq(
       name := "extruder-examples",
-      libraryDependencies += "org.zalando" %% "grafter" % "1.3.1",
+      libraryDependencies ++= Seq("org.zalando" %% "grafter" % "1.4.8"),
       publishArtifact := false
     )
-  ).dependsOn(macros, typesafe)
+  ).dependsOn(typesafe, refined)
 
 lazy val typesafe = (project in file("typesafe")).
   settings (
@@ -86,21 +71,22 @@ lazy val typesafe = (project in file("typesafe")).
       ),
       coverageEnabled := true
     )
-  ).dependsOn(core % "compile->compile;test->test", macros)
+  ).dependsOn(core % "compile->compile;test->test")
 
-lazy val fetch = (project in file("fetch")).
+lazy val refined = (project in file("refined")).
   settings (
     commonSettings ++
-    Seq(
-      name := "extruder-fetch",
-      libraryDependencies ++= Seq(
-        "com.fortysevendeg" %% "fetch" % "0.4.0",
-        "org.specs2" %% "specs2-core" % specs2Ver % "test",
-        "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test"
-      ),
-      coverageEnabled := true
-    )
-  ).dependsOn(core % "compile->compile;test->test", macros)
+      Seq(
+        name := "extruder-refined",
+        libraryDependencies ++= Seq(
+          "eu.timepit" %% "refined" % "0.8.0",
+          "eu.timepit" %% "refined-scalacheck" % "0.8.0",
+          "org.specs2" %% "specs2-core" % specs2Ver % "test",
+          "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test"
+        ),
+        coverageEnabled := true
+      )
+  ).dependsOn(core % "compile->compile;test->test")
 
 lazy val root = (project in file(".")).
   settings(
@@ -112,10 +98,10 @@ lazy val root = (project in file(".")).
       libraryDependencies := libraryDependencies.all(aggregateCompile).value.flatten,
       coverageEnabled := false
     )
-  ).aggregate(core, macros, typesafe, fetch)
+  ).aggregate(core, typesafe, refined)
 
 lazy val aggregateCompile =
   ScopeFilter(
-    inProjects(core, macros),
+    inProjects(core),
     inConfigurations(Compile)
   )
