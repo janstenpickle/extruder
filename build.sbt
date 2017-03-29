@@ -59,7 +59,8 @@ lazy val macros = (project in file("macros")).
         "org.typelevel" %% "macro-compat" % "1.1.1",
         "org.specs2" %% "specs2-core" % specs2Ver % "test"
       ),
-      coverageEnabled := true
+      coverageEnabled := true,
+      coverageExcludedPackages := "extruder.ResolutionMacro"
     )
   ).dependsOn(core)
 
