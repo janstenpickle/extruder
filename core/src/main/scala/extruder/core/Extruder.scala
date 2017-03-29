@@ -31,7 +31,8 @@ case class Extruder[T](resolvers: ResolversBase)
                                            prefixZipper: Zip.Aux[KeysRepr :: ConstRepr :: HNil, PrefixZipperRepr],
                                            zipper: Zip.Aux[PrefixZipperRepr :: DefaultOptsRepr :: HNil, ZipperRepr],
                                            mapper: Mapper.Aux[readConfig.type, ZipperRepr, MapperRepr],
-                                           rightFolder: RightFolder.Aux[MapperRepr, ConfigValidation[HNil], folder.type, ConfigValidation[GenRepr]]): Resolver[T] = {
+                                           rightFolder: RightFolder.Aux[MapperRepr, ConfigValidation[HNil], folder.type,
+                                           ConfigValidation[GenRepr]]): Resolver[T] = {
     val keyNames = Keys[LGenRepr].apply()
     Resolver((path, default) =>
       keyNames.zip(keyNames.mapConst(path :+ className)).

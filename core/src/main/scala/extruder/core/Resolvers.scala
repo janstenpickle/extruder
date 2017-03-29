@@ -122,12 +122,12 @@ trait Resolver[T] {
 }
 
 object Resolver {
-  def apply[T](f: (Seq[String], Option[T]) => ConfigValidation[T]) = new Resolver[T] {
+  def apply[T](f: (Seq[String], Option[T]) => ConfigValidation[T]): Resolver[T] = new Resolver[T] {
     override def read(path: Seq[String],
                       default: Option[T]): ConfigValidation[T] = f(path, default)
   }
 
-  def apply[T](f: => ConfigValidation[T]) = new Resolver[T] {
+  def apply[T](f: => ConfigValidation[T]): Resolver[T] = new Resolver[T] {
     override def read(path: Seq[String],
                       default: Option[T]): ConfigValidation[T] = f
   }
