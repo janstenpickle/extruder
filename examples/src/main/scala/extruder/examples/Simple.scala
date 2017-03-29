@@ -37,4 +37,5 @@ object Simple extends App {
  val sealedObjResolvers = MapResolvers(Map("type" -> "ObjImpl"))
 
   println(resolve[Sealed, MapResolvers](sealedObjResolvers))
+
 }

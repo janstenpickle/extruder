@@ -21,7 +21,7 @@ trait Fetcher[I] { this: ResolversBase =>
       fold[ConfigValidation[Option[T]]](
         {
           case _: NotFound => None.validNel
-          case ex => ValidationFailure(
+          case ex: Any => ValidationFailure(
             s"Failed to resolve value for '${pathToString(path)}': '${ex.getMessage}'", Some(ex)
           )
         },

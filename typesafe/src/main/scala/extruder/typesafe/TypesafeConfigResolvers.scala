@@ -11,7 +11,7 @@ import scala.collection.JavaConverters._
 case class TypesafeConfigResolvers(config: Config) extends Resolvers {
   def lookup[T](f: Config => T, path: Seq[String]): ConfigValidation[Option[T]] = Either.catchNonFatal(f(config)).fold({
     case _ : Missing => None.validNel
-    case th => ValidationFailure(
+    case th: Any => ValidationFailure(
       s"Could not retrieve config '${pathToString(path)}' from supplied Typesafe config",
       Some(th)
     )
