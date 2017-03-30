@@ -1,7 +1,7 @@
 val specs2Ver = "3.8.6"
 
 val commonSettings = Seq(
-  version := "0.2.0",
+  version := "0.2.1",
   organization := "extruder",
   scalaVersion := "2.12.1",
   crossScalaVersions := Seq("2.11.8", "2.12.1"),
@@ -86,7 +86,7 @@ lazy val typesafe = (project in file("typesafe")).
       ),
       coverageEnabled := true
     )
-  ).dependsOn(core % "compile->compile;test->test")
+  ).dependsOn(core % "compile->compile;test->test", macros)
 
 lazy val fetch = (project in file("fetch")).
   settings (
@@ -100,7 +100,7 @@ lazy val fetch = (project in file("fetch")).
       ),
       coverageEnabled := true
     )
-  ).dependsOn(core % "compile->compile;test->test")
+  ).dependsOn(core % "compile->compile;test->test", macros)
 
 lazy val root = (project in file(".")).
   settings(

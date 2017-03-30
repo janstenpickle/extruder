@@ -43,13 +43,13 @@ addSbtPlugin("me.lessis" % "bintray-sbt" % "0.3.0")
 Then add the following to your `build.sbt`:
 ```scala
 resolvers += Resolver.bintrayRepo("janstenpickle", "maven")
-libraryDependencies += "extruder" %% "extruder" % "0.2.0"
+libraryDependencies += "extruder" %% "extruder" % "0.2.1"
 
 // only if you require support for Typesafe config
-libraryDependencies += "extruder" %% "extruder-typesafe" % "0.2.0"
+libraryDependencies += "extruder" %% "extruder-typesafe" % "0.2.1"
 
 // only if you require support for Fetch
-libraryDependencies += "extruder" %% "extruder-fetch" % "0.2.0"
+libraryDependencies += "extruder" %% "extruder-fetch" % "0.2.1"
 ```
 
 # Motivation
@@ -131,14 +131,13 @@ import extruder.core.SystemPropertiesResolvers
 import extruder.resolution._
 
 object Main extends App {
+  System.setProperty("example.configuredstring", "configured")
+  System.setProperty("example.optionalsting", "optional")
+
   case class Example(defaultedString: String = "default", configuredString: String, optionalString: Option[String])
 
-  println(resolve[Example](SystemPropertiesResolvers)) // Invalid(NonEmptyList(ValidationFailure("Could not find configuration at 'example.configuredstring' and no default available", None)))
-
-  System.setProperty("example.configuredstring", "configured")
-  println(resolve[Example](SystemPropertiesResolvers)) // Valid(Example("default", "configured", None))
-
-  System.setProperty("example.optionalsting", "optional")
+  println(resolve[Example, SystemPropertiesResolvers](SystemPropertiesResolvers)) // Invalid(NonEmptyList(ValidationFailure("Could not find configuration at 'example.configuredstring' and no default available", None)))
+  println(resolve[Example, SystemPropertiesResolvers](SystemPropertiesResolvers)) // Valid(Example("default", "configured", None))
   println(resolve[Example, SystemPropertiesResolvers](SystemPropertiesResolvers)) // Valid(Example("default", "configured", Some("optional")))
 }
 ```
