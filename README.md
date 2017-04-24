@@ -8,9 +8,11 @@ This library uses [shapeless](https://github.com/milessabin/shapeless) and [cats
 
 **Rules for configuration resolution are specified in the declaration of the case class itself:**
 ```scala
+import extruder.core.SystemPropertiesConfig._
+
 case class ApplicationConfig(default: Int = 100, noDefault: String, optional: Option[Double])
 
-val config: ValidatedNel[ValidationFailure, ApplicationConfig] = resolve[ApplicationConfig, Resolvers](Resolvers)
+val config: ValidatedNel[ValidationFailure, ApplicationConfig] = decode[ApplicationConfig]
 
 ```
 
@@ -25,7 +27,6 @@ In `ApplicationConfig` above `default` will be set to `100`, `noDefault` will ca
 - [Similar Projects](#similar-projects)
 - [Quick Start Guide](#quick-start-guide)
 - [Extending](#extending)
-  - [Resolving Configuration](#resolving-configuration)
 - [Participation](#participation)
 
 # Modules
@@ -33,7 +34,8 @@ In `ApplicationConfig` above `default` will be set to `100`, `noDefault` will ca
 |---|---|---|
 |**Extruder**|Main module, includes core functionality and basic resolvers.|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder/_latestVersion)|
 |**Typesafe Config**|Support for resolution from [Typesafe Config](https://github.com/typesafehub/config).|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder-typesafe/_latestVersion)|
-|**Fetch**|Support for lookup using [Fetch](https://github.com/47deg/fetch). [See the readme for more info](fetch/README.md).|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder-fetch/_latestVersion)|
+|**Refined**|Support for [refined](https://github.com/fthomas/refined) types.|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder-refined/_latestVersion)|
+
 
 ## Install with SBT
 Add the following to your sbt `project/plugins.sbt` file:
@@ -43,13 +45,13 @@ addSbtPlugin("me.lessis" % "bintray-sbt" % "0.3.0")
 Then add the following to your `build.sbt`:
 ```scala
 resolvers += Resolver.bintrayRepo("janstenpickle", "maven")
-libraryDependencies += "extruder" %% "extruder" % "0.2.1"
+libraryDependencies += "extruder" %% "extruder" % "0.3.0"
 
 // only if you require support for Typesafe config
-libraryDependencies += "extruder" %% "extruder-typesafe" % "0.2.1"
+libraryDependencies += "extruder" %% "extruder-typesafe" % "0.3.0"
 
-// only if you require support for Fetch
-libraryDependencies += "extruder" %% "extruder-fetch" % "0.2.1"
+// only if you require support for refined types
+libraryDependencies += "extruder" %% "extruder-refined" % "0.3.0"
 ```
 
 # Motivation
@@ -66,6 +68,7 @@ This is where Extruder comes in, the [example here](examples/src/main/scala/extr
 # Supported Functionality
 
 - [Parsing of primitive types](core/src/main/scala/extruder/core/Resolvers.scala):
+  - Char
   - String
   - Int
   - Long
@@ -77,36 +80,30 @@ This is where Extruder comes in, the [example here](examples/src/main/scala/extr
   - URL
   - Duration
   - Finite Duration
+- [Support for refined types](refined/)
 - [Case class resolution](#simple-case-class)
 - [Sealed type member resolution (ADTs)](#sealed-type-families)
 - Resolution from multiple configuration sources:
-  - [Simple Map (`Map[String, String]`)](core/src/main/scala/extruder/core/MapResolvers.scala)
-  - [System Properties](core/src/main/scala/extruder/core/SystemPropertiesResolvers.scala)
-  - [Typesafe Config](typesafe/src/main/scala/extruder/typesafe/TypesafeConfigResolvers.scala)
-  - [Fetch](fetch/README.md)
-- [Pluggable configuration backends](#implementing-a-new-set-of-resolvers)
-- [Addition of more types](#extending-an-existing-set-of-resolvers)
+  - [Simple Map (`Map[String, String]`)](core/src/main/scala/extruder/core/Map.scala)
+  - [System Properties](core/src/main/scala/extruder/core/SystemPropertiesConfig.scala)
+  - [Typesafe Config](typesafe/src/main/scala/extruder/typesafe/TypesafeConfig.scala)
+- [Pluggable configuration backends](#extending)
+- [Addition of more types](#extending-an-existing-config-source)
 
 # Unsupported Functionality
 
 **Cyclical references**
 ```scala
+import extruder.core.SystemPropertiesConfig._
+
 case class Example(e: Example)
 
-resolve[Example, SystemPropertiesResolvers](SystemPropertiesResolvers) // won't compile
+decode[Example] // won't compile
 
 case class NestedOne(n: NestedTwo)
 case class NestedTwo(n: NestedOne)
 
-resolve[NestedOne, SystemPropertiesResolvers](SystemPropertiesResolvers) // won't compile
-```
-
-**Type Parameters on Case Classes**
-
-```scala
-case class Typed[T](t: T)
-
-resolve[Typed[Int], SystemPropertiesResolvers](SystemPropertiesResolvers) // won't compile
+decode[NestedOne] // won't compile
 ```
 
 # Similar Projects
@@ -127,26 +124,25 @@ resolve[Typed[Int], SystemPropertiesResolvers](SystemPropertiesResolvers) // won
 ## Simple Case Class
 
 ```scala
-import extruder.core.SystemPropertiesResolvers
-import extruder.resolution._
+import extruder.core.SystemPropertiesConfig._
 
 object Main extends App {
-  System.setProperty("example.configuredstring", "configured")
-  System.setProperty("example.optionalsting", "optional")
-
   case class Example(defaultedString: String = "default", configuredString: String, optionalString: Option[String])
 
-  println(resolve[Example, SystemPropertiesResolvers](SystemPropertiesResolvers)) // Invalid(NonEmptyList(ValidationFailure("Could not find configuration at 'example.configuredstring' and no default available", None)))
-  println(resolve[Example, SystemPropertiesResolvers](SystemPropertiesResolvers)) // Valid(Example("default", "configured", None))
-  println(resolve[Example, SystemPropertiesResolvers](SystemPropertiesResolvers)) // Valid(Example("default", "configured", Some("optional")))
+  println(resolve[Example]) // Invalid(NonEmptyList(ValidationFailure("Could not find configuration at 'example.configuredstring' and no default available", None)))
+
+  System.setProperty("example.configuredstring", "configured")
+  println(resolve[Example]) // Valid(Example("default", "configured", None))
+
+  System.setProperty("example.optionalsting", "optional")
+  println(resolve[Example]) // Valid(Example("default", "configured", Some("optional")))
 }
 ```
 
 ## Nested Case Classes
 
 ```scala
-import extruder.core.SystemPropertiesResolvers
-import extruder.resolution._
+import extruder.core.SystemPropertiesConfig._
 
 object Main extends App {
   case class Example(a: NestedOne, b: NestedTwo)
@@ -157,7 +153,7 @@ object Main extends App {
   System.setProperty("example.a.nestedone.nested.nestedtwo.value", "nested-one-nested-two")
   System.setProperty("example.b.nestedtwo.value", "nested-two")
 
-  println(resolve[Example, SystemPropertiesResolvers](SystemPropertiesResolvers)) // Valid(Example(NestedOne("nested-one", NestedTwo("nested-one-nested-two")), NestedTwo("nested-two"))
+  println(resolve[Example]) // Valid(Example(NestedOne("nested-one", NestedTwo("nested-one-nested-two")), NestedTwo("nested-two"))
 }
 ```
 ## Sealed Type Families
@@ -173,12 +169,12 @@ object TopLevelSealed extends App {
 
   System.setProperty("type", "ExampleObj")
 
-  println(resolve[Example, SystemPropertiesResolvers](SystemPropertiesResolvers)) // Valid(ExampleObj)
+  println(resolve[Example]) // Valid(ExampleObj)
 
   System.setProperty("type", "ExampleCC")
   System.setProperty("examplecc.a", "1")
 
-  println(resolve[Example, SystemPropertiesResolvers](SystemPropertiesResolvers)) // Valid(ExampleCC(1))
+  println(resolve[Example]) // Valid(ExampleCC(1))
 }
 ```
 
@@ -195,128 +191,72 @@ object NestedSealed extends App {
 
   System.setProperty("example.a.type", "ExampleObj")
 
-  println(resolve[Example, SystemPropertiesResolvers](SystemPropertiesResolvers)) // Valid(Example(ExampleObj))
+  println(resolve[Example]) // Valid(Example(ExampleObj))
 
   System.setProperty("example.a.type", "ExampleCC")
   System.setProperty("example.a.examplecc.a", "1")
 
-  println(resolve[Example, SystemPropertiesResolvers](SystemPropertiesResolvers)) // Valid(Example(ExampleCC(1)))
+  println(resolve[Example]) // Valid(Example(ExampleCC(1)))
 }
 
 ```
 
 # Extending
 
-## Resolving Configuration
+## Extending an Existing Config Source
 
-The core project ships with a [`Resolvers`](core/src/main/scala/extruder/core/Resolvers.scala) trait and two implementations which use a map of strings and Java system properties as a configuration sources.
-
-The `Resolvers` trait is responsible for providing a set of implicit `Resolver` instances for primitive Scala types. These resolvers are used during the case class construction in [`Extruder`](core/src/main/scala/extruder/core/Extruder.scala), if a resolver cannot be found for a certain type then the compiler will produce an error.
-
-### Naive Implementation - Use a Map
-
-For every simple configuration sources, which can be loaded directly into memory, the most simple possible implementation may be to convert it to a map and pass that to [`MapResolvers`](core/src/main/scala/extruder/core/MapResolvers.scala):
+Say you wanted to add a resolver for a certain type it is possible to extend an existing implementation of `Resolvers` to parse the new type. Below is an example adding a new decoder for `URL`:
 
 ```scala
-import extruder.core.MapResolvers
+import cats.syntax.either._
+import cats.syntax.validated._
+import java.net.URL
+import extruder.core.MapConfig
+import extruder.core.Parser
+import extruder.core.Missing
+import extruder.core.ValidationException
 
-object MyConfigSourceResolvers {
-  def apply(source: MyConfigSource): MapResolvers = MapResolvers(convertToMap(source))
-
-  def convertToMap(source: MyConfigSource): Map[String, String] = ???
-}
-```
-
-### Implementing a new Set of Resolvers
-
-The `Resolvers` trait assumes your configuration source will simply be providing string values and includes `Resolver` implementations for most Scala primitives, based on the [Mouse library's](https://github.com/benhutchison/mouse) string parsing. Therefore you only have to implement two methods to add a new simple config source:
-
-```scala
-object MyResolvers extends Resolvers {
-  override def pathToString(path: Seq[String]): String = ???
-  override def lookupValue(path: Seq[String]): ConfigValidation[Option[String]] = ???
-  override def lookupList(path: Seq[String]): ConfigValidation[Option[List[String]]] = ???
-}
-```
-
-Notice both methods accept the parameter `path` which is a `Seq[String]`, this is essentially the long name of the configuration you are trying to resolve. It is made up of the name of the case class and the name of the parameter.
-
-For example `case class Example(a: String, b: Int)` will evaluate to the paths `Seq("Example", "a")` and `Seq("Example", "b")`, at this point everything is case sensitive, it is up to the implementer as to whether they want their configuration to base case sensitive or not.
-
-#### Example Implementation
-
-What will follow is a break down of the implementation of the [`SystemPropertiesResolver`](core/src/main/scala/extruder/core/SystemPropertiesResolver.scala) provided by the core library.
-
-First create a map from system properties to act as the configuration source, notice that in this implementation we have chosen to be case insensitive by making all the property keys lower case:
-
-```scala
-val props: Map[String, String] = System.getProperties.asScala.toMap.map { case (k, v) => k.toLowerCase -> v }
-```
-
-##### Implementing `pathToString`
-The `pathToString` method is used internally for meaningful error messages on failure of config resolution, using it in `resolveConfig` is optional.
-
-Again, we're using case insensitivity here so convert the path to lower case.
-
-```scala
-override def pathToString(path: Seq[String]): String = path.mkString(".").toLowerCase
-```
-##### Implementing `lookupValue`
-Note the return type of `lookupValue` is `ConfigValidation[Option[String]]` which expands to `cats.data.ValidatedNel[ValidationFailure, Option[String]]`. This allows for any errors in looking up configuration to be handled differently to the configuration value not being present. For example, a connection error to a remote configuration source should be handled as an `InvalidNel[String]`, where the error message is a string. Whereas the configuration value not being present should be an empty `Option[String]`.
-
-```scala
-override def lookupValue(path: Seq[String]): ConfigValidation[Option[String]] = props.get(pathToString(path)).validNel
-
-```
-
-The `.validNel` on the end of the lookup is from the `cats.syntax.validated._` package and simply lifts the result of `props.get(pathToString(path))` into the right of `cats.data.ValidatedNel[String, Option[String]]`.
-
-##### Overriding `lookupList`
-_Note that this will override the default implementation in [`Resolvers`](core/src/main/scala/extruder/core/Resolvers.scala), if you're happy with the default implementation and just want to change the separator see [Overriding `listSeparator`](#overriding-listseparator)._
-
-The return type for this function is `ConfigValidation[Option[List[String]]]`, this allows for any errors looking up or converting to a list the value. Some sources may provide list or array types natively, if they don't you may implement it here.
-
-```scala
-override def lookupList(path: Seq[String]): ConfigValidation[Option[List[String]]] =
-  lookupValue(path).map(_.map(_.split(",").toList.map(_.trim)))
-```
-
-As this config source does not provide a means of looking up a list we look up the value using `lookupValue` and turn the string inside `ConfigValidation[Option[String]]` into a list of strings, where each element is separated by a `,`.
-
-It is also possible to add some validation when converting the string value to a list:
-
-```scala
-override def lookupList(path: Seq[String]): ConfigValidation[Option[List[String]]] =
-  lookupValue(path).fold(
-    _.invalid,
-    _.fold[ConfigValidation[Option[List[String]]]](None.validNel)(value =>
-      if (value.contains(",")) Some(value.split(",").toList.map(_.trim)).validNel
-      else ValidationFailure(
-        s"No separator (,) found in value '$value' when attempting to create a list for '${pathToString(path)}'"
+trait WithURL extends MapConfig {
+  implicit val urlDecoder: MapDecoder[URL] =
+    mkDecoder[URL]((path, default, config) =>
+      config
+      .get(pathToString(path))
+      .fold(default)(Some(_))
+      .fold[ConfigValidation[URL]](Missing(s"Could not find value for ${pathToString(path)}").invalidNel)(value =>
+        Either.catchNonFatal(new URL(value)).leftMap(ex =>
+          ValidationException(ex.getMessage, ex)
+        ).toValidatedNel
       )
     )
-  )
+
+  implicit val urlEncoder: MapEncoder[URL] =
+    mkEncoder[URL]((path, value) =>
+      Map(pathToString(path) -> value.toString).validNel
+    )
+}
+
+object WithURL extends WithURL
 ```
 
-##### Overriding `listSeparator`
+This is a fairly verbose implementation which repeats some of the abstracted functionality found in `PrimitiveDecoders` and `PrimitiveEncoders`, it must also be implemented for each configuration type.
 
-If you are happy with the default implementation of `lookupList`, but want to change the list separator then you can simply override `listSeparator` and set it to anything you like.
-
-### Extending an Existing Set of Resolvers
-
-Say you wanted to add a resolver for a certain type it is possible to extend an existing implementation of `Resolvers` to parse the new type. Below is an example adding a new resolver for `URL`:
+This functionality can be implemented more simply and so that it works for all configuration backends which implement the `PrimitiveDecoders` and `PrimitiveEncoders` traits:
 
 ```scala
 import cats.syntax.either._
 import java.net.URL
-import extruder.core.SystemPropertiesResolvers
+import extruder.core.MapConfig
 import extruder.core.Parser
+import extruder.core.Show
 
-class WithURL extends SystemPropertiesResolvers {
-  implicit val url: Parser[URL] = value => Either.catchNonFatal(new URL(value))
+object WithURL {
+  implicit val urlParser: Parser[URL] = url => Either.catchNonFatal(new URL(url))
+
+  implicit val urlShow: Show[URL] = Show.fromToString
 }
-
 ```
+
+The object `WithURL` may then be imported wherever extruder is used and being to provide support for the new type.
 
 # Participation
 

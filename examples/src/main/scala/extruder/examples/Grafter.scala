@@ -2,10 +2,10 @@ package extruder.examples
 
 import cats.Eval
 import cats.data.{NonEmptyList, Reader}
+import extruder.core.{ValidationError, ValidationException}
 import org.zalando.grafter.GenericReader._
 import org.zalando.grafter._
-import extruder.core.{SystemPropertiesResolvers, ValidationFailure}
-import extruder.resolution._
+import extruder.core.SystemPropertiesConfig._
 
 case class ApplicationConfig(http: HttpConfig, db: DbConfig)
 
@@ -47,14 +47,14 @@ object Grafter extends App {
   System.setProperty("applicationconfig.http.httpconfig.port", "8080")
   System.setProperty("applicationconfig.db.dbconfig.url", "jdbc:localhost/database")
 
-  def convertToStartResult(failures: NonEmptyList[ValidationFailure]): Eval[List[StartResult]] =
-    Eval.later(failures.toList.map(failure =>
-      failure.exception.fold[StartResult](StartFailure(failure.message))(ex => StartError(failure.message, ex))
-    ))
+  def convertToStartResult(failures: NonEmptyList[ValidationError]): Eval[List[StartResult]] =
+    Eval.later(failures.toList.map {
+      case ex: ValidationException => StartError(ex.message, ex.exception)
+      case err: Any => StartFailure(err.message)
+    })
 
-  val start: Eval[List[StartResult]] = resolve[ApplicationConfig, SystemPropertiesResolvers](SystemPropertiesResolvers)
+  val start: Eval[List[StartResult]] = decode[ApplicationConfig]
     .fold(convertToStartResult, app => Rewriter.start(GenericReader[ApplicationConfig, Application].run(app)))
 
   println(start.value)
 }
-

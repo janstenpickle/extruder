@@ -1,14 +1,14 @@
 language: scala
 scala:
-  - 2.12.1 
-  - 2.11.8
+  - 2.12.2
+  - 2.11.11
 jdk: oraclejdk8
 cache:
   directories:
    - ~/.ivy2
    - ~/.sbt
 script:
-  - sbt clean test coverageReport &&
-    sbt coverageAggregate
+  - sbt ++$TRAVIS_SCALA_VERSION clean scalastyle test coverageReport &&
+    sbt ++$TRAVIS_SCALA_VERSION coverageAggregate
 after_success:
-  - sbt coveralls
+  - sbt ++$TRAVIS_SCALA_VERSION coveralls

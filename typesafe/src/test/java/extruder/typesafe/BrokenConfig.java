@@ -16,6 +16,12 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class BrokenConfig implements Config {
+  private String errorMsg;
+
+  public BrokenConfig(String errorMsg){
+    this.errorMsg = errorMsg;
+  }
+
   @Override
   public ConfigObject root() {
     return null;
@@ -113,7 +119,7 @@ public class BrokenConfig implements Config {
 
   @Override
   public String getString(final String path) {
-    throw new RuntimeException("fail");
+    throw new RuntimeException(errorMsg);
   }
 
   @Override
