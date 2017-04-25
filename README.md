@@ -45,13 +45,13 @@ addSbtPlugin("me.lessis" % "bintray-sbt" % "0.3.0")
 Then add the following to your `build.sbt`:
 ```scala
 resolvers += Resolver.bintrayRepo("janstenpickle", "maven")
-libraryDependencies += "extruder" %% "extruder" % "0.3.0"
+libraryDependencies += "extruder" %% "extruder" % "0.3.1"
 
 // only if you require support for Typesafe config
-libraryDependencies += "extruder" %% "extruder-typesafe" % "0.3.0"
+libraryDependencies += "extruder" %% "extruder-typesafe" % "0.3.1"
 
 // only if you require support for refined types
-libraryDependencies += "extruder" %% "extruder-refined" % "0.3.0"
+libraryDependencies += "extruder" %% "extruder-refined" % "0.3.1"
 ```
 
 # Motivation
