@@ -31,13 +31,10 @@ trait PrimitiveDecoders[C, D[T] <: Decoder[T, C]] extends ResolutionCommon { sel
     )
 
   implicit def optionalDecoder[T](implicit decoder: Lazy[D[T]]): D[Option[T]] =
-    mkDecoder((path, default, config) =>
-      (lookupValue(path, config), default) match {
-        case (Valid(None), None) => None.validNel
-        case (Valid(None), Some(d)) => d.validNel
-        case (Valid(Some(_)), _) => decoder.value.read(path, None, config).map(Some(_))
-        case (err @ Invalid(_), _) => err
-      }
+    mkDecoder((path, _, config) => decoder.value.read(path, None, config).fold(x =>
+      if (x.filter(_.isInstanceOf[Missing]) == x.toList) None.validNel
+      else x.invalid,
+      Some(_).validNel)
     )
 
   protected def resolveValue[T](parser: String => ConfigValidation[T]): (Seq[String], Option[T], C) => ConfigValidation[T] =
