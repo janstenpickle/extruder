@@ -24,9 +24,8 @@ trait DerivedDecoders[C, D[T] <: Decoder[T, C]] extends ResolutionCommon { self:
       mkDecoder((path, _, config) =>
       typeResolver.value.read(pathWithType(path), None, config) match {
         case Valid(None) => Missing(
-                  s"Could not resolve instance of sealed tyconfpe at path '${pathToStringWithType(path)}', " +
-                    "please ensure the implementing children are case classes or case objects"
-                ).invalidNel // TODO make better
+          s"Could not type of sealed instance at path '${pathToStringWithType(path)}'"
+        ).invalidNel
         case Valid(Some(tpe)) if tpe == key.value.name =>
           headResolve.value.read(path, None, config).map(v => Inl(field[K](v)))
         case Valid(_) => tailResolve.value.read(path, None, config).map(Inr(_))
@@ -71,14 +70,6 @@ trait DerivedDecoders[C, D[T] <: Decoder[T, C]] extends ResolutionCommon { self:
 
   implicit def objectDecoder[T](implicit gen: Generic.Aux[T, HNil]): D[T] =
     mkDecoder((_, _, _) => gen.from((HNil :: HNil).tail).validNel)
-
-
-  implicit def optionalCaseClassDecoder[T <: Product with Serializable](implicit decoder: Lazy[D[T]]): D[Option[T]] =
-    mkDecoder((path, _, config) => decoder.value.read(path, None, config).fold(x =>
-      if(x.filter(_.isInstanceOf[Missing]) == x.toList) None.validNel
-      else x.invalid,
-      Some(_).validNel)
-    )
 
   object readConfig extends Poly1 {
     implicit def caseAny[A <: Symbol, B](implicit decoder: Lazy[D[B]]): Case.Aux[((A, (Seq[String], C)), Option[B]), ConfigValidation[B]] =
