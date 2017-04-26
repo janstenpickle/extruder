@@ -1,5 +1,7 @@
 package extruder.examples
 
+import java.net.URL
+
 import cats.syntax.either._
 import cats.syntax.validated._
 import com.typesafe.config.ConfigFactory
@@ -11,7 +13,6 @@ import extruder.typesafe.TypesafeConfig
 import scala.collection.JavaConverters._
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import extruder.refined._
-import extruder.core.MapConfig._
 
 case class CC(a: String = "test", b: String = "test2", c: Int, d: Option[CC2], e: CC3, f: Set[Int], dur: Duration, finDur: FiniteDuration)
 case class CC2(x: String = "test4", y: Option[Int] = Some(232), z: CC3)
@@ -44,13 +45,13 @@ object Simple extends App {
     "cc.findur" -> "22 days"
   )
 
-  println(decode[CC](config))
+  println(MapConfig.decode[CC](config))
 
   val sealedObjResolvers = Map("type" -> "ObjImpl")
 
-  println(decode[Sealed](sealedObjResolvers).map(encode[Sealed]))
+  println(MapConfig.decode[Sealed](sealedObjResolvers).map(MapConfig.encode[Sealed]))
 
-  println(encode[Sealed](ObjImpl))
+  println(MapConfig.encode[Sealed](ObjImpl))
 
 
   println(MapConfig.decode[CC](config).map(MapConfig.encode[CC]))
@@ -63,6 +64,8 @@ object Simple extends App {
   println(TypesafeConfig.decode[CC](ConfigFactory.parseMap(config.asJava)))
 
   println(MapConfig.decode[Int Refined Positive](Map("" -> "23")).map(MapConfig.encode[Int Refined Positive]))
+
+  println(EnvironmentConfig.decode[String](Seq("home")))
 }
 
 

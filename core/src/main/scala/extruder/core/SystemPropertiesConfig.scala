@@ -5,21 +5,20 @@ import cats.syntax.validated._
 
 import scala.collection.JavaConverters._
 
-trait SystemPropertiesDecoder[T] extends Decoder[T, Map[String, String]]
-
-trait SystemPropertiesDecoders extends BaseMapDecoders with Decode[java.util.Properties, Map[String, String], MapDecoder] {
+trait SystemPropertiesDecoders extends BaseMapDecoders with Decode[java.util.Properties, Map[String, String], MapDecoder] with PeriodSeparatedPath {
   override protected def prepareConfig(config: java.util.Properties): ConfigValidation[Map[String, String]] =
-    config.asScala.toMap.map{ case (k, v) => (k.toLowerCase, v) }.validNel
+    config.asScala.toMap.map { case (k, v) => k.toLowerCase -> v }.validNel
 
   def decode[T](implicit decoder: MapDecoder[T]): ConfigValidation[T] =
-    decode[T](System.getProperties)
+    decode[T](Seq.empty)
+
+  def decode[T](namespace: Seq[String])(implicit decoder: MapDecoder[T]): ConfigValidation[T] =
+    decode[T](namespace, System.getProperties)
 }
 
 object SystemPropertiesDecoder extends SystemPropertiesDecoders
 
-trait SystemPropertiesEncoder[T] extends Encoder[T, Map[String, String]]
-
-trait SystemPropertiesEncoders extends BaseMapEncoders with Encode[Map[String, String], Unit, MapEncoder] {
+trait SystemPropertiesEncoders extends BaseMapEncoders with Encode[Map[String, String], Unit, MapEncoder] with PeriodSeparatedPath {
   override protected def finalizeConfig(inter: Map[String, String]): ConfigValidation[Unit] =
     Either.catchNonFatal {
       inter.foreach { case (k, v) => System.setProperty(k, v) }

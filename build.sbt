@@ -1,7 +1,7 @@
 val specs2Ver = "3.8.6"
 
 val commonSettings = Seq(
-  version := "0.3.1",
+  version := "0.3.2-SNAPSHOT",
   organization := "extruder",
   scalaVersion := "2.12.2",
   crossScalaVersions := Seq("2.11.11", "2.12.2"),
@@ -26,8 +26,7 @@ val commonSettings = Seq(
   publishArtifact in Test := false,
   pomIncludeRepository := { _ => false },
   bintrayReleaseOnPublish := false,
-  coverageMinimum := 90,
-  coverageFailOnMinimum := true
+  coverageMinimum := 90
 )
 
 lazy val core = (project in file("core")).
