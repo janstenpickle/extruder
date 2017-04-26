@@ -5,8 +5,7 @@ import cats.syntax.validated._
 
 trait BaseMapEncoders extends Encoders[Map[String, String], MapEncoder]
                       with PrimitiveEncoders[Map[String, String], MapEncoder]
-                      with DerivedEncoders[Map[String, String], MapEncoder]
-                      with PeriodSeparatedPath {
+                      with DerivedEncoders[Map[String, String], MapEncoder] {
   override protected val monoid: Monoid[Map[String, String]] = new Monoid[Map[String, String]] {
     override def empty: Map[String, String] = Map.empty
     override def combine(x: Map[String, String], y: Map[String, String]): Map[String, String] = x ++ y
@@ -23,8 +22,7 @@ trait BaseMapEncoders extends Encoders[Map[String, String], MapEncoder]
 
 trait BaseMapDecoders extends Decoders[Map[String, String], MapDecoder]
                       with PrimitiveDecoders[Map[String, String], MapDecoder]
-                      with DerivedDecoders[Map[String, String], MapDecoder]
-                      with PeriodSeparatedPath {
+                      with DerivedDecoders[Map[String, String], MapDecoder] {
   override protected def lookupValue(path: Seq[String], config: Map[String, String]): ConfigValidation[Option[String]] =
     config.get(pathToString(path)).validNel
 
@@ -36,7 +34,7 @@ trait BaseMapDecoders extends Decoders[Map[String, String], MapDecoder]
 
 trait MapDecoder[T] extends Decoder[T, Map[String, String]]
 
-trait MapDecoders extends BaseMapDecoders with Decode[Map[String, String], Map[String, String], MapDecoder] {
+trait MapDecoders extends BaseMapDecoders with Decode[Map[String, String], Map[String, String], MapDecoder] with PeriodSeparatedPath {
   override protected def prepareConfig(config: Map[String, String]): ConfigValidation[Map[String, String]] =
     config.map{ case (k, v) => (k.toLowerCase, v) }.validNel
 }
@@ -46,7 +44,7 @@ object MapDecoder extends MapDecoders
 
 trait MapEncoder[T] extends Encoder[T, Map[String, String]]
 
-trait MapEncoders extends BaseMapEncoders with Encode[Map[String, String], Map[String, String], MapEncoder] {
+trait MapEncoders extends BaseMapEncoders with Encode[Map[String, String], Map[String, String], MapEncoder] with PeriodSeparatedPath {
   override protected def finalizeConfig(inter: Map[String, String]): ConfigValidation[Map[String, String]] = inter.validNel
 }
 
