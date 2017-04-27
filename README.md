@@ -8,7 +8,7 @@ This library uses [shapeless](https://github.com/milessabin/shapeless) and [cats
 
 **Rules for configuration resolution are specified in the declaration of the case class itself:**
 ```scala
-import extruder.core.SystemPropertiesConfig._
+import extruder.system.SystemPropertiesConfig._
 
 case class ApplicationConfig(default: Int = 100, noDefault: String, optional: Option[Double])
 
@@ -38,20 +38,16 @@ In `ApplicationConfig` above `default` will be set to `100`, `noDefault` will ca
 
 
 ## Install with SBT
-Add the following to your sbt `project/plugins.sbt` file:
-```scala
-addSbtPlugin("me.lessis" % "bintray-sbt" % "0.3.0")
-```
-Then add the following to your `build.sbt`:
+Add the following to your `build.sbt`:
 ```scala
 resolvers += Resolver.bintrayRepo("janstenpickle", "maven")
-libraryDependencies += "extruder" %% "extruder" % "0.3.1"
+libraryDependencies += "extruder" %% "extruder" % "0.4.0"
 
 // only if you require support for Typesafe config
-libraryDependencies += "extruder" %% "extruder-typesafe" % "0.3.1"
+libraryDependencies += "extruder" %% "extruder-typesafe" % "0.4.0"
 
 // only if you require support for refined types
-libraryDependencies += "extruder" %% "extruder-refined" % "0.3.1"
+libraryDependencies += "extruder" %% "extruder-refined" % "0.4.0"
 ```
 
 # Motivation
@@ -94,7 +90,7 @@ This is where Extruder comes in, the [example here](examples/src/main/scala/extr
 
 **Cyclical references**
 ```scala
-import extruder.core.SystemPropertiesConfig._
+import extruder.system.SystemPropertiesConfig._
 
 case class Example(e: Example)
 
@@ -124,7 +120,7 @@ decode[NestedOne] // won't compile
 ## Simple Case Class
 
 ```scala
-import extruder.core.SystemPropertiesConfig._
+import extruder.system.SystemPropertiesConfig._
 
 object Main extends App {
   case class Example(defaultedString: String = "default", configuredString: String, optionalString: Option[String])
@@ -142,7 +138,7 @@ object Main extends App {
 ## Nested Case Classes
 
 ```scala
-import extruder.core.SystemPropertiesConfig._
+import extruder.system.SystemPropertiesConfig._
 
 object Main extends App {
   case class Example(a: NestedOne, b: NestedTwo)
@@ -159,7 +155,7 @@ object Main extends App {
 ## Sealed Type Families
 
 ```scala
-import extruder.core.SystemPropertiesResolvers
+import extruder.system.SystemPropertiesResolvers
 import extruder.resolution._
 
 object TopLevelSealed extends App {
@@ -179,7 +175,7 @@ object TopLevelSealed extends App {
 ```
 
 ```scala
-import extruder.core.SystemPropertiesResolvers
+import extruder.system.SystemPropertiesResolvers
 import extruder.resolution._
 
 object NestedSealed extends App {
