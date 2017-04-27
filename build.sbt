@@ -1,7 +1,7 @@
 val specs2Ver = "3.8.6"
 
 val commonSettings = Seq(
-  version := "0.3.2-SNAPSHOT",
+  version := "0.3.3",
   organization := "extruder",
   scalaVersion := "2.12.2",
   crossScalaVersions := Seq("2.11.11", "2.12.2"),
@@ -25,8 +25,7 @@ val commonSettings = Seq(
   developers := List(Developer("janstenpickle", "Chris Jansen", "janstenpickle@users.noreply.github.com", url = url("https://github.com/janstepickle"))),
   publishArtifact in Test := false,
   pomIncludeRepository := { _ => false },
-  bintrayReleaseOnPublish := false,
-  coverageMinimum := 90
+  bintrayReleaseOnPublish := false
 )
 
 lazy val core = (project in file("core")).
@@ -43,8 +42,7 @@ lazy val core = (project in file("core")).
         "org.typelevel" %% "discipline" % "0.7.3" % "test",
         "com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % "1.1.5" % "test"
       ),
-      publishArtifact in Test := true,
-      coverageEnabled := true
+      publishArtifact in Test := true
     )
   )
 
@@ -67,8 +65,7 @@ lazy val typesafe = (project in file("typesafe")).
         "com.typesafe" % "config" % "1.3.1",
         "org.specs2" %% "specs2-core" % specs2Ver % "test",
         "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test"
-      ),
-      coverageEnabled := true
+      )
     )
   ).dependsOn(core % "compile->compile;test->test")
 
@@ -82,8 +79,7 @@ lazy val refined = (project in file("refined")).
           "eu.timepit" %% "refined-scalacheck" % "0.8.0",
           "org.specs2" %% "specs2-core" % specs2Ver % "test",
           "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test"
-        ),
-        coverageEnabled := true
+        )
       )
   ).dependsOn(core % "compile->compile;test->test")
 
@@ -94,8 +90,7 @@ lazy val root = (project in file(".")).
       name := "extruder",
       unmanagedSourceDirectories in Compile := unmanagedSourceDirectories.all(aggregateCompile).value.flatten,
       sources in Compile  := sources.all(aggregateCompile).value.flatten,
-      libraryDependencies := libraryDependencies.all(aggregateCompile).value.flatten,
-      coverageEnabled := false
+      libraryDependencies := libraryDependencies.all(aggregateCompile).value.flatten
     )
   ).aggregate(core, typesafe, refined)
 

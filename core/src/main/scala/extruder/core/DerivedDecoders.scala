@@ -18,9 +18,9 @@ trait DerivedDecoders[C, D[T] <: Decoder[T, C]] extends ResolutionCommon { self:
   ).invalidNel)
 
   implicit def cconsDecoder[K <: Symbol, H, T <: Coproduct](implicit key: Witness.Aux[K],
-                                                     headResolve: Lazy[D[H]],
-                                                     tailResolve: Lazy[D[T]],
-                                                     typeResolver: Lazy[D[Option[String]]]): D[FieldType[K, H] :+: T] =
+                                                            headResolve: Lazy[D[H]],
+                                                            tailResolve: Lazy[D[T]],
+                                                            typeResolver: Lazy[D[Option[String]]]): D[FieldType[K, H] :+: T] =
       mkDecoder((path, _, config) =>
       typeResolver.value.read(pathWithType(path), None, config) match {
         case Valid(None) => Missing(
