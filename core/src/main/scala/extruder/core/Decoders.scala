@@ -17,11 +17,11 @@ trait Decode[C, I, D[T] <: Decoder[T, I]] { self: ResolutionCommon =>
   def decode[T](namespace: Seq[String], config: C)(implicit decoder: D[T]): ConfigValidation[T] =
     prepareConfig(config).fold(_.invalid, c => decoder.read(namespace, None, c))
 
-  def parameters[T](implicit params: Parameters[T]): List[ParametersOutput] =
+  def parameters[T](implicit params: Parameters[T]): List[ParamRepr] =
     parameters(Seq.empty[String])
 
-  def parameters[T](namespace: Seq[String])(implicit params: Parameters[T]): List[ParametersOutput] =
-    params.eval(namespace).map { case (k, (default, tpe, required)) => ParametersOutput(pathToString(k), default, tpe, required) }.toList
+  def parameters[T](namespace: Seq[String])(implicit params: Parameters[T]): List[ParamRepr] =
+    params.eval(namespace)//.map { case (k, (default, tpe, required)) => ParametersOutput(pathToString(k), default, tpe, required) }.toList
 }
 
 trait Decoder[T, C] {

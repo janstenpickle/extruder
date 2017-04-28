@@ -25,7 +25,7 @@ case class Testing(s: Option[Long], d: Set[String], i: Int = 1)
 sealed trait Sealed
 case object ObjImpl extends Sealed
 case class CCImpl2(a: String) extends Sealed
-case class CCImpl(a: String, i: Long, u: URL, s: Set[Int], cc: Option[CC4]) extends Sealed
+case class CCImpl(a: String, i: Long = 76, u: URL, s: Set[Int], cc: Option[CC4]) extends Sealed
 
 case class Testing2(a: Set[Int] = Set(1,2), df: Option[Long] = Some(32L), dsf: Option[List[String]] = Some(List("dfs", "sdfsdf")))
 case class Testing3(b: String, c: Testing2)
@@ -73,8 +73,8 @@ object Simple extends App {
 //  println(EnvironmentConfig.decode[String](Seq("home")))
 
 
-  println(MapConfig.parameters[Testing2])
-  println(EnvironmentConfig.parameters[Testing2])
+  println(MapConfig.parameters[Sealed])
+ // println(EnvironmentConfig.parameters[Testing2])
 
 }
 
