@@ -5,7 +5,7 @@ import cats.syntax.either._
 import org.scalacheck.Gen.Choose
 import org.scalacheck.Shapeless._
 import org.scalacheck.{Gen, Prop}
-import org.specs2.matcher.EitherMatchers
+import org.specs2.matcher.{EitherMatchers, MatchResult}
 import org.specs2.specification.core.SpecStructure
 import org.specs2.{ScalaCheck, Specification}
 import org.typelevel.discipline.specs2.Discipline
@@ -41,9 +41,12 @@ trait ConfigSpec[C, I, J, D[T] <: Decoder[T, I], E[T] <: Encoder[T, J]] extends 
         FiniteDuration ${testType(finiteDurationGen)}
         Case class tree ${test(Gen.resultOf(CaseClass))}
         Case class with defaults set $testDefaults
-        $ext
 
-        ${checkAll("Encoder monoid", monoidGroupLaws.monoid(monoid))}
+      Can represent the following types as a table of required params
+        Case class tree $testCaseClassParams
+      $ext
+
+      ${checkAll("Encoder monoid", monoidGroupLaws.monoid(monoid))}
       """
 
   def testNumeric[T: Numeric](implicit encoder: E[T],
@@ -89,4 +92,6 @@ trait ConfigSpec[C, I, J, D[T] <: Decoder[T, I], E[T] <: Encoder[T, J]] extends 
     )
 
   def convertConfig(map: Map[String, String]): C
+
+  def testCaseClassParams: MatchResult[String] = parameters[CaseClass] !== ""
 }

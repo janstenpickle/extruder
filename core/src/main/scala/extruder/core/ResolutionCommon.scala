@@ -3,7 +3,7 @@ package extruder.core
 import cats.syntax.validated._
 
 trait ResolutionCommon extends Serializable {
-  val TypeKey = "type"
+  import ResolutionCommon._
 
   val ListSeparator: String = ","
 
@@ -16,4 +16,8 @@ trait ResolutionCommon extends Serializable {
 
   protected def errorMsg[T](path: Seq[String]): ConfigValidation[T] =
     Missing(s"Could not find configuration at '${pathToString(path)}' and no default available").invalidNel[T]
+}
+
+object ResolutionCommon {
+  val TypeKey = "type"
 }

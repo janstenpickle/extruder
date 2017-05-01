@@ -1,6 +1,7 @@
-package extruder.core
+package extruder.system
 
 import cats.syntax.validated._
+import extruder.core._
 
 import scala.collection.JavaConverters._
 

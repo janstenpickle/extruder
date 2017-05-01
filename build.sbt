@@ -1,7 +1,7 @@
 val specs2Ver = "3.8.6"
 
 val commonSettings = Seq(
-  version := "0.3.2-SNAPSHOT",
+  version := "0.4.0-SNAPSHOT",
   organization := "extruder",
   scalaVersion := "2.12.2",
   crossScalaVersions := Seq("2.11.11", "2.12.2"),
@@ -48,6 +48,11 @@ lazy val core = (project in file("core")).
     )
   )
 
+lazy val systemSources = (project in file("system-sources")).
+  settings (
+    commonSettings ++ Seq(name := "extruder-system-sources")
+  ).dependsOn(core)
+
 lazy val examples = (project in file("examples")).
   settings (
     commonSettings ++
@@ -56,7 +61,7 @@ lazy val examples = (project in file("examples")).
       libraryDependencies ++= Seq("org.zalando" %% "grafter" % "1.4.8"),
       publishArtifact := false
     )
-  ).dependsOn(typesafe, refined)
+  ).dependsOn(systemSources, typesafe, refined)
 
 lazy val typesafe = (project in file("typesafe")).
   settings (
@@ -94,13 +99,12 @@ lazy val root = (project in file(".")).
       name := "extruder",
       unmanagedSourceDirectories in Compile := unmanagedSourceDirectories.all(aggregateCompile).value.flatten,
       sources in Compile  := sources.all(aggregateCompile).value.flatten,
-      libraryDependencies := libraryDependencies.all(aggregateCompile).value.flatten,
-      coverageEnabled := false
+      libraryDependencies := libraryDependencies.all(aggregateCompile).value.flatten
     )
   ).aggregate(core, typesafe, refined)
 
 lazy val aggregateCompile =
   ScopeFilter(
-    inProjects(core),
+    inProjects(core, systemSources),
     inConfigurations(Compile)
   )
