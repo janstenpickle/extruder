@@ -20,3 +20,6 @@ project/plugins/project/
 
 # IntelliJ
 .idea/
+
+# Docs
+docs/src/main/tut/contributing.md

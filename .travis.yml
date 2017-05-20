@@ -3,12 +3,22 @@ scala:
   - 2.12.2
   - 2.11.11
 jdk: oraclejdk8
+before_install:
+  - export PATH=${PATH}:./vendor/bundle
+install:
+  - rvm use 2.2.3 --install --fuzzy
+  - gem update --system
+  - gem install sass
+  - gem install jekyll -v 3.2.1
 cache:
   directories:
    - ~/.ivy2
    - ~/.sbt
+   - ~/.vendor
 script:
-  - sbt ++$TRAVIS_SCALA_VERSION clean scalastyle test coverageReport &&
+  - sbt ++$TRAVIS_SCALA_VERSION clean scalastyle test coverageReport docs/makeMicrosite &&
     sbt ++$TRAVIS_SCALA_VERSION coverageAggregate
 after_success:
   - sbt ++$TRAVIS_SCALA_VERSION coveralls
+  - if [ "$TRAVIS_BRANCH" = "master" -a "$TRAVIS_PULL_REQUEST" = "false" ]; then sbt ++$TRAVIS_SCALA_VERSION docs/publishMicrosite; fi
+  - if [ "$TRAVIS_PULL_REQUEST" = "true" ]; then echo "Not in master branch, skipping deploy and release"; fi
