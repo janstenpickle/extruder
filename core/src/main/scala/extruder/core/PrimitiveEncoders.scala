@@ -9,7 +9,7 @@ import shapeless._
 
 import scala.concurrent.duration.Duration
 
-trait PrimitiveEncoders[C, E[T] <: Encoder[T, C]] extends ResolutionCommon { self: Encoders[C, E] =>
+trait PrimitiveEncoders[C, E[T] <: Encoder[T, C]] { self: Encoders[C, E] with UtilsMixin =>
   protected def writeValue(path: Seq[String], value: String): ConfigValidation[C]
 
   implicit def primitiveEncoder[T](implicit shows: Show[T]): E[T] =
@@ -21,7 +21,7 @@ trait PrimitiveEncoders[C, E[T] <: Encoder[T, C]] extends ResolutionCommon { sel
     )
 
   implicit def traversableEncoder[T, F[T] <: TraversableOnce[T]](implicit shows: Show[T]): E[F[T]] =
-    mkEncoder((path, value) => writeValue(path, value.map(shows.show).filter(_.trim.nonEmpty).mkString(ListSeparator)))
+    mkEncoder((path, value) => writeValue(path, value.map(shows.show).filter(_.trim.nonEmpty).mkString(utils.ListSeparator)))
 }
 
 trait Shows {

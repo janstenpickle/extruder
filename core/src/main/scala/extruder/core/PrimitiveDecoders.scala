@@ -12,10 +12,10 @@ import scala.collection.generic.CanBuildFrom
 import scala.concurrent.duration.Duration
 import scala.reflect.ClassTag
 
-trait PrimitiveDecoders[C, D[T] <: Decoder[T, C]] extends ResolutionCommon { self: Decoders[C, D] =>
+trait PrimitiveDecoders[C, D[T] <: Decoder[T, C]] { self: Decoders[C, D] with UtilsMixin =>
   protected def lookupValue(path: Seq[String], config: C): ConfigValidation[Option[String]]
   protected def lookupList(path: Seq[String], config: C): ConfigValidation[Option[List[String]]] =
-    lookupValue(path, config).map(_.map(_.split(ListSeparator).toList.map(_.trim)))
+    lookupValue(path, config).map(_.map(_.split(utils.ListSeparator).toList.map(_.trim)))
 
   implicit def primitiveDecoder[T](implicit parser: Parser[T]): D[T] =
     mkDecoder((path, default, config) => resolveValue(formatParserError(parser, path))(path, default, config))
@@ -46,7 +46,7 @@ trait PrimitiveDecoders[C, D[T] <: Decoder[T, C]] extends ResolutionCommon { sel
   protected def resolve[T, V](parser: V => ConfigValidation[T],
                     lookup: (Seq[String], C) => ConfigValidation[Option[V]])(path: Seq[String], default: Option[T], config: C): ConfigValidation[T] =
     (lookup(path, config), default) match {
-      case (Valid(None), None) => errorMsg[T](path)
+      case (Valid(None), None) => utils.errorMsg[T](path)
       case (Valid(None), Some(v)) => v.validNel[ValidationError]
       case (Valid(Some(v)), _) => parser(v)
       case (err @ Invalid(_), _) => err
@@ -54,7 +54,7 @@ trait PrimitiveDecoders[C, D[T] <: Decoder[T, C]] extends ResolutionCommon { sel
 
   protected def formatParserError[T](parser: Parser[T], path: Seq[String]): String => ConfigValidation[T] = value =>
     parser.parse(value).leftMap(err =>
-       ValidationFailure(s"Could not parse value '$value' at '${pathToString(path)}': $err")
+       ValidationFailure(s"Could not parse value '$value' at '${utils.pathToString(path)}': $err")
     ).toValidatedNel
 }
 
