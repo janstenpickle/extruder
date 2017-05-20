@@ -1,7 +1,7 @@
 val specs2Ver = "3.8.9"
 
 val commonSettings = Seq(
-  version := "0.4.0-SNAPSHOT",
+  version := "0.5.0-SNAPSHOT",
   organization := "extruder",
   scalaVersion := "2.12.2",
   crossScalaVersions := Seq("2.11.11", "2.12.2"),
