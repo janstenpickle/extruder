@@ -16,8 +16,8 @@ import extruder.refined._
 
 case class CC(a: String = "test", b: String = "test2", c: Int, d: Option[CC2], e: CC3, f: Set[Int], dur: Duration, finDur: FiniteDuration)
 case class CC2(x: String = "test4", y: Option[Int] = Some(232), z: CC3)
-case class CC3(a: Option[String])
-case class CC4(a: Option[CC3])
+case class CC3(a: List[Long], option: Option[String])
+case class CC4(a: CC3)
 
 
 case class Testing(s: Option[Long], d: Set[String], i: Int = 1, j: ObjImpl.type)
@@ -75,7 +75,8 @@ object Simple extends App {
 //  println(EnvironmentConfig.decode[String](Seq("home")))
 
 
-  println(MapConfig.parameters[CCImpl3](Seq.empty[String]))
+  println(MapConfig.decode[CC4](config))
+  //println(MapConfig.parameters[Sealed](Seq.empty[String]))
  // println(EnvironmentConfig.parameters[Sealed])
 
 }

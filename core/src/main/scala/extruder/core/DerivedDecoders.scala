@@ -38,34 +38,44 @@ trait DerivedDecoders[C, D[T] <: Decoder[T, C]] extends ResolutionCommon { self:
     mkDecoder((path, _, config) => underlying.value.read(path, None, config).map(gen.from))
 
   // scalastyle:off
-  implicit def productDecoder[T,
-                              GenRepr <: HList,
-                              DefaultOptsRepr <: HList,
-                              LGenRepr <: HList,
-                              KeysRepr <: HList,
-                              ConstRepr <: HList,
-                              ZipperRepr <: HList,
-                              PrefixZipperRepr <: HList,
-                              MapperRepr <: HList](implicit gen: Generic.Aux[T, GenRepr],
-                                                   defaultOpts: Default.AsOptions.Aux[T, DefaultOptsRepr],
-                                                   lGen: LabelledGeneric.Aux[T, LGenRepr],
-                                                   keys: Keys.Aux[LGenRepr, KeysRepr],
-                                                   constMapper: ConstMapper.Aux[(Seq[String], C), KeysRepr, ConstRepr],
-                                                   prefixZipper: Zip.Aux[KeysRepr :: ConstRepr :: HNil, PrefixZipperRepr],
-                                                   zipper: Zip.Aux[PrefixZipperRepr :: DefaultOptsRepr :: HNil, ZipperRepr],
-                                                   lazyMapper: Lazy[Mapper.Aux[readConfig.type, ZipperRepr, MapperRepr]],
-                                                   rightFolder: RightFolder.Aux[MapperRepr, ConfigValidation[HNil], folder.type, ConfigValidation[GenRepr]],
-                                                   tag: TypeTag[T]): D[T] = {
-    lazy val className: String = tag.tpe.typeSymbol.name.toString
-    val keyNames = Keys[LGenRepr].apply()
-    mkDecoder((path, _, config) =>
-      keyNames.zip(keyNames.mapConst((path :+ className, config))).
-        zip(Default.AsOptions[T].apply()).
-        map(readConfig)(lazyMapper.value).
-        foldRight((HNil :: HNil).tail.validNel[ValidationError])(folder).
-        map(Generic[T].from)
-    )
+//  implicit def productDecoder[T,
+//                              GenRepr <: HList,
+//                              DefaultOptsRepr <: HList,
+//                              LGenRepr <: HList,
+//                              KeysRepr <: HList,
+//                              ConstRepr <: HList,
+//                              ZipperRepr <: HList,
+//                              PrefixZipperRepr <: HList,
+//                              MapperRepr <: HList](implicit gen: Generic.Aux[T, GenRepr],
+//                                                   defaultOpts: Default.AsOptions.Aux[T, DefaultOptsRepr],
+//                                                   lGen: LabelledGeneric.Aux[T, LGenRepr],
+//                                                   keys: Keys.Aux[LGenRepr, KeysRepr],
+//                                                   constMapper: ConstMapper.Aux[(Seq[String], C), KeysRepr, ConstRepr],
+//                                                   prefixZipper: Zip.Aux[KeysRepr :: ConstRepr :: HNil, PrefixZipperRepr],
+//                                                   zipper: Zip.Aux[PrefixZipperRepr :: DefaultOptsRepr :: HNil, ZipperRepr],
+//                                                   lazyMapper: Lazy[Mapper.Aux[readConfig.type, ZipperRepr, MapperRepr]],
+//                                                   rightFolder: RightFolder.Aux[MapperRepr, ConfigValidation[HNil], folder.type, ConfigValidation[GenRepr]],
+//                                                   tag: TypeTag[T]): D[T] = {
+//    lazy val className: String = tag.tpe.typeSymbol.name.toString
+//    val keyNames = Keys[LGenRepr].apply()
+//    mkDecoder((path, _, config) =>
+//      keyNames.zip(keyNames.mapConst((path :+ className, config))).
+//        zip(Default.AsOptions[T].apply()).
+//        map(readConfig)(lazyMapper.value).
+//        foldRight((HNil :: HNil).tail.validNel[ValidationError])(folder).
+//        map(Generic[T].from)
+//    )
+//  }
+
+  implicit def anyDecoder[T, GenRep <: HList, ParamRepr <: HList](implicit gen: Default.AsOptions.Aux[T, GenRep], mapper: Lazy[Mapper[cunt.type, GenRep]], parameters: NewParameters.Aux[T, ParamRepr]): D[T] = {
+    println(Default.AsOptions[T].apply().map(cunt)(mapper.value))
+    mkDecoder((path, _, config) => ValidationFailure(parameters.eval(path).toString).invalidNel)
   }
+
+  object cunt extends Poly1 {
+    implicit def caseAny[A, ParamRepr](implicit params: Lazy[NewParameters.Aux[A, ParamRepr]]): Case.Aux[Option[A], ParamRepr] = at[Option[A]](_ => params.value.eval(Seq.empty))
+  }
+
   // scalastyle:on
 
   implicit def objectDecoder[T](implicit gen: Generic.Aux[T, HNil]): D[T] =

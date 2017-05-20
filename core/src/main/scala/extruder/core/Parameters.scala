@@ -12,7 +12,7 @@ import scala.reflect.runtime.universe.TypeTag
 
 trait ParametersInstances extends Shows {
 
-  implicit def objectParameters[T](implicit gen: Generic.Aux[T, HNil], tag: TypeTag[T]): NewParameters.Aux[T, HNil] = new NewParameters[T] {
+  implicit def objectParameters[T](implicit gen: Generic.Aux[T, HNil], tag: TypeTag[T], ev: T =:!= None.type): NewParameters.Aux[T, HNil] = new NewParameters[T] {
     override type Repr = HNil
     override def eval(path: Seq[String]): HNil = HNil
   }
@@ -30,12 +30,6 @@ trait ParametersInstances extends Shows {
     override def eval(path: Seq[String]): Out = (headParams.value.eval(path) :: tailParams.value.eval(path)).adjoined
   }
 
-//  implicit def optionShit[ T]: NewParameters.Aux[None.type :+: Some[T] :+: CNil, Unit :: HNil] =
-//    new NewParameters[None.type :+: Some[T] :+: CNil] {
-//      override type Repr = Unit :: HNil
-//
-//      override def eval(path: Seq[String]): Unit :: HNil = () :: HNil
-//    }
 
   implicit val cnilTypeName: TypeNames[CNil] = TypeNames(List.empty)
 
@@ -49,7 +43,8 @@ trait ParametersInstances extends Shows {
   implicit def unionParameters[T, V <: Coproduct, VRepr <: HList](implicit gen: Generic.Aux[T, V],
                                                                   underlying: Lazy[NewParameters.Aux[V, VRepr]],
                                                                   typeNames: Lazy[TypeNames[V]],
-                                                                  tag: TypeTag[T]): NewParameters.Aux[T, NewParameter[T] :: VRepr] =
+                                                                  tag: TypeTag[T],
+                                                                  ev: T <:!< TraversableOnce[Any]): NewParameters.Aux[T, NewParameter[T] :: VRepr] =
     new NewParameters[T] {
       override type Repr = NewParameter[T] :: VRepr
 
@@ -58,23 +53,33 @@ trait ParametersInstances extends Shows {
     }
 
 
-  implicit def primitive[T](implicit shows: Show[T]): NewParameters.Aux[T, String :: HNil] = new NewParameters[T] {
-    override type Repr = String :: HNil
-    override def eval(path: Seq[String]): ::[String, HNil] = "cunt" :: HNil
+  implicit def primitive[T](implicit shows: Show[T], tt: TypeTag[T]): NewParameters.Aux[T, NewParameter[T] :: HNil] = new NewParameters[T] {
+    override type Repr = NewParameter[T] :: HNil
+    override def eval(path: Seq[String]): NewParameter[T] :: HNil =
+      NewProductParameter[T](path, required = true, ttToString[T], None) :: HNil
+  }
+
+  implicit def optional[T, URepr <: HList, OutRepr <: HList]
+  (implicit params: NewParameters.Aux[T, URepr], mapper: Mapper.Aux[shit.type, URepr, OutRepr])
+  : NewParameters.Aux[Option[T], OutRepr] = {
+    println("sdfsff")
+    new NewParameters[Option[T]] {
+      override type Repr = OutRepr
+      override def eval(path: Seq[String]): OutRepr = params.eval(path).map(shit)
+
+    }
+  }
+
+  implicit def traversable[T, F[V] <: TraversableOnce[V]](implicit shows: Show[T], tt: TypeTag[T], traversableTag: TypeTag[F[T]]): NewParameters.Aux[F[T], NewParameter[F[T]] :: HNil] = new NewParameters[F[T]] {
+    override type Repr = NewParameter[F[T]] :: HNil
+    override def eval(path: Seq[String]): NewParameter[F[T]] :: HNil =
+      NewProductParameter[F[T]](path, required = true, traversableTtToString[T, F], None) :: HNil
   }
 
 
-
-//  implicit def optionalProductParameters[T, URepr <: HList, OutRepr <: HList](implicit params: NewParameters.Aux[T, URepr],
-//                                                                              mapper: Mapper.Aux[shit.type, URepr, OutRepr]): NewParameters.Aux[Option[T], OutRepr] =
-//    new NewParameters[Option[T]] {
-//      override type Repr = OutRepr
-//      override def eval(path: Seq[String]): OutRepr = params.eval(path).map(shit)
-//    }
-//
-//  object shit extends Poly1 {
-//    implicit def caseAny[T]: Case.Aux[NewParameter[T], NewParameter[T]] = at[NewParameter[T]](_.updateRequired(false))
-//  }
+  object shit extends Poly1 {
+    implicit def caseAny[T]: Case.Aux[NewParameter[T], NewParameter[T]] = at[NewParameter[T]](_.updateRequired(false))
+  }
     //Parameters(path => getMeAConfigPath.eval(path).map(_.updateRequired(false)))
 
   implicit def productParameters[T,
@@ -98,8 +103,8 @@ trait ParametersInstances extends Shows {
                                                       tag: TypeTag[T]): NewParameters.Aux[T, OutRepr] = new NewParameters[T] {
     override type Repr = OutRepr
 
-    lazy val className: String = ttToString[T]
-    val keyNames = Keys[LGenRepr].apply()
+    private val className: String = ttToString[T]
+    private val keyNames = Keys[LGenRepr].apply()
 
     override def eval(path: Seq[String]): OutRepr =
       keyNames
@@ -112,25 +117,49 @@ trait ParametersInstances extends Shows {
 
 
   object readParams extends Poly1 {
-    implicit def casePrimitive[A <: Symbol, B](implicit tag: TypeTag[B], shows: Show[B]): Case.Aux[((A, Seq[String]), Option[B]), NewProductParameter[B] :: HNil] =
-      at[((A, Seq[String]), Option[B])]{ case ((key, prefix), default) =>
-        NewProductParameter[B](prefix :+ key.name, default.isEmpty, ttToString[B], default) :: HNil
-      }
+//    implicit def casePrimitive[A <: Symbol, B](implicit tag: TypeTag[B], shows: Show[B]): Case.Aux[((A, Seq[String]), Option[B]), NewProductParameter[B] :: HNil] =
+//      at[((A, Seq[String]), Option[B])]{ case ((key, prefix), default) =>
+//        NewProductParameter[B](prefix :+ key.name, default.isEmpty, ttToString[B], default) :: HNil
+//      }
 
 //    implicit def casePrimitive[A <: Symbol, B](implicit show: Lazy[Show[B]], tag: TypeTag[B]): Case.Aux[((A, Seq[String]), Option[B]), List[Parameter]] =
 //      at[((A, Seq[String]), Option[B])]{ case ((key, prefix), default) => List(ProductParameter(prefix :+ key.name, default.fold(true)(_ => false), ttToString[B], default.map(show.value.show))) }
 
-    implicit def caseOptionalPrimitive[A <: Symbol, B](implicit tag: TypeTag[B], shows: Show[B]): Case.Aux[((A, Seq[String]), Option[Option[B]]), NewProductParameter[Option[B]] :: HNil] =
+    implicit def caseOptionalPrimitive[A <: Symbol, B](implicit tag: TypeTag[B], show: Lazy[NewParameters.Aux[Option[B], NewParameter[B] :: HNil]]): Case.Aux[((A, Seq[String]), Option[Option[B]]), NewParameter[Option[B]] :: HNil] =
       at[((A, Seq[String]), Option[Option[B]])]{ case ((key, prefix), default) =>
-        NewProductParameter[Option[B]](prefix :+ key.name, required = false, ttToString[B], default) :: HNil
+        val param = show.value.eval(prefix :+ key.name).head
+        default.fold[NewParameter[Option[B]]](param.setDefault(None))(param.setDefault) :: HNil
       }
-//
+
+    implicit def casePrim[A <: Symbol, B](implicit show: Lazy[NewParameters.Aux[B, NewParameter[B] :: HNil]]): Case.Aux[((A, Seq[String]), Option[B]), NewParameter[B] :: HNil] =
+      at[((A, Seq[String]), Option[B])]{ case ((key, prefix), default) =>
+        val param = show.value.eval(prefix :+ key.name).head
+        default.fold(param)(param.setDefault) :: HNil
+      }
+
     implicit def caseProduct[A <: Symbol, B, Repr <: HList](implicit show: Lazy[NewParameters.Aux[B, Repr]]): Case.Aux[((A, Seq[String]), Option[B]), Repr] =
-      at[((A, Seq[String]), Option[B])]{ case ((key, prefix), default) => show.value.eval(prefix :+ key.name) }
+      at[((A, Seq[String]), Option[B])]{ case ((key, prefix), _) =>
+        show.value.eval(prefix :+ key.name)
+      }
+
+
+
+//    implicit def caseOptPrim[A <: Symbol, B](implicit show: Lazy[NewParameters.Aux[Option[B], NewParameter[B] :: HNil]]): Case.Aux[((A, Seq[String]), Option[B]), NewParameter[Option[B]] :: HNil] =
+//      at[((A, Seq[String]), Option[B])]{ case ((key, prefix), default) =>
+//        val param = show.value.eval(prefix :+ key.name).head
+//        println("fuck " + key)
+//        param.setDefault(default) :: HNil
+//      }
+
+//
+//    implicit def caseOptionProduct[A <: Symbol, B, Repr <: HList](implicit show: Lazy[NewParameters.Aux[B, Repr]]): Case.Aux[((A, Seq[String]), Option[Option[B]]), Repr] =
+//      at[((A, Seq[String]), Option[Option[B]])]{ case ((key, prefix), default) => show.value.eval(prefix :+ key.name) }
 ////
+
+
 //    implicit def caseTraversable[A <: Symbol, B, F[C] <: TraversableOnce[C]](implicit show: Lazy[Show[B]], tag: TypeTag[B], traversableTag: TypeTag[F[B]]): Case.Aux[((A, Seq[String]), Option[F[B]]), List[Parameter]] =
 //      at[((A, Seq[String]), Option[F[B]])]{ case ((key, prefix), default) => List(ProductParameter(prefix :+ key.name, default.fold(true)(_ => false), traversableTtToString[B, F],  default.map(_.map(show.value.show).mkString(",")))) }
-//
+
 //    implicit def caseOptionTraversable[A <: Symbol, B, F[C] <: TraversableOnce[C]](implicit shows: Lazy[Show[B]], tag: TypeTag[B], traversableTag: TypeTag[F[B]]): Case.Aux[((A, Seq[String]), Option[Option[F[B]]]), List[Parameter]] =
 //      at[((A, Seq[String]), Option[Option[F[B]]])]{ case ((key, prefix), default) => List(ProductParameter(prefix :+ key.name, required = false, traversableTtToString[B, F], default.flatten.map(_.map(shows.value.show).mkString(",")))) }
   }
@@ -197,14 +226,17 @@ trait NewParameter[T] {
   def default: Option[T]
   def updateRequired(req: Boolean): NewParameter[T]
   def formatPath(fmt: Seq[String] => String): String = fmt(path)
+  def setDefault[A](default: A): NewParameter[A]
 }
 
 case class NewProductParameter[T](path: Seq[String], required: Boolean, `type`: String, default: Option[T]) extends NewParameter[T] {
   override def updateRequired(req: Boolean): NewProductParameter[T] = copy(required = req)
+  override def setDefault[A](default: A): NewProductParameter[A] = copy[A](required = false, default = Some(default))
 }
 
 case class NewUnionParameter[T](path: Seq[String], `type`: String, types: List[String]) extends NewParameter[T] {
   override val required: Boolean = true
   override val default: Option[T] = None
   override def updateRequired(req: Boolean): NewUnionParameter[T] = this
+  override def setDefault[A](default: A): NewUnionParameter[A] = copy[A](path, `type`, types)
 }
