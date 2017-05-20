@@ -17,8 +17,10 @@ class TypesafeConfigSpec extends ConfigSpec[Config, Config, ConfigMap, TypesafeC
                          with TypesafeConfigEncoders {
   import TypesafeConfigSpec._
 
-  override def convertConfig(map: Map[String, String]): Config =
-    ConfigFactory.parseMap(map.asJava)
+  override def convertConfig(map: Map[Seq[String], String]): Config = {
+    val config = map.map { case (k, v) => utils.pathToString(k) -> v }.asJava
+    ConfigFactory.parseMap(config)
+  }
 
   override def ext: SpecStructure =
     s2"""

@@ -110,7 +110,7 @@ decode[NestedOne] // won't compile
 
 - Extruder accumilates configuration resolution errors, so a single invocation will highlight all problems with the configuration source
 - Extruder supports pluggable configuration backends - does not rely on [Typesafe Config](https://github.com/typesafehub/config) by default
-- Pureconfig supports time parsing using `java.time` which Extruder does not out of the box, a date parsing module may be added in the future, until then [custom resolvers may be added](#extending-an-existing-set-of-resolvers)
+- Pureconfig supports time parsing using `java.time` which Extruder does not out of the box, a date parsing module may be added in the future, until then [custom configuration sources may be added](#extending-an-existing-set-of-resolvers)
 - Resolution of Typesafe `ConfigValue`, `ConfigObject` and `ConfigList` is only supported by the Typesafe Config configuration backend, as it is closely tied to Typesafe Config, Pureconfig supports this by default as it is directly tied to Typesafe config
 - Pureconfig supports returning `Map[String, String]`, for the time being Extruder does not support this
 - Extruder supports control of class and parameter name formatting by [overriding a method](#implementing-pathtostring), however Pureconfig supports this via predefined configuration schemes
@@ -125,13 +125,13 @@ import extruder.system.SystemPropertiesConfig._
 object Main extends App {
   case class Example(defaultedString: String = "default", configuredString: String, optionalString: Option[String])
 
-  println(resolve[Example]) // Invalid(NonEmptyList(ValidationFailure("Could not find configuration at 'example.configuredstring' and no default available", None)))
+  println(decode[Example]) // Invalid(NonEmptyList(ValidationFailure("Could not find configuration at 'example.configuredstring' and no default available", None)))
 
   System.setProperty("example.configuredstring", "configured")
-  println(resolve[Example]) // Valid(Example("default", "configured", None))
+  println(decode[Example]) // Valid(Example("default", "configured", None))
 
   System.setProperty("example.optionalsting", "optional")
-  println(resolve[Example]) // Valid(Example("default", "configured", Some("optional")))
+  println(decode[Example]) // Valid(Example("default", "configured", Some("optional")))
 }
 ```
 
@@ -149,13 +149,13 @@ object Main extends App {
   System.setProperty("example.a.nestedone.nested.nestedtwo.value", "nested-one-nested-two")
   System.setProperty("example.b.nestedtwo.value", "nested-two")
 
-  println(resolve[Example]) // Valid(Example(NestedOne("nested-one", NestedTwo("nested-one-nested-two")), NestedTwo("nested-two"))
+  println(decode[Example]) // Valid(Example(NestedOne("nested-one", NestedTwo("nested-one-nested-two")), NestedTwo("nested-two"))
 }
 ```
 ## Sealed Type Families
 
 ```scala
-import extruder.system.SystemPropertiesResolvers
+import extruder.system.SystemPropertiesConfig
 import extruder.resolution._
 
 object TopLevelSealed extends App {
@@ -165,17 +165,17 @@ object TopLevelSealed extends App {
 
   System.setProperty("type", "ExampleObj")
 
-  println(resolve[Example]) // Valid(ExampleObj)
+  println(decode[Example]) // Valid(ExampleObj)
 
   System.setProperty("type", "ExampleCC")
   System.setProperty("examplecc.a", "1")
 
-  println(resolve[Example]) // Valid(ExampleCC(1))
+  println(decode[Example]) // Valid(ExampleCC(1))
 }
 ```
 
 ```scala
-import extruder.system.SystemPropertiesResolvers
+import extruder.system.SystemPropertiesConfig
 import extruder.resolution._
 
 object NestedSealed extends App {
@@ -187,12 +187,12 @@ object NestedSealed extends App {
 
   System.setProperty("example.a.type", "ExampleObj")
 
-  println(resolve[Example]) // Valid(Example(ExampleObj))
+  println(decode[Example]) // Valid(Example(ExampleObj))
 
   System.setProperty("example.a.type", "ExampleCC")
   System.setProperty("example.a.examplecc.a", "1")
 
-  println(resolve[Example]) // Valid(Example(ExampleCC(1)))
+  println(decode[Example]) // Valid(Example(ExampleCC(1)))
 }
 
 ```

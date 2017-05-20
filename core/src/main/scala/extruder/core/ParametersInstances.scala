@@ -37,7 +37,7 @@ trait ParametersInstances extends Shows {
                                                   tag: TypeTag[T]): Parameters[T] =
     Parameters(path =>
       NonEmptyList.fromList(typeNames.value.values).fold[List[ParamRepr]](List.empty)(types =>
-        UnionRepr(path :+ ResolutionCommon.TypeKey, types) ::
+        UnionRepr(path :+ TypeKey, types) ::
         underlying.value.eval(path)
       )
     )

@@ -11,12 +11,10 @@ trait EnvironmentDecoders extends Decoders[Map[String, String], EnvironmentDecod
                           with PrimitiveDecoders[Map[String, String], EnvironmentDecoder]
                           with DerivedDecoders[Map[String, String], EnvironmentDecoder]
                           with Decode[java.util.Map[String, String], Map[String, String], EnvironmentDecoder]
-                          with ResolutionCommon {
-
-  override protected def pathToString(path: Seq[String]): String = path.mkString("_").toUpperCase
+                          with EnvironmentUtilsMixin {
 
   override protected def lookupValue(path: Seq[String], config: Map[String, String]): ConfigValidation[Option[String]] =
-    config.get(pathToString(path)).validNel
+    config.get(utils.pathToString(path)).validNel
 
   override protected def mkDecoder[T](f: (Seq[String], Option[T], Map[String, String]) => ConfigValidation[T]): EnvironmentDecoder[T] =
     new EnvironmentDecoder[T] {
@@ -36,3 +34,16 @@ trait EnvironmentDecoders extends Decoders[Map[String, String], EnvironmentDecod
 object EnvironmentDecoder extends EnvironmentDecoders
 
 object EnvironmentConfig extends EnvironmentDecoders
+
+trait EnvironmentUtils extends Utils
+
+object EnvironmentUtils extends UtilsCompanion[EnvironmentUtils] {
+  override implicit val default: EnvironmentUtils = new EnvironmentUtils {
+    override def pathToString(path: Seq[String]): String = path.mkString("_").toUpperCase
+  }
+}
+
+trait EnvironmentUtilsMixin extends UtilsMixin {
+  override type U = EnvironmentUtils
+  override val utils: EnvironmentUtils = implicitly[EnvironmentUtils]
+}

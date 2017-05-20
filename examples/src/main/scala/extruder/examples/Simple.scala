@@ -77,6 +77,9 @@ object Simple extends App {
   println(MapConfig.parameters[Sealed])
   
   println(EnvironmentConfig.parameters[Sealed])
+
+  println(TypesafeConfig.parameters[Sealed])
+
 }
 
 

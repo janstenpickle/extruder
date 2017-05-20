@@ -10,11 +10,11 @@ import shapeless._
 
 import scala.reflect.runtime.universe.TypeTag
 
-trait DerivedDecoders[C, D[T] <: Decoder[T, C]] extends ResolutionCommon { self: Decoders[C, D] =>
+trait DerivedDecoders[C, D[T] <: Decoder[T, C]] { self: Decoders[C, D] with UtilsMixin =>
   import DerivedDecoders._
 
   implicit val cnilDecoder: D[CNil] = mkDecoder((path, _, _) => ValidationFailure(
-    s"Could not find specified implementation of sealed type at configuration path '${pathToStringWithType(path)}'"
+    s"Could not find specified implementation of sealed type at configuration path '${utils.pathToStringWithType(path)}'"
   ).invalidNel)
 
   implicit def cconsDecoder[K <: Symbol, H, T <: Coproduct](implicit key: Witness.Aux[K],
@@ -22,9 +22,9 @@ trait DerivedDecoders[C, D[T] <: Decoder[T, C]] extends ResolutionCommon { self:
                                                             tailResolve: Lazy[D[T]],
                                                             typeResolver: Lazy[D[Option[String]]]): D[FieldType[K, H] :+: T] =
       mkDecoder((path, _, config) =>
-      typeResolver.value.read(pathWithType(path), None, config) match {
+      typeResolver.value.read(utils.pathWithType(path), None, config) match {
         case Valid(None) => Missing(
-          s"Could not type of sealed instance at path '${pathToStringWithType(path)}'"
+          s"Could not type of sealed instance at path '${utils.pathToStringWithType(path)}'"
         ).invalidNel
         case Valid(Some(tpe)) if tpe == key.value.name =>
           headResolve.value.read(path, None, config).map(v => Inl(field[K](v)))

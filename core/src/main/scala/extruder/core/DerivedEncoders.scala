@@ -9,7 +9,7 @@ import shapeless.ops.record.Keys
 
 import scala.reflect.runtime.universe.TypeTag
 
-trait DerivedEncoders[C, E[T] <: Encoder[T, C]] extends ResolutionCommon { self: Encoders[C, E] =>
+trait DerivedEncoders[C, E[T] <: Encoder[T, C]] { self: Encoders[C, E] with UtilsMixin =>
   implicit val cnilEncoder: E[CNil] = mkEncoder((_, _) =>
     ValidationFailure(s"Impossible!").invalidNel
   )
@@ -19,7 +19,7 @@ trait DerivedEncoders[C, E[T] <: Encoder[T, C]] extends ResolutionCommon { self:
                                                      tailEncode: Lazy[E[T]],
                                                      typeEncode: Lazy[E[String]]): E[FieldType[K, H] :+: T] =
   mkEncoder((path, value) =>
-    (typeEncode.value.write(pathWithType(path), key.value.name) |@| (value match {
+    (typeEncode.value.write(utils.pathWithType(path), key.value.name) |@| (value match {
       case Inl(h) => headEncode.value.write(path, h)
       case Inr(t) => tailEncode.value.write(path, t)
     })).map(monoid.combine)
@@ -74,5 +74,5 @@ trait DerivedEncoders[C, E[T] <: Encoder[T, C]] extends ResolutionCommon { self:
 
   implicit def caseObjectEncoder[T](implicit gen: Generic.Aux[T, HNil],
                                     stringEncoder: Lazy[E[String]]): E[T] =
-    mkEncoder((path, value) => stringEncoder.value.write(pathWithType(path), value.toString))
+    mkEncoder((path, value) => stringEncoder.value.write(utils.pathWithType(path), value.toString))
 }

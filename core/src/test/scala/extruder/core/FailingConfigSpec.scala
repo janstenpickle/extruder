@@ -36,12 +36,12 @@ class FailingConfigSpec extends Specification with ScalaCheck with EitherMatcher
     else config.validNel
 
   override protected def lookupValue(path: Seq[String], config: Map[String, String]): ConfigValidation[Option[String]] =
-    if (path.contains(okNamespace)) config.get(pathToString(path)).validNel
+    if (path.contains(okNamespace)) config.get(utils.pathToString(path)).validNel
     else ValidationFailure(lookupFailMessage).invalidNel
 
   override protected def writeValue(path: Seq[String], value: String): ConfigValidation[Map[String, String]] =
     if (path.contains(okNamespace)) ValidationFailure(writeFailMessage).invalidNel
-    else Map(pathToString(path) -> value).validNel
+    else Map(utils.pathToString(path) -> value).validNel
 
 
   def testLookupFail[T](gen: Gen[T])
@@ -56,7 +56,7 @@ class FailingConfigSpec extends Specification with ScalaCheck with EitherMatcher
 
   def testCnilDecoder: MatchResult[Any] =
     cnilDecoder.read(Seq.empty, None, Map.empty) mustEqual ValidationFailure(
-      s"Could not find specified implementation of sealed type at configuration path '${pathToStringWithType(Seq.empty)}'"
+      s"Could not find specified implementation of sealed type at configuration path '${utils.pathToStringWithType(Seq.empty)}'"
     ).invalidNel
 
   def testDurationDecoder: MatchResult[Any] =

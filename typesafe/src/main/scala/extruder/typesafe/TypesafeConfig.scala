@@ -15,12 +15,12 @@ trait TypesafeConfigDecoders extends Decode[TConfig, TConfig, TypesafeConfigDeco
                              with Decoders[TConfig, TypesafeConfigDecoder]
                              with PrimitiveDecoders[TConfig, TypesafeConfigDecoder]
                              with DerivedDecoders[TConfig, TypesafeConfigDecoder]
-                             with PeriodSeparatedPath {
+                             with TypesafeConfigUtilsMixin {
   def lookup[T](f: TConfig => T, path: Seq[String], config: TConfig): ConfigValidation[Option[T]] =
     Either.catchNonFatal(f(config)).fold({
       case _ : Missing => None.validNel
       case th: Any => ValidationException(
-        s"Could not retrieve config '${pathToString(path)}' from supplied Typesafe config",
+        s"Could not retrieve config '${utils.pathToString(path)}' from supplied Typesafe config",
         th
       ).invalidNel
     }, Some(_).validNel)
@@ -29,22 +29,22 @@ trait TypesafeConfigDecoders extends Decode[TConfig, TConfig, TypesafeConfigDeco
     config.validNel
 
   override protected def lookupValue(path: Seq[String], config: TConfig): ConfigValidation[Option[String]] =
-    lookup(_.getString(pathToString(path)), path, config)
+    lookup(_.getString(utils.pathToString(path)), path, config)
 
   override protected def lookupList(path: Seq[String], config: TConfig): ConfigValidation[Option[List[String]]] =
-    lookup(_.getStringList(pathToString(path)).asScala.toList, path, config)
+    lookup(_.getStringList(utils.pathToString(path)).asScala.toList, path, config)
 
   private def resolve[T](lookup: (Seq[String], TConfig) => ConfigValidation[Option[T]]): (Seq[String], Option[T], TConfig) => ConfigValidation[T] =
     resolve[T, T](_.validNel, lookup)
 
   implicit val configValueDecoder: TypesafeConfigDecoder[ConfigValue] =
-    mkDecoder(resolve[ConfigValue]((path, config) => lookup(_.getValue(pathToString(path)), path, config)))
+    mkDecoder(resolve[ConfigValue]((path, config) => lookup(_.getValue(utils.pathToString(path)), path, config)))
 
   implicit val configListDecoder: TypesafeConfigDecoder[ConfigList] =
-    mkDecoder(resolve[ConfigList]((path, config) => lookup(_.getList(pathToString(path)), path, config)))
+    mkDecoder(resolve[ConfigList]((path, config) => lookup(_.getList(utils.pathToString(path)), path, config)))
 
   implicit val configObjectDecoder: TypesafeConfigDecoder[ConfigObject] =
-    mkDecoder(resolve[ConfigObject]((path, config) => lookup(_.getObject(pathToString(path)), path, config)))
+    mkDecoder(resolve[ConfigObject]((path, config) => lookup(_.getObject(utils.pathToString(path)), path, config)))
 
   override def mkDecoder[T](f: (Seq[String], Option[T], TConfig) => ConfigValidation[T]): TypesafeConfigDecoder[T] =
     new TypesafeConfigDecoder[T] {
@@ -54,7 +54,7 @@ trait TypesafeConfigDecoders extends Decode[TConfig, TConfig, TypesafeConfigDeco
   def decode[T](implicit decoder: TypesafeConfigDecoder[T]): ConfigValidation[T] = decode[T](Seq.empty)
 
   def decode[T](namespace: Seq[String])(implicit decoder: TypesafeConfigDecoder[T]): ConfigValidation[T] =
-    ConfigFactory.load().handle.fold(_.invalid, decode[T](namespace.map(_.toLowerCase), _))
+    ConfigFactory.load().handle.fold(_.invalid, decode[T](namespace, _))
 }
 
 trait TypesafeConfigDecoder[T] extends Decoder[T, TConfig]
@@ -65,14 +65,14 @@ trait TypesafeConfigEncoders extends Encode[ConfigMap, TConfig, TypesafeConfigEn
                              with Encoders[ConfigMap, TypesafeConfigEncoder]
                              with PrimitiveEncoders[ConfigMap, TypesafeConfigEncoder]
                              with DerivedEncoders[ConfigMap, TypesafeConfigEncoder]
-                             with PeriodSeparatedPath {
+                             with TypesafeConfigUtilsMixin {
   override protected val monoid: Monoid[ConfigMap] = new Monoid[ConfigMap] {
     override def empty: ConfigMap = Map.empty
     override def combine(x: ConfigMap, y: ConfigMap): ConfigMap = x ++ y
   }
 
   private def valueToConfig(path: Seq[String], value: ConfigTypes): ConfigValidation[ConfigMap] =
-    Map(pathToString(path) -> value).validNel
+    Map(utils.pathToString(path) -> value).validNel
 
   override protected def writeValue(path: Seq[String], value: String): ConfigValidation[ConfigMap] =
     valueToConfig(path, Coproduct[ConfigTypes](value))
@@ -87,16 +87,16 @@ trait TypesafeConfigEncoders extends Encode[ConfigMap, TConfig, TypesafeConfigEn
     }.asJava).handle
 
   override implicit def traversableEncoder[T, F[T] <: TraversableOnce[T]](implicit shows: Show[T]): TypesafeConfigEncoder[F[T]] =
-    mkEncoder((path, value) => Map(pathToString(path) -> Coproduct[ConfigTypes](value.map(shows.show).toList)).validNel)
+    mkEncoder((path, value) => Map(utils.pathToString(path) -> Coproduct[ConfigTypes](value.map(shows.show).toList)).validNel)
 
   implicit def configValueEncoder: TypesafeConfigEncoder[ConfigValue] =
-    mkEncoder((path, value) => Map(pathToString(path) -> Coproduct[ConfigTypes](value)).validNel)
+    mkEncoder((path, value) => Map(utils.pathToString(path) -> Coproduct[ConfigTypes](value)).validNel)
 
   implicit def configListEncoder: TypesafeConfigEncoder[ConfigList] =
-    mkEncoder((path, value) => Map(pathToString(path) -> Coproduct[ConfigTypes](value)).validNel)
+    mkEncoder((path, value) => Map(utils.pathToString(path) -> Coproduct[ConfigTypes](value)).validNel)
 
   implicit def configObjectEncoder: TypesafeConfigEncoder[ConfigObject] =
-    mkEncoder((path, value) => Map(pathToString(path) -> Coproduct[ConfigTypes](value)).validNel)
+    mkEncoder((path, value) => Map(utils.pathToString(path) -> Coproduct[ConfigTypes](value)).validNel)
 
   override def mkEncoder[T](f: (Seq[String], T) => ConfigValidation[ConfigMap]): TypesafeConfigEncoder[T] =
     new TypesafeConfigEncoder[T] {
@@ -109,3 +109,21 @@ trait TypesafeConfigEncoder[T] extends Encoder[T, ConfigMap]
 object TypesafeConfigEncoder extends TypesafeConfigEncoders
 
 object TypesafeConfig extends TypesafeConfigDecoders with TypesafeConfigEncoders
+
+trait TypesafeConfigUtils extends Utils
+
+object TypesafeConfigUtils extends UtilsCompanion[TypesafeConfigUtils] {
+  override implicit val default: TypesafeConfigUtils = new TypesafeConfigUtils {
+    val dashTransformation: String => String = _.replaceAll(
+      "([A-Z]+)([A-Z][a-z])",
+      "$1-$2"
+    ).replaceAll("([a-z\\d])([A-Z])", "$1-$2").toLowerCase
+
+    override def pathToString(path: Seq[String]): String = path.map(dashTransformation).mkString(".")
+  }
+}
+
+trait TypesafeConfigUtilsMixin extends UtilsMixin {
+  override type U = TypesafeConfigUtils
+  override val utils: TypesafeConfigUtils = implicitly[TypesafeConfigUtils]
+}

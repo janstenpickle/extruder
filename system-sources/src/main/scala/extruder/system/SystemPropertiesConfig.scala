@@ -6,7 +6,7 @@ import extruder.core._
 
 import scala.collection.JavaConverters._
 
-trait SystemPropertiesDecoders extends BaseMapDecoders with Decode[java.util.Properties, Map[String, String], MapDecoder] with PeriodSeparatedPath {
+trait SystemPropertiesDecoders extends BaseMapDecoders with Decode[java.util.Properties, Map[String, String], MapDecoder] with MapUtilsMixin {
   override protected def prepareConfig(config: java.util.Properties): ConfigValidation[Map[String, String]] =
     config.asScala.toMap.map { case (k, v) => k.toLowerCase -> v }.validNel
 
@@ -19,7 +19,7 @@ trait SystemPropertiesDecoders extends BaseMapDecoders with Decode[java.util.Pro
 
 object SystemPropertiesDecoder extends SystemPropertiesDecoders
 
-trait SystemPropertiesEncoders extends BaseMapEncoders with Encode[Map[String, String], Unit, MapEncoder] with PeriodSeparatedPath {
+trait SystemPropertiesEncoders extends BaseMapEncoders with Encode[Map[String, String], Unit, MapEncoder] with MapUtilsMixin {
   override protected def finalizeConfig(inter: Map[String, String]): ConfigValidation[Unit] =
     Either.catchNonFatal {
       inter.foreach { case (k, v) => System.setProperty(k, v) }

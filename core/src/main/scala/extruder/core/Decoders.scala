@@ -8,7 +8,7 @@ trait Decoders[C, D[T] <: Decoder[T, C]] {
   def apply[T](implicit decoder: D[T]): D[T] = decoder
 }
 
-trait Decode[C, I, D[T] <: Decoder[T, I]] { self: ResolutionCommon =>
+trait Decode[C, I, D[T] <: Decoder[T, I]] { self: UtilsMixin =>
   protected def prepareConfig(config: C): ConfigValidation[I]
 
   def decode[T](config: C)(implicit decoder: D[T]): ConfigValidation[T] =
@@ -21,7 +21,7 @@ trait Decode[C, I, D[T] <: Decoder[T, I]] { self: ResolutionCommon =>
     parameters(Seq.empty[String])
 
   def parameters[T](namespace: Seq[String])(implicit params: Parameters[T]): String =
-    FormatParameters.asTable[T](pathToString, namespace)
+    FormatParameters.asTable[T](utils.pathToString, namespace)
 }
 
 trait Decoder[T, C] {

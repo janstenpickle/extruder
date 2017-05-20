@@ -85,13 +85,13 @@ trait ConfigSpec[C, I, J, D[T] <: Decoder[T, I], E[T] <: Encoder[T, J]] extends 
   def testDefaults(implicit decoder: D[CaseClass]): Prop =
     Prop.forAll(Gen.alphaNumStr, Gen.posNum[Int], Gen.posNum[Long])((s, i, l) =>
       decode[CaseClass](convertConfig(Map(
-        "caseclass.s" -> s,
-        "caseclass.i" -> i.toString,
-        "caseclass.l" -> l.toString
+        Seq("CaseClass", "s") -> s,
+        Seq("CaseClass", "i") -> i.toString,
+        Seq("CaseClass", "l") -> l.toString
       ))).toEither must beRight(CaseClass(s, i, l, None))
     )
 
-  def convertConfig(map: Map[String, String]): C
+  def convertConfig(map: Map[Seq[String], String]): C
 
   def testCaseClassParams: MatchResult[String] = parameters[CaseClass] !== ""
 }
