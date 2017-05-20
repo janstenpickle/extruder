@@ -1,4 +1,4 @@
-val specs2Ver = "3.8.6"
+val specs2Ver = "3.8.9"
 
 val commonSettings = Seq(
   version := "0.4.0-SNAPSHOT",
@@ -36,7 +36,7 @@ lazy val core = (project in file("core")).
       name := "extruder-core",
       libraryDependencies ++= Seq(
         "org.typelevel" %% "cats" % "0.9.0",
-        "com.github.benhutchison" %% "mouse" % "0.6",
+        "com.github.benhutchison" %% "mouse" % "0.7",
         "com.chuusai" %% "shapeless" % "2.3.2",
         "org.specs2" %% "specs2-core" % specs2Ver % "test",
         "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test",
@@ -83,8 +83,8 @@ lazy val refined = (project in file("refined")).
       Seq(
         name := "extruder-refined",
         libraryDependencies ++= Seq(
-          "eu.timepit" %% "refined" % "0.8.0",
-          "eu.timepit" %% "refined-scalacheck" % "0.8.0",
+          "eu.timepit" %% "refined" % "0.8.1",
+          "eu.timepit" %% "refined-scalacheck" % "0.8.1",
           "org.specs2" %% "specs2-core" % specs2Ver % "test",
           "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test"
         ),
