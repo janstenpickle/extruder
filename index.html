@@ -1,0 +1,154 @@
+<html><head><meta charset="utf-8" /><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /><title>extruder</title><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="Populate Scala case classes from any any configuration source" /><meta name="author" content="Chris Jansen" /><meta name="og:image" content="/extruder/img/poster.png" /><meta name="og:title" content="extruder" /><meta name="og:site_name" content="extruder" /><meta name="og:url" content="https://janstenpickle.github.io/extruder/" /><meta name="og:type" content="website" /><meta name="og:description" content="Populate Scala case classes from any any configuration source" /><meta name="twitter:image" content="/extruder/img/poster.png" /><meta name="twitter:card" content="summary_large_image" /><meta name="twitter:site" content="" /><meta name="kazari-dependencies" content="" /><meta name="kazari-resolvers" content="" /><link rel="icon" type="image/png" href="/extruder/img/favicon.png" /><link rel="icon" type="image/png" sizes="16x16" href="/extruder/img/favicon16x16.png" /><link rel="icon" type="image/png" sizes="24x24" href="/extruder/img/favicon24x24.png" /><link rel="icon" type="image/png" sizes="32x32" href="/extruder/img/favicon32x32.png" /><link rel="icon" type="image/png" sizes="48x48" href="/extruder/img/favicon48x48.png" /><link rel="icon" type="image/png" sizes="57x57" href="/extruder/img/favicon57x57.png" /><link rel="icon" type="image/png" sizes="60x60" href="/extruder/img/favicon60x60.png" /><link rel="icon" type="image/png" sizes="64x64" href="/extruder/img/favicon64x64.png" /><link rel="icon" type="image/png" sizes="70x70" href="/extruder/img/favicon70x70.png" /><link rel="icon" type="image/png" sizes="72x72" href="/extruder/img/favicon72x72.png" /><link rel="icon" type="image/png" sizes="76x76" href="/extruder/img/favicon76x76.png" /><link rel="icon" type="image/png" sizes="96x96" href="/extruder/img/favicon96x96.png" /><link rel="icon" type="image/png" sizes="114x114" href="/extruder/img/favicon114x114.png" /><link rel="icon" type="image/png" sizes="120x120" href="/extruder/img/favicon120x120.png" /><link rel="icon" type="image/png" sizes="128x128" href="/extruder/img/favicon128x128.png" /><link rel="icon" type="image/png" sizes="144x144" href="/extruder/img/favicon144x144.png" /><link rel="icon" type="image/png" sizes="150x150" href="/extruder/img/favicon150x150.png" /><link rel="icon" type="image/png" sizes="152x152" href="/extruder/img/favicon152x152.png" /><link rel="icon" type="image/png" sizes="196x196" href="/extruder/img/favicon196x196.png" /><link rel="icon" type="image/png" sizes="310x310" href="/extruder/img/favicon310x310.png" /><link rel="icon" type="image/png" sizes="310x150" href="/extruder/img/favicon310x150.png" /><link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" /><link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" /><link rel="stylesheet" href="/extruder/highlight/styles/atom-one-light.css" /><link rel="stylesheet" href="/extruder/css/style.css" /><link rel="stylesheet" href="/extruder/css/palette.css" /><link rel="stylesheet" href="/extruder/css/codemirror.css" /><link rel="stylesheet" href="/extruder/css/kazari-style.css" /><link rel="stylesheet" href="/extruder/css/solarized-dark.css" /><link rel="stylesheet" href="/extruder/css/override.css" /></head><body><header id="site-header"><div class="navbar-wrapper"><div class="container"><div class="row"><div class="col-xs-6"><a href="/extruder/" class="brand"><div class="icon-wrapper"><span>extruder</span></div></a></div><div class="col-xs-6"><nav class="text-right"><ul class=""><li><a href="https://github.com/janstenpickle/extruder"><i class="fa fa-github"></i><span class="hidden-xs">GitHub</span></a></li><li><a href="api"><i class="fa fa-file-text"></i><span class="hidden-xs">Documentation</span></a></li></ul></nav></div></div></div></div><div class="jumbotron"><div class="container"><h1 class="text-center">Populate Scala case classes from any any configuration source</h1><h2></h2><p class="text-center"><a href="https://github.com/janstenpickle/extruder" class="btn btn-outline-inverse">View on GitHub</a></p></div></div><div><ul class="horizontalNav">         <li><a class="" href="/extruder/extending.html">Extending an Existing Config Source</a></li>  <li><a class="" href="/extruder/resolution.html">Resolving Configuration</a></li> </ul></div></header><main id="site-main"><section class="use"><div class="container"><div id="content"><h1 id="extruder">Extruder</h1>
+
+<p><a href="http://typelevel.org/projects"><img src="https://img.shields.io/badge/typelevel-incubator-green.svg" alt="Typelevel Incubator" /></a> <a href="https://travis-ci.org/janstenpickle/extruder"><img src="https://travis-ci.org/janstenpickle/extruder.svg?branch=master" alt="Build Status" /></a> <a href="https://coveralls.io/github/janstenpickle/extruder?branch=master"><img src="https://coveralls.io/repos/github/janstenpickle/extruder/badge.svg?branch=master" alt="Coverage Status" /></a></p>
+
+<p>This library uses <a href="https://github.com/milessabin/shapeless">shapeless</a> and <a href="https://github.com/typelevel/cats">cats</a> to provide a neat syntax to instantiate Scala case classes from a configuration source.</p>
+
+<p><a name="quick-start"></a></p>
+
+<p>Add the following to your <code class="highlighter-rouge">build.sbt</code>:</p>
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="n">resolvers</span> <span class="o">+=</span> <span class="nc">Resolver</span><span class="o">.</span><span class="n">bintrayRepo</span><span class="o">(</span><span class="s">"janstenpickle"</span><span class="o">,</span> <span class="s">"maven"</span><span class="o">)</span>
+<span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"extruder"</span> <span class="o">%%</span> <span class="s">"extruder"</span> <span class="o">%</span> <span class="s">"0.4.0"</span>
+
+<span class="c1">// only if you require support for Typesafe config
+</span><span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"extruder"</span> <span class="o">%%</span> <span class="s">"extruder-typesafe"</span> <span class="o">%</span> <span class="s">"0.4.0"</span>
+
+<span class="c1">// only if you require support for refined types
+</span><span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"extruder"</span> <span class="o">%%</span> <span class="s">"extruder-refined"</span> <span class="o">%</span> <span class="s">"0.4.0"</span>
+</code></pre>
+</div>
+
+<p><strong>Rules for configuration resolution are specified in the declaration of the case class itself:</strong></p>
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">import</span> <span class="nn">cats.data.ValidatedNel</span>
+<span class="k">import</span> <span class="nn">extruder.core.ValidationError</span>
+<span class="k">import</span> <span class="nn">extruder.system.SystemPropertiesConfig._</span>
+
+<span class="k">case</span> <span class="k">class</span> <span class="nc">ApplicationConfig</span><span class="o">(</span><span class="n">default</span><span class="k">:</span> <span class="kt">Int</span> <span class="o">=</span> <span class="mi">100</span><span class="o">,</span> <span class="n">noDefault</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">optional</span><span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">Double</span><span class="o">])</span>
+
+<span class="k">val</span> <span class="n">config</span><span class="k">:</span> <span class="kt">ValidatedNel</span><span class="o">[</span><span class="kt">ValidationError</span>, <span class="kt">ApplicationConfig</span><span class="o">]</span> <span class="k">=</span> <span class="n">decode</span><span class="o">[</span><span class="kt">ApplicationConfig</span><span class="o">]</span>
+</code></pre>
+</div>
+
+<h2 id="motivation">Motivation</h2>
+
+<p>To learn more about <a href="https://github.com/milessabin/shapeless">shapeless</a> having read Dave Gurnell’s excellent introduction: <a href="http://underscore.io/books/shapeless-guide/">“The Type Astronaut’s Guide to Shapeless”</a>.</p>
+
+<p>Try out <a href="https://github.com/zalando/grafter">Grafter</a>. This project complements applications which use <a href="https://github.com/zalando/grafter">Grafter</a> or other dependency injection frameworks and techniques by providing a way of resolving values in case classes from a configuration source.</p>
+
+<p>Specifically Grafter requires that all configuration be part single case class to be passed to the entry point of the application. Structuring the config in classes like this works well, but leaves the question of how are these classes populated with config?</p>
+
+<p>This is where Extruder comes in, the <a href="examples/src/main/scala/extruder/examples/Grafter.scala">example here</a> shows how they may be used together.</p>
+
+<h1 id="modules">Modules</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Module</th>
+      <th>Description</th>
+      <th>Download</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Extruder</strong></td>
+      <td>Main module, includes core functionality and basic resolvers.</td>
+      <td><a href="https://bintray.com/janstenpickle/maven/extruder/_latestVersion"> <img src="https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg" alt="Download" /> </a></td>
+    </tr>
+    <tr>
+      <td><strong>Typesafe Config</strong></td>
+      <td>Support for resolution from <a href="https://github.com/typesafehub/config">Typesafe Config</a>.</td>
+      <td><a href="https://bintray.com/janstenpickle/maven/extruder-typesafe/_latestVersion"> <img src="https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg" alt="Download" /> </a></td>
+    </tr>
+    <tr>
+      <td><strong>Refined</strong></td>
+      <td>Support for <a href="https://github.com/fthomas/refined">Refined</a> types.</td>
+      <td><a href="https://bintray.com/janstenpickle/maven/extruder-refined/_latestVersion"> <img src="https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg" alt="Download" /> </a></td>
+    </tr>
+  </tbody>
+</table>
+
+<h1 id="supported-functionality">Supported Functionality</h1>
+
+<ul>
+  <li><a href="resolution.html">Parsing of primitive types</a>:
+    <ul>
+      <li>Char</li>
+      <li>String</li>
+      <li>Int</li>
+      <li>Long</li>
+      <li>Double</li>
+      <li>Float</li>
+      <li>Short</li>
+      <li>Byte</li>
+      <li>Boolean</li>
+      <li>URL</li>
+      <li>Duration</li>
+      <li>Finite Duration</li>
+    </ul>
+  </li>
+  <li><a href="refined.html">Support for refined types</a></li>
+  <li><a href="resolution.html#simple-case-class">Case class resolution</a></li>
+  <li><a href="resolution.html#sealed-type-families">Sealed type member resolution (ADTs)</a></li>
+  <li>Resolution from multiple configuration sources:
+    <ul>
+      <li><a href="core/src/main/scala/extruder/core/Map.scala">Simple Map (<code class="highlighter-rouge">Map[String, String]</code>)</a></li>
+      <li><a href="core/src/main/scala/extruder/core/SystemPropertiesConfig.scala">System Properties</a></li>
+      <li><a href="typesafe/src/main/scala/extruder/typesafe/TypesafeConfig.scala">Typesafe Config</a></li>
+    </ul>
+  </li>
+  <li><a href="#extending">Pluggable configuration backends</a></li>
+  <li><a href="#extending-an-existing-config-source">Addition of more types</a></li>
+</ul>
+
+<h1 id="similar-projects">Similar Projects</h1>
+
+<h3 id="pureconfig">PureConfig</h3>
+<p><a href="https://github.com/melrief/pureconfig">PureConfig</a> uses a similar technique to create case classes from <a href="https://github.com/typesafehub/config">Typesafe Config</a>.</p>
+
+<ul>
+  <li>Extruder supports pluggable configuration backends - does not rely on <a href="https://github.com/typesafehub/config">Typesafe Config</a> by default</li>
+  <li>Pureconfig supports time parsing using <code class="highlighter-rouge">java.time</code> which Extruder does not out of the box, a date parsing module may be added in the future, until then <a href="#extending-an-existing-set-of-resolvers">custom configuration sources may be added</a></li>
+  <li>Resolution of Typesafe <code class="highlighter-rouge">ConfigValue</code>, <code class="highlighter-rouge">ConfigObject</code> and <code class="highlighter-rouge">ConfigList</code> is only supported by the Typesafe Config configuration backend, as it is closely tied to Typesafe Config, Pureconfig supports this by default as it is directly tied to Typesafe config</li>
+  <li>Pureconfig supports returning <code class="highlighter-rouge">Map[String, String]</code>, for the time being Extruder does not support this</li>
+  <li>Extruder supports control of class and parameter name formatting by <a href="#implementing-pathtostring">overriding a method</a>, however Pureconfig supports this via predefined configuration schemes</li>
+</ul>
+
+<h1 id="participation">Participation</h1>
+
+<p>This project supports the Typelevel <a href="http://typelevel.org/conduct.html">code of conduct</a> and aims that its channels
+(mailing list, Gitter, github, etc.) to be welcoming environments for everyone.</p>
+
+<h1 id="licence">Licence</h1>
+
+<h4 id="mit-license">MIT License</h4>
+
+<p><em>Copyright (c) 2017 Chris Jansen</em></p>
+
+<p>Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the “Software”), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:</p>
+
+<p>The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.</p>
+
+<p>THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</p>
+
+</div></div></section><section class="technologies"><div class="container"><div class="row"></div></div></section></main><footer id="site-footer"><div class="container"><div class="row"><div class="col-xs-6"><p>extruder is designed and developed by <a href="https://github.com/janstenpickle/extruder" target="_blank">Chris Jansen</a></p></div><div class="col-xs-6"><p class="text-right"><a href="https://github.com/janstenpickle/extruder"><span class="fa fa-github"></span>View on GitHub</a></p></div></div><div class="row"><div class="col-xs-6"><p>Website built with <a href="https://47deg.github.io/sbt-microsites/" target="_blank">Sbt-microsites</a> - © 2016 <a href="https://www.47deg.com/" target="_blank">47 Degrees</a></p></div></div></div></footer><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script><script src="/extruder/highlight/highlight.pack.js"></script><script>hljs.configure({
+languages:['scala','java','bash']
+});
+hljs.initHighlighting();
+             </script><script src="/extruder/js/kazari.js"></script><script><script>
+$(document).ready(function() {
+	kazari.KazariPlugin().decorateCode('https://scala-evaluator-212.herokuapp.com/eval', 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.S2F6YXJp.Jl2eqMfw8IakJF93PjxTbrf-8YUJgX5OoOfy5JHE8Yw', '', 'solarized-dark')
+})
+    </script></script></body></html>
