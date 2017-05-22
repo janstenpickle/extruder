@@ -1,3 +1,5 @@
+import microsites.ExtraMdFileConfig
+
 val specs2Ver = "3.8.9"
 
 val commonSettings = Seq(
@@ -108,3 +110,56 @@ lazy val aggregateCompile =
     inProjects(core, systemSources),
     inConfigurations(Compile)
   )
+
+  lazy val docSettings = commonSettings ++ Seq(
+    micrositeName := "extruder",
+    micrositeDescription := "Populate Scala case classes from any any configuration source",
+    micrositeAuthor := "Chris Jansen",
+    micrositeHighlightTheme := "atom-one-light",
+    micrositeHomepage := "https://janstenpickle.github.io/extruder/",
+    micrositeBaseUrl := "extruder",
+    micrositeDocumentationUrl := "api",
+    micrositeGithubOwner := "janstenpickle",
+    micrositeGithubRepo := "extruder",
+    micrositeExtraMdFiles := Map(file("CONTRIBUTING.md") -> ExtraMdFileConfig("contributing.md", "docs")),
+    micrositePalette := Map(
+      "brand-primary" -> "#009933",
+      "brand-secondary" -> "#006600",
+      "brand-tertiary" -> "#339933",
+      "gray-dark" -> "#49494B",
+      "gray" -> "#7B7B7E",
+      "gray-light" -> "#E5E5E6",
+      "gray-lighter" -> "#F4F3F4",
+      "white-color" -> "#FFFFFF"),
+    micrositePushSiteWith := GitHub4s,
+    micrositeGithubToken := sys.env.get("GITHUB_TOKEN"),
+    addMappingsToSiteDir(mappings in (ScalaUnidoc, packageDoc), micrositeDocumentationUrl),
+    ghpagesNoJekyll := false,
+    scalacOptions in (ScalaUnidoc, unidoc) ++= Seq(
+      "-groups",
+      "-implicits",
+      "-skip-packages", "scalaz",
+      "-sourcepath", baseDirectory.in(LocalRootProject).value.getAbsolutePath,
+      "-doc-root-content", (resourceDirectory.in(Compile).value / "rootdoc.txt").getAbsolutePath
+    ),
+    scalacOptions ~= {
+      _.filterNot(Set("-Yno-predef"))
+    },
+    git.remoteRepo := "git@github.com:janstenpickle/extruder.git",
+    unidocProjectFilter in (ScalaUnidoc, unidoc) :=
+      inAnyProject -- inProjects(root, examples),
+    includeFilter in makeSite := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.svg" | "*.js" | "*.swf" | "*.yml" | "*.md"
+  )
+
+lazy val docs = project.dependsOn(core, systemSources, typesafe, refined)
+  .settings(
+    moduleName := "extruder-docs",
+    name := "Extruder docs",
+    publish := (),
+    publishLocal := (),
+    publishArtifact := false
+  )
+  .settings(docSettings)
+  .enablePlugins(ScalaUnidocPlugin)
+  .enablePlugins(GhpagesPlugin)
+  .enablePlugins(MicrositesPlugin)

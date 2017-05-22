@@ -1,0 +1,5 @@
+options:
+  - title: Config Resolution
+    url: resolution.html
+  - title: Extending a Config Source
+    url: extending.html
