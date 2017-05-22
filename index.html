@@ -6,17 +6,19 @@
 
 <p>This library uses <a href="https://github.com/milessabin/shapeless">shapeless</a> and <a href="https://github.com/typelevel/cats">cats</a> to provide a neat syntax to instantiate Scala case classes from a configuration source.</p>
 
+<h2 id="quickstart-guide">Quickstart Guide</h2>
+
 <p><a name="quick-start"></a></p>
 
 <p>Add the following to your <code class="highlighter-rouge">build.sbt</code>:</p>
 <div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="n">resolvers</span> <span class="o">+=</span> <span class="nc">Resolver</span><span class="o">.</span><span class="n">bintrayRepo</span><span class="o">(</span><span class="s">"janstenpickle"</span><span class="o">,</span> <span class="s">"maven"</span><span class="o">)</span>
-<span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"extruder"</span> <span class="o">%%</span> <span class="s">"extruder"</span> <span class="o">%</span> <span class="s">"0.4.0"</span>
+<span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"extruder"</span> <span class="o">%%</span> <span class="s">"extruder"</span> <span class="o">%</span> <span class="s">"0.5.0"</span>
 
 <span class="c1">// only if you require support for Typesafe config
-</span><span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"extruder"</span> <span class="o">%%</span> <span class="s">"extruder-typesafe"</span> <span class="o">%</span> <span class="s">"0.4.0"</span>
+</span><span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"extruder"</span> <span class="o">%%</span> <span class="s">"extruder-typesafe"</span> <span class="o">%</span> <span class="s">"0.5.0"</span>
 
 <span class="c1">// only if you require support for refined types
-</span><span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"extruder"</span> <span class="o">%%</span> <span class="s">"extruder-refined"</span> <span class="o">%</span> <span class="s">"0.4.0"</span>
+</span><span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"extruder"</span> <span class="o">%%</span> <span class="s">"extruder-refined"</span> <span class="o">%</span> <span class="s">"0.5.0"</span>
 </code></pre>
 </div>
 
@@ -30,6 +32,8 @@
 <span class="k">val</span> <span class="n">config</span><span class="k">:</span> <span class="kt">ValidatedNel</span><span class="o">[</span><span class="kt">ValidationError</span>, <span class="kt">ApplicationConfig</span><span class="o">]</span> <span class="k">=</span> <span class="n">decode</span><span class="o">[</span><span class="kt">ApplicationConfig</span><span class="o">]</span>
 </code></pre>
 </div>
+
+<p>In <code class="highlighter-rouge">ApplicationConfig</code> above <code class="highlighter-rouge">default</code> will be set to <code class="highlighter-rouge">100</code>, <code class="highlighter-rouge">noDefault</code> will cause a validation failure to be logged and <code class="highlighter-rouge">optional</code> will be set to <code class="highlighter-rouge">None</code>, should the configuration source not contain a value for each parameter.</p>
 
 <h2 id="motivation">Motivation</h2>
 

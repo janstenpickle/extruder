@@ -67,6 +67,22 @@
 </span>
 </code></pre>
 </div>
+
+<h1 id="unsupported-functionality">Unsupported Functionality</h1>
+
+<p><strong>Cyclical references</strong></p>
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">import</span> <span class="nn">extruder.system.SystemPropertiesConfig._</span>
+
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Example</span><span class="o">(</span><span class="n">e</span><span class="k">:</span> <span class="kt">Example</span><span class="o">)</span>
+
+<span class="n">decode</span><span class="o">[</span><span class="kt">Example</span><span class="o">]</span> <span class="c1">// won't compile
+</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">NestedOne</span><span class="o">(</span><span class="n">n</span><span class="k">:</span> <span class="kt">NestedTwo</span><span class="o">)</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">NestedTwo</span><span class="o">(</span><span class="n">n</span><span class="k">:</span> <span class="kt">NestedOne</span><span class="o">)</span>
+
+<span class="n">decode</span><span class="o">[</span><span class="kt">NestedOne</span><span class="o">]</span> <span class="c1">// won't compile
+</span></code></pre>
+</div>
 </section></div></div></div></div><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script><script src="/extruder/highlight/highlight.pack.js"></script><script>hljs.configure({
 languages:['scala','java','bash']
 });
