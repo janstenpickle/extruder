@@ -46,7 +46,7 @@ lazy val core = (project in file("core")).
         "com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % "1.1.5" % "test"
       ),
       publishArtifact in Test := true,
-      coverageEnabled := true
+      coverageEnabled.in(Test, test) := true
     )
   )
 
@@ -75,7 +75,7 @@ lazy val typesafe = (project in file("typesafe")).
         "org.specs2" %% "specs2-core" % specs2Ver % "test",
         "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test"
       ),
-      coverageEnabled := true
+      coverageEnabled.in(Test, test) := true
     )
   ).dependsOn(core % "compile->compile;test->test")
 
@@ -90,7 +90,7 @@ lazy val refined = (project in file("refined")).
           "org.specs2" %% "specs2-core" % specs2Ver % "test",
           "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test"
         ),
-        coverageEnabled := true
+        coverageEnabled.in(Test, test) := true
       )
   ).dependsOn(core % "compile->compile;test->test")
 
