@@ -1,87 +1,82 @@
 package extruder.core
 
-import cats.data.Validated.{Invalid, Valid}
+import cats.effect.IO
 import cats.implicits._
-import shapeless.labelled.{FieldType, field}
-import shapeless.ops.hlist.{ConstMapper, Mapper, RightFolder, Zip}
-import shapeless.ops.record._
-import shapeless.syntax.std.tuple._
 import shapeless._
+import shapeless.labelled.{FieldType, field}
 
 import scala.reflect.runtime.universe.TypeTag
 
-trait DerivedDecoders[C, D[T] <: Decoder[T, C]] { self: Decoders[C, D] with UtilsMixin =>
-  import DerivedDecoders._
+trait DerivedDecoders { self: Decoders with DecodeTypes =>
+  implicit def cnilDecoder[F[_], E](implicit utils: Hint, AE: ExtruderApplicativeError[F, E]): Dec[F, CNil] =
+    mkDecoder[F, CNil]((path, _, _) => IO.pure(AE.validationFailure(
+      s"Could not find specified implementation of sealed type at configuration path '${utils.pathToStringWithType(path)}'"
+    )))
 
-  implicit val cnilDecoder: D[CNil] = mkDecoder((path, _, _) => ValidationFailure(
-    s"Could not find specified implementation of sealed type at configuration path '${utils.pathToStringWithType(path)}'"
-  ).invalidNel)
-
-  implicit def cconsDecoder[K <: Symbol, H, T <: Coproduct](implicit key: Witness.Aux[K],
-                                                            headResolve: Lazy[D[H]],
-                                                            tailResolve: Lazy[D[T]],
-                                                            typeResolver: Lazy[D[Option[String]]]): D[FieldType[K, H] :+: T] =
-      mkDecoder((path, _, config) =>
-      typeResolver.value.read(utils.pathWithType(path), None, config) match {
-        case Valid(None) => Missing(
+  implicit def cconsDecoder[F[_], E, K <: Symbol, H, T <: Coproduct](implicit key: Witness.Aux[K],
+                                                                     headResolve: Dec[F, H],
+                                                                     tailResolve: Lazy[Dec[F, T]],
+                                                                     typeResolver: Lazy[Dec[F, Option[String]]],
+                                                                     utils: Hint,
+                                                                     AE: ExtruderApplicativeError[F, E],
+                                                                     FM: IOFlatMap[F]): Dec[F, FieldType[K, H] :+: T] =
+    mkDecoder { (path, _, config) =>
+      val onValidType: Option[String] => IO[F[FieldType[K, H] :+: T]] = {
+        case None => IO.pure(AE.missing(
           s"Could not type of sealed instance at path '${utils.pathToStringWithType(path)}'"
-        ).invalidNel
-        case Valid(Some(tpe)) if tpe == key.value.name =>
-          headResolve.value.read(path, None, config).map(v => Inl(field[K](v)))
-        case Valid(_) => tailResolve.value.read(path, None, config).map(Inr(_))
-        case err @ Invalid(_) => err
+        ))
+        case Some(tpe) if tpe == key.value.name =>
+          headResolve.read(path, None, config).map(AE.map(_)(v => Inl(field[K](v))))
+        case _ => tailResolve.value.read(path, None, config).map(AE.map(_)(Inr(_)))
       }
-    )
+      FM.flatMap(typeResolver.value.read(utils.pathWithType(path), None, config))(onValidType)
+    }
 
-  implicit def unionDecoder[T, V <: Coproduct](implicit gen: LabelledGeneric.Aux[T, V],
-                                               underlying: Lazy[D[V]]): D[T] =
-    mkDecoder((path, _, config) => underlying.value.read(path, None, config).map(gen.from))
+  implicit def unionDecoder[F[_], E, T, V <: Coproduct](implicit gen: LabelledGeneric.Aux[T, V],
+                                                        underlying: Lazy[Dec[F, V]],
+                                                        AE: ExtruderApplicativeError[F, E],
+                                                        FM: IOFlatMap[F],
+                                                        lp: LowPriority): Dec[F, T] =
+    mkDecoder((path, _, config) => underlying.value.read(path, None, config).map(AE.map(_)(gen.from)))
 
-  // scalastyle:off parameter.number
-  implicit def productDecoder[T,
+  trait DerivedDecoderWithDefault[T, F[_], Repr <: HList, DefaultRepr <: HList] {
+    def read(path: Seq[String], default: DefaultRepr, config: DecodeConfig): IO[F[Repr]]
+  }
+
+  implicit def hNilDerivedDecoder[T, F[_], E](implicit AE: ExtruderApplicativeError[F, E]): DerivedDecoderWithDefault[T, F, HNil, HNil] =
+    new DerivedDecoderWithDefault[T, F, HNil, HNil] {
+      override def read(path: Seq[String], default: HNil, config: DecodeConfig): IO[F[HNil]] = IO.pure(AE.pure(HNil))
+    }
+
+  implicit def hConsDerivedDecoder[T, F[_], E, K <: Symbol, V, TailRepr <: HList, DefaultsTailRepr <: HList]
+  (implicit key: Witness.Aux[K],
+   AE: ExtruderApplicativeError[F, E],
+   decoder: Lazy[Dec[F, V]],
+   tailDecoder: Lazy[DerivedDecoderWithDefault[T, F, TailRepr, DefaultsTailRepr]]): DerivedDecoderWithDefault[T, F, FieldType[K, V] :: TailRepr, Option[V] :: DefaultsTailRepr] =
+    new DerivedDecoderWithDefault[T, F, FieldType[K, V] :: TailRepr, Option[V] :: DefaultsTailRepr] {
+      override def read(path: Seq[String], default: Option[V] :: DefaultsTailRepr, config: DecodeConfig): IO[F[::[FieldType[K, V], TailRepr]]] = {
+        val fieldName = key.value.name
+
+        for {
+          head <- decoder.value.read(path :+ fieldName, default.head, config)
+          tail <- tailDecoder.value.read(path, default.tail, config)
+        } yield (head |@| tail).map((h, t) => field[K](h) :: t)
+      }
+    }
+
+  implicit def productDecoder[F[_],
+                              E,
+                              T,
                               GenRepr <: HList,
-                              DefaultOptsRepr <: HList,
-                              LGenRepr <: HList,
-                              KeysRepr <: HList,
-                              ConstRepr <: HList,
-                              ZipperRepr <: HList,
-                              PrefixZipperRepr <: HList,
-                              MapperRepr <: HList](implicit gen: Generic.Aux[T, GenRepr],
-                                                   defaultOpts: Default.AsOptions.Aux[T, DefaultOptsRepr],
-                                                   lGen: LabelledGeneric.Aux[T, LGenRepr],
-                                                   keys: Keys.Aux[LGenRepr, KeysRepr],
-                                                   constMapper: ConstMapper.Aux[(Seq[String], C), KeysRepr, ConstRepr],
-                                                   prefixZipper: Zip.Aux[KeysRepr :: ConstRepr :: HNil, PrefixZipperRepr],
-                                                   zipper: Zip.Aux[PrefixZipperRepr :: DefaultOptsRepr :: HNil, ZipperRepr],
-                                                   lazyMapper: Lazy[Mapper.Aux[readConfig.type, ZipperRepr, MapperRepr]],
-                                                   rightFolder: RightFolder.Aux[MapperRepr, ConfigValidation[HNil], folder.type, ConfigValidation[GenRepr]],
-                                                   tag: TypeTag[T]): D[T] = {
+                              DefaultOptsRepr <: HList](implicit gen: LabelledGeneric.Aux[T, GenRepr],
+                                                        defaults: Default.AsOptions.Aux[T, DefaultOptsRepr],
+                                                        tag: TypeTag[T],
+                                                        AE: ExtruderApplicativeError[F, E],
+                                                        decoder: Lazy[DerivedDecoderWithDefault[T, F, GenRepr, DefaultOptsRepr]]): Dec[F, T] = {
     lazy val className: String = tag.tpe.typeSymbol.name.toString
-    val keyNames = Keys[LGenRepr].apply()
-    mkDecoder((path, _, config) =>
-      keyNames.zip(keyNames.mapConst((path :+ className, config))).
-        zip(Default.AsOptions[T].apply()).
-        map(readConfig)(lazyMapper.value).
-        foldRight((HNil :: HNil).tail.validNel[ValidationError])(folder).
-        map(Generic[T].from)
-    )
+    mkDecoder{(path, _, config) =>
+      decoder.value.read(path :+ className, defaults(), config).map(AE.map(_)(gen.from))
+    }
   }
-  // scalastyle:on
 
-  implicit def objectDecoder[T](implicit gen: Generic.Aux[T, HNil]): D[T] =
-    mkDecoder((_, _, _) => gen.from((HNil :: HNil).tail).validNel)
-
-  object readConfig extends Poly1 {
-    implicit def caseAny[A <: Symbol, B](implicit decoder: Lazy[D[B]]): Case.Aux[((A, (Seq[String], C)), Option[B]), ConfigValidation[B]] =
-      at[((A, (Seq[String], C)), Option[B])]{ case ((key, (prefix, config)), default) => decoder.value.read(prefix :+ key.name, default, config) }
-  }
-}
-
-object DerivedDecoders {
-  // scalastyle:off object.name
-  object folder extends Poly2 {
-    implicit def caseHList[A, B <: HList]: Case.Aux[ConfigValidation[A], ConfigValidation[B], ConfigValidation[A :: B]] =
-      at[ConfigValidation[A], ConfigValidation[B]]((a, b) => (a |@| b).map(_ :: _))
-  }
-  // scalastyle:on
 }
