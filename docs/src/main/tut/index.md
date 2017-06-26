@@ -7,7 +7,7 @@ section: "home"
 
 # Extruder
 
-[![Typelevel Incubator](https://img.shields.io/badge/typelevel-incubator-green.svg)](http://typelevel.org/projects) [![Build Status](https://travis-ci.org/janstenpickle/extruder.svg?branch=master)](https://travis-ci.org/janstenpickle/extruder) [![Coverage Status](https://coveralls.io/repos/github/janstenpickle/extruder/badge.svg?branch=master)](https://coveralls.io/github/janstenpickle/extruder?branch=master)
+[![Typelevel Incubator](https://img.shields.io/badge/typelevel-incubator-green.svg)](http://typelevel.org/projects) [![Build Status](https://travis-ci.org/janstenpickle/extruder.svg?branch=master)](https://travis-ci.org/janstenpickle/extruder) [![codecov](https://codecov.io/gh/janstenpickle/extruder/branch/master/graph/badge.svg)](https://codecov.io/gh/janstenpickle/extruder)
 
 This library uses [shapeless](https://github.com/milessabin/shapeless) and [cats](https://github.com/typelevel/cats) to provide a neat syntax to instantiate Scala case classes from a configuration source.
 
@@ -35,25 +35,16 @@ This is where Extruder comes in, the [example here](examples/src/main/scala/extr
 | **Extruder**|Main module, includes core functionality and basic resolvers.|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder/_latestVersion)|
 | **Typesafe Config**|Support for resolution from [Typesafe Config][typesafe].|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder-typesafe/_latestVersion)|
 | **Refined**|Support for [Refined][refined] types.|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder-refined/_latestVersion)|
+| **Monix**|Support for [Monix] types.|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder-monix/_latestVersion)|
+| **FS2**|Support for [FS2] types.|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder-fs2/_latestVersion)|
 
 # Supported Functionality
 
-- [Parsing of primitive types](resolution.html):
-  - Char
-  - String
-  - Int
-  - Long
-  - Double
-  - Float
-  - Short
-  - Byte
-  - Boolean
-  - URL
-  - Duration
-  - Finite Duration
+- [Parsing of primitive types](usage.html#primitive-types):
+{% include primitives.md %}
 - [Support for refined types](refined.html)
-- [Case class resolution](resolution.html#simple-case-class)
-- [Sealed type member resolution (ADTs)](resolution.html#sealed-type-families)
+- [Case class resolution](usage.html#simple-case-class)
+- [Sealed type member resolution (ADTs)](usage.html#sealed-type-families)
 - Resolution from multiple configuration sources:
   - [Simple Map (`Map[String, String]`)](core/src/main/scala/extruder/core/Map.scala)
   - [System Properties](core/src/main/scala/extruder/core/SystemPropertiesConfig.scala)
