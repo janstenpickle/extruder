@@ -1,33 +1,42 @@
 package extruder.system
 
-import cats.syntax.either._
-import cats.syntax.validated._
+import java.util.Properties
+
+import cats.effect.IO
+import cats.syntax.cartesian._
 import extruder.core._
 
 import scala.collection.JavaConverters._
 
-trait SystemPropertiesDecoders extends BaseMapDecoders with Decode[java.util.Properties, Map[String, String], MapDecoder] with MapUtilsMixin {
-  override protected def prepareConfig(config: java.util.Properties): ConfigValidation[Map[String, String]] =
-    config.asScala.toMap.map { case (k, v) => k.toLowerCase -> v }.validNel
+trait SystemPropertiesDecoders extends BaseMapDecoders with Decode with DecodeFromDefaultConfig with DecodeTypes {
+  override type InputConfig = java.util.Properties
+  override type OutputConfig = Unit
 
-  def decode[T](implicit decoder: MapDecoder[T]): ConfigValidation[T] =
-    decode[T](Seq.empty)
+  override protected def prepareConfig[F[_], E](namespace: Seq[String], config: java.util.Properties)
+                                               (implicit AE: ExtruderApplicativeError[F, E], util: Hint): IO[F[Map[String, String]]] =
+    IO(AE.pure(config.asScala.toMap.map { case (k, v) => k.toLowerCase -> v }))
 
-  def decode[T](namespace: Seq[String])(implicit decoder: MapDecoder[T]): ConfigValidation[T] =
-    decode[T](namespace, System.getProperties)
+  override def loadConfig: IO[Properties] = IO(System.getProperties)
 }
 
 object SystemPropertiesDecoder extends SystemPropertiesDecoders
 
-trait SystemPropertiesEncoders extends BaseMapEncoders with Encode[Map[String, String], Unit, MapEncoder] with MapUtilsMixin {
-  override protected def finalizeConfig(inter: Map[String, String]): ConfigValidation[Unit] =
-    Either.catchNonFatal {
-      inter.foreach { case (k, v) => System.setProperty(k, v) }
-    }.leftMap(ex => ValidationException(ex.getMessage, ex)).toValidatedNel
+trait SystemPropertiesEncoders extends BaseMapEncoders with Encode {
+  override type OutputConfig = Unit
+
+  override protected def finalizeConfig[F[_], E](namespace: Seq[String], inter: Map[String, String])
+                                                (implicit AE: ExtruderApplicativeError[F, E], util: Hint): IO[F[Unit]] = IO.pure {
+    inter.map { case (k, v) => AE.catchNonFatal(System.setProperty(k, v)) }
+      .foldLeft(AE.pure(()))((acc, v) =>
+        (acc |@| v).map((_, _) => ())
+      )
+  }
 }
 
 object SystemPropertiesEncoder extends SystemPropertiesEncoders
 
-trait SystemPropertiesConfig extends SystemPropertiesDecoders with SystemPropertiesEncoders
+trait SystemPropertiesConfig extends SystemPropertiesDecoders with SystemPropertiesEncoders {
+  override type Hint = MapHints
+}
 
 object SystemPropertiesConfig extends SystemPropertiesConfig

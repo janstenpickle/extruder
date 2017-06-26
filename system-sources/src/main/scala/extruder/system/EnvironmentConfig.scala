@@ -1,49 +1,49 @@
 package extruder.system
 
-import cats.syntax.validated._
+import cats.effect.IO
 import extruder.core._
 
 import scala.collection.JavaConverters._
 
-trait EnvironmentDecoder[T] extends Decoder[T, Map[String, String]]
+trait EnvironmentDecoder[F[_], T] extends Decoder[F, T, Map[String, String]]
 
-trait EnvironmentDecoders extends Decoders[Map[String, String], EnvironmentDecoder]
-                          with PrimitiveDecoders[Map[String, String], EnvironmentDecoder]
-                          with DerivedDecoders[Map[String, String], EnvironmentDecoder]
-                          with Decode[java.util.Map[String, String], Map[String, String], EnvironmentDecoder]
-                          with EnvironmentUtilsMixin {
+trait EnvironmentDecoders extends Decoders
+                          with PrimitiveDecoders
+                          with DerivedDecoders
+                          with Decode
+                          with DecodeFromDefaultConfig
+                          with DecodeTypes {
+  override type InputConfig = java.util.Map[String, String]
+  override type DecodeConfig = Map[String, String]
+  override type Dec[F[_], T] = EnvironmentDecoder[F, T]
+  override type Hint = EnvironmentHints
 
-  override protected def lookupValue(path: Seq[String], config: Map[String, String]): ConfigValidation[Option[String]] =
-    config.get(utils.pathToString(path)).validNel
+  override protected def hasValue[F[_], E](path: Seq[String], config: Map[String, String])(implicit utils: EnvironmentHints, AE: ExtruderApplicativeError[F, E]): IO[F[Boolean]] =
+    lookupValue(path, config).map(AE.map(_)(_.isDefined))
 
-  override protected def mkDecoder[T](f: (Seq[String], Option[T], Map[String, String]) => ConfigValidation[T]): EnvironmentDecoder[T] =
-    new EnvironmentDecoder[T] {
-      override def read(path: Seq[String], default: Option[T], config: Map[String, String]): ConfigValidation[T] = f(path, default, config)
+  override protected def lookupValue[F[_], E](path: Seq[String], config: Map[String, String])(implicit utils: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[Option[String]]] =
+    IO(AE.pure(config.get(utils.pathToString(path))))
+
+  override protected def mkDecoder[F[_], T](f: (Seq[String], Option[T], Map[String, String]) => IO[F[T]]): EnvironmentDecoder[F, T] =
+    new EnvironmentDecoder[F, T] {
+      override def read(path: Seq[String], default: Option[T], config: Map[String, String]): IO[F[T]] = f(path, default, config)
     }
 
-  override protected def prepareConfig(config: java.util.Map[String, String]): ConfigValidation[Map[String, String]] =
-    config.asScala.toMap.map { case (k, v) => k.toUpperCase -> v }.validNel
+  override protected def prepareConfig[F[_], E](namespace: Seq[String], config: java.util.Map[String, String])
+                                               (implicit AE: ExtruderApplicativeError[F, E], util: Hint): IO[F[Map[String, String]]] =
+    IO(AE.pure(config.asScala.toMap.map { case (k, v) => k.toUpperCase -> v }))
 
-  def decode[T](implicit decoder: EnvironmentDecoder[T]): ConfigValidation[T] =
-    decode[T](Seq.empty)
-
-  def decode[T](namespace: Seq[String])(implicit decoder: EnvironmentDecoder[T]): ConfigValidation[T] =
-    decode[T](namespace, System.getenv())
+  override def loadConfig: IO[java.util.Map[String, String]] = IO(System.getenv())
 }
 
 object EnvironmentDecoder extends EnvironmentDecoders
 
 object EnvironmentConfig extends EnvironmentDecoders
 
-trait EnvironmentUtils extends Utils
+trait EnvironmentHints extends Hints
 
-object EnvironmentUtils extends UtilsCompanion[EnvironmentUtils] {
-  override implicit val default: EnvironmentUtils = new EnvironmentUtils {
+object EnvironmentHints extends HintsCompanion[EnvironmentHints] {
+  override implicit val default: EnvironmentHints = new EnvironmentHints {
     override def pathToString(path: Seq[String]): String = path.mkString("_").toUpperCase
   }
-}
-
-trait EnvironmentUtilsMixin extends UtilsMixin {
-  override type U = EnvironmentUtils
-  override val utils: EnvironmentUtils = implicitly[EnvironmentUtils]
 }
