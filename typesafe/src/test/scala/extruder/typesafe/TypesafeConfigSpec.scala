@@ -1,6 +1,7 @@
 package extruder.typesafe
 
 import cats.Eq
+import cats.effect.IO
 import cats.kernel.laws.GroupLaws
 import cats.instances.all._
 import com.typesafe.config._
@@ -11,16 +12,25 @@ import org.specs2.specification.core.SpecStructure
 import shapeless._
 
 import scala.collection.JavaConverters._
+import extruder.core.ConfigValidationCatsInstances._
 
-class TypesafeConfigSpec extends ConfigSpec[Config, Config, ConfigMap, TypesafeConfigDecoder, TypesafeConfigEncoder]
+class TypesafeConfigSpec extends ConfigSpec
                          with TypesafeConfigDecoders
                          with TypesafeConfigEncoders {
   import TypesafeConfigSpec._
 
-  override def convertConfig(map: Map[Seq[String], String]): Config = {
+  implicit val configValueEq: Eq[ConfigValue] = Eq.fromUniversalEquals
+  implicit val configObjectEq: Eq[ConfigObject] = Eq.fromUniversalEquals
+  implicit val configListEq: Eq[ConfigList] = Eq.fromUniversalEquals
+
+  override val supportsEmptyNamespace: Boolean = false
+
+  override def convertConfig(map: Map[Seq[String], String])(implicit utils: Hint): Config = {
     val config = map.map { case (k, v) => utils.pathToString(k) -> v }.asJava
     ConfigFactory.parseMap(config)
   }
+
+  override def loadConfig: IO[InputConfig] = IO(convertConfig(caseClassConfig))
 
   override def ext: SpecStructure =
     s2"""
@@ -38,6 +48,8 @@ class TypesafeConfigSpec extends ConfigSpec[Config, Config, ConfigMap, TypesafeC
     )
 
   override def monoidGroupLaws: GroupLaws[ConfigMap] = GroupLaws[ConfigMap]
+
+  override implicit def utils: TypesafeConfigHints = TypesafeConfigHints.default
 }
 
 object TypesafeConfigSpec {

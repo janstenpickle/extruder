@@ -1,119 +1,133 @@
 package extruder.typesafe
 
 import cats.Monoid
+import cats.effect.IO
 import cats.syntax.either._
-import cats.syntax.validated._
 import com.typesafe.config.ConfigException.Missing
 import com.typesafe.config.{ConfigFactory, ConfigList, ConfigObject, ConfigValue, Config => TConfig}
 import extruder.core._
-import extruder.syntax.validation._
 import shapeless.Coproduct
 
 import scala.collection.JavaConverters._
 
-trait TypesafeConfigDecoders extends Decode[TConfig, TConfig, TypesafeConfigDecoder]
-                             with Decoders[TConfig, TypesafeConfigDecoder]
-                             with PrimitiveDecoders[TConfig, TypesafeConfigDecoder]
-                             with DerivedDecoders[TConfig, TypesafeConfigDecoder]
-                             with TypesafeConfigUtilsMixin {
-  def lookup[T](f: TConfig => T, path: Seq[String], config: TConfig): ConfigValidation[Option[T]] =
+trait TypesafeConfigDecoders extends Decode
+                             with DecodeFromDefaultConfig
+                             with Decoders
+                             with PrimitiveDecoders
+                             with DerivedDecoders
+                             with DecodeTypes {
+  override type InputConfig = TConfig
+  override type DecodeConfig = TConfig
+  override type Hint = TypesafeConfigHints
+  override type Dec[F[_], T] = TypesafeConfigDecoder[F, T]
+
+  private def lookup[T, F[_], E](f: TConfig => T, path: Seq[String], config: TConfig)
+                                (implicit utils: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[Option[T]]] = IO {
     Either.catchNonFatal(f(config)).fold({
-      case _ : Missing => None.validNel
-      case th: Any => ValidationException(
+      case _: Missing => AE.pure(None)
+      case th: Any => AE.validationException(
         s"Could not retrieve config '${utils.pathToString(path)}' from supplied Typesafe config",
         th
-      ).invalidNel
-    }, Some(_).validNel)
+      )
+    }, v => AE.pure(Some(v)))
+  }
 
-  override protected def prepareConfig(config: TConfig): ConfigValidation[TConfig] =
-    config.validNel
+  override protected def prepareConfig[F[_], E](namespace: Seq[String], config: TConfig)
+                                               (implicit AE: ExtruderApplicativeError[F, E], utils: Hint): IO[F[TConfig]] =
+    IO(AE.pure(config))
 
-  override protected def lookupValue(path: Seq[String], config: TConfig): ConfigValidation[Option[String]] =
+  override protected def hasValue[F[_], E](path: Seq[String], config: TConfig)(implicit utils: TypesafeConfigHints, AE: ExtruderApplicativeError[F, E]): IO[F[Boolean]] =
+    lookup[ConfigValue, F, E](_.getValue(utils.pathToString(path)), path, config).map(AE.map(_)(_.isDefined))
+
+  override protected def lookupValue[F[_], E](path: Seq[String], config: TConfig)(implicit utils: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[Option[String]]] =
     lookup(_.getString(utils.pathToString(path)), path, config)
 
-  override protected def lookupList(path: Seq[String], config: TConfig): ConfigValidation[Option[List[String]]] =
+  override protected def lookupList[F[_], E](path: Seq[String], config: TConfig)(implicit utils: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[Option[List[String]]]] =
     lookup(_.getStringList(utils.pathToString(path)).asScala.toList, path, config)
 
-  private def resolve[T](lookup: (Seq[String], TConfig) => ConfigValidation[Option[T]]): (Seq[String], Option[T], TConfig) => ConfigValidation[T] =
-    resolve[T, T](_.validNel, lookup)
+  private def resolve[F[_], E, T](lookup: (Seq[String], TConfig) => IO[F[Option[T]]])(implicit AE: ExtruderApplicativeError[F, E]): (Seq[String], Option[T], TConfig) => IO[F[T]] =
+    resolve[F, E, T, T](AE.pure, lookup)
 
-  implicit val configValueDecoder: TypesafeConfigDecoder[ConfigValue] =
-    mkDecoder(resolve[ConfigValue]((path, config) => lookup(_.getValue(utils.pathToString(path)), path, config)))
+  implicit def configValueDecoder[F[_], E](implicit utils: Hint, AE: ExtruderApplicativeError[F, E]): TypesafeConfigDecoder[F, ConfigValue] =
+    mkDecoder(resolve[F, E, ConfigValue]((path, config) => lookup(_.getValue(utils.pathToString(path)), path, config)))
 
-  implicit val configListDecoder: TypesafeConfigDecoder[ConfigList] =
-    mkDecoder(resolve[ConfigList]((path, config) => lookup(_.getList(utils.pathToString(path)), path, config)))
+  implicit def configListDecoder[F[_], E](implicit utils: Hint, AE: ExtruderApplicativeError[F, E]): TypesafeConfigDecoder[F, ConfigList] =
+    mkDecoder(resolve[F, E, ConfigList]((path, config) => lookup(_.getList(utils.pathToString(path)), path, config)))
 
-  implicit val configObjectDecoder: TypesafeConfigDecoder[ConfigObject] =
-    mkDecoder(resolve[ConfigObject]((path, config) => lookup(_.getObject(utils.pathToString(path)), path, config)))
+  implicit def configObjectDecoder[F[_], E](implicit utils: Hint, AE: ExtruderApplicativeError[F, E]): TypesafeConfigDecoder[F, ConfigObject] =
+    mkDecoder(resolve[F, E, ConfigObject]((path, config) => lookup(_.getObject(utils.pathToString(path)), path, config)))
 
-  override def mkDecoder[T](f: (Seq[String], Option[T], TConfig) => ConfigValidation[T]): TypesafeConfigDecoder[T] =
-    new TypesafeConfigDecoder[T] {
-      override def read(path: Seq[String], default: Option[T], config: TConfig): ConfigValidation[T] = f(path, default, config)
+  override def mkDecoder[F[_], T](f: (Seq[String], Option[T], TConfig) => IO[F[T]]): TypesafeConfigDecoder[F, T] =
+    new TypesafeConfigDecoder[F, T] {
+      override def read(path: Seq[String], default: Option[T], config: TConfig): IO[F[T]] = f(path, default, config)
     }
 
-  def decode[T](implicit decoder: TypesafeConfigDecoder[T]): ConfigValidation[T] = decode[T](Seq.empty)
-
-  def decode[T](namespace: Seq[String])(implicit decoder: TypesafeConfigDecoder[T]): ConfigValidation[T] =
-    ConfigFactory.load().handle.fold(_.invalid, decode[T](namespace, _))
+  override def loadConfig: IO[TConfig] = IO(ConfigFactory.load())
 }
 
-trait TypesafeConfigDecoder[T] extends Decoder[T, TConfig]
+trait TypesafeConfigDecoder[F[_], T] extends Decoder[F, T, TConfig]
 
 object TypesafeConfigDecoder extends TypesafeConfigDecoders
 
-trait TypesafeConfigEncoders extends Encode[ConfigMap, TConfig, TypesafeConfigEncoder]
-                             with Encoders[ConfigMap, TypesafeConfigEncoder]
-                             with PrimitiveEncoders[ConfigMap, TypesafeConfigEncoder]
-                             with DerivedEncoders[ConfigMap, TypesafeConfigEncoder]
-                             with TypesafeConfigUtilsMixin {
+trait TypesafeConfigEncoders extends Encode
+                             with Encoders
+                             with PrimitiveEncoders
+                             with DerivedEncoders
+                             with EncodeTypes {
+  override type OutputConfig = TConfig
+  override type EncodeConfig = ConfigMap
+  override type Enc[F[_], T] = TypesafeConfigEncoder[F, T]
+  override type Hint = TypesafeConfigHints
+
   override protected val monoid: Monoid[ConfigMap] = new Monoid[ConfigMap] {
     override def empty: ConfigMap = Map.empty
     override def combine(x: ConfigMap, y: ConfigMap): ConfigMap = x ++ y
   }
 
-  private def valueToConfig(path: Seq[String], value: ConfigTypes): ConfigValidation[ConfigMap] =
-    Map(utils.pathToString(path) -> value).validNel
+  private def valueToConfig[F[_], E](path: Seq[String], value: ConfigTypes)(implicit utils: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[ConfigMap]] =
+    IO(AE.pure(Map(utils.pathToString(path) -> value)))
 
-  override protected def writeValue(path: Seq[String], value: String): ConfigValidation[ConfigMap] =
+  override protected def writeValue[F[_], E](path: Seq[String], value: String)(implicit utils: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[ConfigMap]] =
     valueToConfig(path, Coproduct[ConfigTypes](value))
 
-  override protected def finalizeConfig(inter: ConfigMap): ConfigValidation[TConfig] =
-    ConfigFactory.parseMap(inter.flatMap { case (k, v) =>
+  override protected def finalizeConfig[F[_], E](namespace: Seq[String], inter: ConfigMap)
+                                                (implicit AE: ExtruderApplicativeError[F, E], utils: Hint): IO[F[TConfig]] =
+    IO(AE.catchNonFatal(ConfigFactory.parseMap(inter.flatMap { case (k, v) =>
       (v.select[String].toSeq ++
        v.select[ConfigValue] ++
        v.select[ConfigList] ++
        v.select[ConfigObject] ++
-       v.select[List[String]].map(_.asJava)).map(k.toLowerCase -> _)
-    }.asJava).handle
+       v.select[List[String]].map(_.asJava)).map(k -> _)
+    }.asJava)))
 
-  override implicit def traversableEncoder[T, F[T] <: TraversableOnce[T]](implicit shows: Show[T]): TypesafeConfigEncoder[F[T]] =
-    mkEncoder((path, value) => Map(utils.pathToString(path) -> Coproduct[ConfigTypes](value.map(shows.show).toList)).validNel)
+  override implicit def traversableEncoder[F[_], E, T, FF[T] <: TraversableOnce[T]](implicit shows: Show[T], utils: Hint, AE: ExtruderApplicativeError[F, E]): TypesafeConfigEncoder[F, FF[T]] =
+    mkEncoder((path, value) => IO(AE.pure(Map(utils.pathToString(path) -> Coproduct[ConfigTypes](value.map(shows.show).toList)))))
 
-  implicit def configValueEncoder: TypesafeConfigEncoder[ConfigValue] =
-    mkEncoder((path, value) => Map(utils.pathToString(path) -> Coproduct[ConfigTypes](value)).validNel)
+  implicit def configValueEncoder[F[_], E](implicit utils: Hint, AE: ExtruderApplicativeError[F, E]): TypesafeConfigEncoder[F, ConfigValue] =
+    mkEncoder((path, value) => IO(AE.pure(Map(utils.pathToString(path) -> Coproduct[ConfigTypes](value)))))
 
-  implicit def configListEncoder: TypesafeConfigEncoder[ConfigList] =
-    mkEncoder((path, value) => Map(utils.pathToString(path) -> Coproduct[ConfigTypes](value)).validNel)
+  implicit def configListEncoder[F[_], E](implicit utils: Hint, AE: ExtruderApplicativeError[F, E]): TypesafeConfigEncoder[F, ConfigList] =
+    mkEncoder((path, value) => IO(AE.pure(Map(utils.pathToString(path) -> Coproduct[ConfigTypes](value)))))
 
-  implicit def configObjectEncoder: TypesafeConfigEncoder[ConfigObject] =
-    mkEncoder((path, value) => Map(utils.pathToString(path) -> Coproduct[ConfigTypes](value)).validNel)
+  implicit def configObjectEncoder[F[_], E](implicit utils: Hint, AE: ExtruderApplicativeError[F, E]): TypesafeConfigEncoder[F, ConfigObject] =
+    mkEncoder((path, value) => IO(AE.pure(Map(utils.pathToString(path) -> Coproduct[ConfigTypes](value)))))
 
-  override def mkEncoder[T](f: (Seq[String], T) => ConfigValidation[ConfigMap]): TypesafeConfigEncoder[T] =
-    new TypesafeConfigEncoder[T] {
-      override def write(path: Seq[String], in: T): ConfigValidation[ConfigMap] = f(path, in)
+  override def mkEncoder[F[_], T](f: (Seq[String], T) => IO[F[ConfigMap]]): TypesafeConfigEncoder[F, T] =
+    new TypesafeConfigEncoder[F, T] {
+      override def write(path: Seq[String], in: T): IO[F[ConfigMap]] = f(path, in)
     }
 }
 
-trait TypesafeConfigEncoder[T] extends Encoder[T, ConfigMap]
+trait TypesafeConfigEncoder[F[_], T] extends Encoder[F, T, ConfigMap]
 
 object TypesafeConfigEncoder extends TypesafeConfigEncoders
 
 object TypesafeConfig extends TypesafeConfigDecoders with TypesafeConfigEncoders
 
-trait TypesafeConfigUtils extends Utils
+trait TypesafeConfigHints extends Hints
 
-object TypesafeConfigUtils extends UtilsCompanion[TypesafeConfigUtils] {
-  override implicit val default: TypesafeConfigUtils = new TypesafeConfigUtils {
+object TypesafeConfigHints extends HintsCompanion[TypesafeConfigHints] {
+  override implicit val default: TypesafeConfigHints = new TypesafeConfigHints {
     val dashTransformation: String => String = _.replaceAll(
       "([A-Z]+)([A-Z][a-z])",
       "$1-$2"
@@ -121,9 +135,4 @@ object TypesafeConfigUtils extends UtilsCompanion[TypesafeConfigUtils] {
 
     override def pathToString(path: Seq[String]): String = path.map(dashTransformation).mkString(".")
   }
-}
-
-trait TypesafeConfigUtilsMixin extends UtilsMixin {
-  override type U = TypesafeConfigUtils
-  override val utils: TypesafeConfigUtils = implicitly[TypesafeConfigUtils]
 }
