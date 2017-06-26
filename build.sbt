@@ -1,12 +1,13 @@
 import microsites.ExtraMdFileConfig
 
-val specs2Ver = "3.8.9"
+val specs2Ver = "3.9.1"
 
 val commonSettings = Seq(
   organization := "extruder",
   scalaVersion := "2.12.2",
   crossScalaVersions := Seq("2.11.11", "2.12.2"),
-  addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
+  addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full),
+  addCompilerPlugin("org.spire-math" % "kind-projector" % "0.9.4" cross CrossVersion.binary),
   scalacOptions ++= Seq(
     "-unchecked",
     "-feature",
@@ -37,13 +38,14 @@ lazy val core = (project in file("core")).
     Seq(
       name := "extruder-core",
       libraryDependencies ++= Seq(
-        "org.typelevel" %% "cats" % "0.9.0",
-        "com.github.benhutchison" %% "mouse" % "0.7",
-        "com.chuusai" %% "shapeless" % "2.3.2",
+        "org.typelevel" %% "cats" % "0.9.0" exclude("org.scalacheck", "scalacheck"),
+        "org.typelevel" %% "cats-effect" % "0.3" exclude("org.scalacheck", "scalacheck"),
+        "com.github.benhutchison" %% "mouse" % "0.9" exclude("org.scalacheck", "scalacheck"),
+        "com.chuusai" %% "shapeless" % "2.3.2" exclude("org.scalacheck", "scalacheck"),
         "org.specs2" %% "specs2-core" % specs2Ver % "test",
         "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test",
-        "org.typelevel" %% "discipline" % "0.7.3" % "test",
-        "com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % "1.1.5" % "test"
+        "org.typelevel" %% "discipline" % "0.7.3" % "test" exclude("org.scalacheck", "scalacheck"),
+        "com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % "1.1.5" % "test" exclude("org.scalacheck", "scalacheck")
       ),
       publishArtifact in Test := true,
       coverageEnabled.in(Test, test) := true
@@ -60,10 +62,10 @@ lazy val examples = (project in file("examples")).
     commonSettings ++
     Seq(
       name := "extruder-examples",
-      libraryDependencies ++= Seq("org.zalando" %% "grafter" % "1.4.8"),
+      libraryDependencies ++= Seq("org.zalando" %% "grafter" % "1.4.8", "io.monix" %% "monix-cats" % "2.3.0", "io.monix" %% "monix-eval" % "2.3.0"),
       publishArtifact := false
     )
-  ).dependsOn(systemSources, typesafe, refined)
+  ).dependsOn(systemSources, typesafe, refined, monix)
 
 lazy val typesafe = (project in file("typesafe")).
   settings (
@@ -85,8 +87,37 @@ lazy val refined = (project in file("refined")).
       Seq(
         name := "extruder-refined",
         libraryDependencies ++= Seq(
-          "eu.timepit" %% "refined" % "0.8.1",
-          "eu.timepit" %% "refined-scalacheck" % "0.8.1",
+          "eu.timepit" %% "refined" % "0.8.2",
+          "eu.timepit" %% "refined-scalacheck" % "0.8.2",
+          "org.specs2" %% "specs2-core" % specs2Ver % "test",
+          "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test"
+        ),
+        coverageEnabled.in(Test, test) := true
+      )
+  ).dependsOn(core % "compile->compile;test->test")
+
+lazy val monix = (project in file("monix")).
+  settings (
+    commonSettings ++
+      Seq(
+        name := "extruder-monix",
+        libraryDependencies ++= Seq(
+          "io.monix" %% "monix-eval" % "2.3.0",
+          "io.monix" %% "monix-cats" % "2.3.0",
+          "org.specs2" %% "specs2-core" % specs2Ver % "test",
+          "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test"
+        ),
+        coverageEnabled.in(Test, test) := true
+      )
+  ).dependsOn(core % "compile->compile;test->test")
+
+lazy val fs2 = (project in file("fs2")).
+  settings (
+    commonSettings ++
+      Seq(
+        name := "extruder-fs2",
+        libraryDependencies ++= Seq(
+          "co.fs2" %% "fs2-core" % "0.9.7",
           "org.specs2" %% "specs2-core" % specs2Ver % "test",
           "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test"
         ),
@@ -103,7 +134,7 @@ lazy val root = (project in file(".")).
       sources in Compile  := sources.all(aggregateCompile).value.flatten,
       libraryDependencies := libraryDependencies.all(aggregateCompile).value.flatten
     )
-  ).aggregate(core, typesafe, refined)
+  ).aggregate(core, typesafe, refined, monix, fs2)
 
 lazy val aggregateCompile =
   ScopeFilter(
@@ -113,7 +144,7 @@ lazy val aggregateCompile =
 
   lazy val docSettings = commonSettings ++ Seq(
     micrositeName := "extruder",
-    micrositeDescription := "Populate Scala case classes from any any configuration source",
+    micrositeDescription := "Populate Scala case classes from any configuration source",
     micrositeAuthor := "Chris Jansen",
     micrositeHighlightTheme := "atom-one-light",
     micrositeHomepage := "https://janstenpickle.github.io/extruder/",
@@ -151,7 +182,7 @@ lazy val aggregateCompile =
     includeFilter in makeSite := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.svg" | "*.js" | "*.swf" | "*.yml" | "*.md"
   )
 
-lazy val docs = project.dependsOn(core, systemSources, typesafe, refined)
+lazy val docs = project.dependsOn(core, systemSources, typesafe, refined, monix)
   .settings(
     moduleName := "extruder-docs",
     name := "Extruder docs",
