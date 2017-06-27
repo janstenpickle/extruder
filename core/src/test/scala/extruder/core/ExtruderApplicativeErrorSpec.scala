@@ -11,10 +11,14 @@ import org.specs2.specification.core.SpecStructure
 import org.specs2.{ScalaCheck, Specification}
 import org.typelevel.discipline.specs2.Discipline
 
-abstract class ExtruderApplicativeErrorSpec[F[_], E](implicit AE: ExtruderApplicativeError[F, E],
-                                                     eArb: Arbitrary[E],
-                                                     cogen: Cogen[E],
-                                                     eEq: Eq[E]) extends Specification with ScalaCheck with Discipline {
+abstract class ExtruderApplicativeErrorSpec[F[_], E](
+  implicit AE: ExtruderApplicativeError[F, E],
+  eArb: Arbitrary[E],
+  cogen: Cogen[E],
+  eEq: Eq[E]
+) extends Specification
+    with ScalaCheck
+    with Discipline {
   implicit val hints: Hints = new Hints {
     override def pathToString(path: Seq[String]): String = path.mkString(".").toLowerCase
   }
@@ -43,8 +47,8 @@ abstract class ExtruderApplicativeErrorSpec[F[_], E](implicit AE: ExtruderApplic
 
   def testCatchNonFatal(implicit eq: Eq[F[String]]): Prop = prop { str: String =>
     val th = new RuntimeException(str)
-    eq.eqv(AE.catchNonFatal(str), AE.pure(str)) and
-    eq.eqv(AE.catchNonFatal(throw th), AE.validationException(str, th))
+    eq.eqv(AE.catchNonFatal(str), AE.pure(str))
+      .and(eq.eqv(AE.catchNonFatal(throw th), AE.validationException(str, th)))
   }
 
   def testAttemptIO(implicit eq: Eq[F[Int]], hints: Hints): Prop = prop { i: Int =>
@@ -75,16 +79,18 @@ abstract class ExtruderApplicativeErrorSpec[F[_], E](implicit AE: ExtruderApplic
 }
 
 abstract class ExtruderApplicativeErrorThrowableSpec[F[_]](implicit AE: ExtruderApplicativeError[F, Throwable])
-  extends ExtruderApplicativeErrorSpec[F, Throwable]()(
-    AE,
-    Arbitrary[Throwable](implicitly[Arbitrary[Exception]].arbitrary),
-    implicitly[Cogen[Throwable]],
-    Eq[String].on(_.toString)
-  ) {
+    extends ExtruderApplicativeErrorSpec[F, Throwable]()(
+      AE,
+      Arbitrary[Throwable](implicitly[Arbitrary[Exception]].arbitrary),
+      implicitly[Cogen[Throwable]],
+      Eq[String].on(_.toString)
+    ) {
   override def missingValue(message: String): Throwable = new NoSuchElementException(message)
   override def validationFailureValue(message: String): Throwable = new RuntimeException(message)
   override def validationExceptionValue(message: String, th: Throwable): Throwable = th
-  override def compareErrors[A](f: F[A], th1: Option[Throwable], th2: Option[Throwable])(implicit e: Eq[F[A]]): Boolean = {
+  override def compareErrors[A](f: F[A], th1: Option[Throwable], th2: Option[Throwable])(
+    implicit e: Eq[F[A]]
+  ): Boolean = {
     val err: F[A] = (th1, th2) match {
       case (Some(e1), Some(e2)) => e1.addSuppressed(e2); AE.raiseError(e1)
       case (Some(e1), None) => AE.raiseError(e1)
@@ -95,13 +101,23 @@ abstract class ExtruderApplicativeErrorThrowableSpec[F[_]](implicit AE: Extruder
   }
 }
 
-abstract class ExtruderApplicativeErrorValidationErrorsSpec[F[_]](implicit AE: ExtruderApplicativeError[F, ValidationErrors]) extends ExtruderApplicativeErrorSpec[F, ValidationErrors]()(AE, ConfigValidationCatsInstances.validationErrorsArb, ConfigValidationCatsInstances.vCogen, Eq.fromUniversalEquals) {
+abstract class ExtruderApplicativeErrorValidationErrorsSpec[F[_]](
+  implicit AE: ExtruderApplicativeError[F, ValidationErrors]
+) extends ExtruderApplicativeErrorSpec[F, ValidationErrors]()(
+      AE,
+      ConfigValidationCatsInstances.validationErrorsArb,
+      ConfigValidationCatsInstances.vCogen,
+      Eq.fromUniversalEquals
+    ) {
   override def missingValue(message: String): ValidationErrors = NonEmptyList.of(Missing(message))
   override def validationFailureValue(message: String): ValidationErrors = NonEmptyList.of(ValidationFailure(message))
-  override def validationExceptionValue(message: String, th: Throwable): ValidationErrors = NonEmptyList.of(ValidationException(message, th))
+  override def validationExceptionValue(message: String, th: Throwable): ValidationErrors =
+    NonEmptyList.of(ValidationException(message, th))
   override implicit def feq[A](implicit eq: Eq[A]): Eq[F[A]] = Eq.fromUniversalEquals
 
-  override def compareErrors[A](f: F[A], v1: Option[ValidationErrors], v2: Option[ValidationErrors])(implicit e: Eq[F[A]]): Boolean = {
+  override def compareErrors[A](f: F[A], v1: Option[ValidationErrors], v2: Option[ValidationErrors])(
+    implicit e: Eq[F[A]]
+  ): Boolean = {
     val err: F[A] = (v1, v2) match {
       case (Some(e1), Some(e2)) => AE.raiseError(e1 ++ e2.toList)
       case (Some(e1), None) => AE.raiseError(e1)

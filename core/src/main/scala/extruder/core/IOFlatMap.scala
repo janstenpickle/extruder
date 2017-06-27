@@ -7,7 +7,7 @@ import extruder.instances.{ConfigValidationInstances, EitherInstances, FutureIns
 
 abstract class IOFlatMap[F[_]](implicit F: Applicative[F]) extends FlatMap[IOF[F, ?]] {
   override def tailRecM[A, B](a: A)(f: (A) => IOF[F, Either[A, B]]): IOF[F, B] =
-    flatMap(f(a)){
+    flatMap(f(a)) {
       case Left(a1) => tailRecM(a1)(f)
       case Right(b) => IO.pure(F.pure(b))
     }

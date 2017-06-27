@@ -41,7 +41,6 @@ object Database {
   implicit def reader: Reader[ApplicationConfig, Database] = genericReader
 }
 
-
 object Grafter extends App {
   System.setProperty("applicationconfig.http.httpconfig.host", "localhost")
   System.setProperty("applicationconfig.http.httpconfig.port", "8080")

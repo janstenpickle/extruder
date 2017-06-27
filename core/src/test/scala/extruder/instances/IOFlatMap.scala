@@ -29,7 +29,8 @@ class EitherNelIOFlatMapSpec extends IOFlatMapSpec[Either[ValidationErrors, ?], 
   override implicit def feq[A](implicit e: Eq[A]): Eq[Either[ValidationErrors, A]] = Eq.fromUniversalEquals
 }
 class ConfigValidationIOFlatMapSpec extends IOFlatMapSpec[ConfigValidation, ValidationErrors] {
-  override implicit def feq[A](implicit e: Eq[A]): Eq[ConfigValidation[A]] = ConfigValidationCatsInstances.validationErrorsEq
+  override implicit def feq[A](implicit e: Eq[A]): Eq[ConfigValidation[A]] =
+    ConfigValidationCatsInstances.validationErrorsEq
 }
 class IOIOFlatMapSpec extends IOFlatMapSpec[IO, Throwable] {
   override implicit def feq[A](implicit e: Eq[A]): Eq[IO[A]] = ioEq

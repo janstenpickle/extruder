@@ -23,13 +23,18 @@ abstract class ExtruderApplicativeError[F[_], E](implicit FM: FlatMap[F]) extend
     )
 }
 
-object ExtruderApplicativeError extends ConfigValidationInstances with FutureInstances with EitherInstances with IOInstances {
+object ExtruderApplicativeError
+    extends ConfigValidationInstances
+    with FutureInstances
+    with EitherInstances
+    with IOInstances {
   def appendThrowables[A, B]: (EitherThrowable[(A => B)], EitherThrowable[A]) => EitherThrowable[B] = {
     case (Right(f), Right(a)) => Right(f(a))
-    case (Left(fe), Left(ae)) => Left {
-      fe.addSuppressed(ae)
-      fe
-    }
+    case (Left(fe), Left(ae)) =>
+      Left {
+        fe.addSuppressed(ae)
+        fe
+      }
     case (Left(e), Right(_)) => Left(e)
     case (Right(_), Left(e)) => Left(e)
   }
@@ -60,8 +65,8 @@ object ExtruderApplicativeError extends ConfigValidationInstances with FutureIns
   }
 
   abstract class FromMonadErrorAccumulatesErrors[M[_]](implicit override val ME: MonadError[M, ValidationErrors])
-    extends WithMonadError[M, ValidationErrors] with AccumulatesErrors[M]
-
+      extends WithMonadError[M, ValidationErrors]
+      with AccumulatesErrors[M]
 
   def apply[M[_], E](AE: ExtruderApplicativeError[M, E]): ExtruderApplicativeError[M, E] = AE
 }

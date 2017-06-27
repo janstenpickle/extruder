@@ -2,22 +2,22 @@ package extruder.instances
 
 import cats.effect.IO
 import cats.instances.either._
-import extruder.core.{EitherErrors, EitherThrowable, ExtruderApplicativeError, IOFlatMap, Hints, ValidationErrors}
+import extruder.core.{EitherErrors, EitherThrowable, ExtruderApplicativeError, Hints, IOFlatMap, ValidationErrors}
 
 trait EitherInstances {
   import ExtruderApplicativeError._
 
   implicit val throwableExtruderApplicativeError: ExtruderApplicativeError[EitherThrowable, Throwable] =
     new FromMonadError[EitherThrowable] {
-      override def ap[A, B](ff: Either[Throwable, (A) => B])
-                           (fa: Either[Throwable, A]): Either[Throwable, B] =
+      override def ap[A, B](ff: Either[Throwable, (A) => B])(fa: Either[Throwable, A]): Either[Throwable, B] =
         appendThrowables(ff, fa)
     }
 
   implicit val validationErrorsExtruderApplicativeError: ExtruderApplicativeError[EitherErrors, ValidationErrors] =
     new FromMonadErrorAccumulatesErrors[EitherErrors] {
-      override def ap[A, B](ff: Either[ValidationErrors, (A) => B])
-                           (fa: Either[ValidationErrors, A]): Either[ValidationErrors, B] =
+      override def ap[A, B](
+        ff: Either[ValidationErrors, (A) => B]
+      )(fa: Either[ValidationErrors, A]): Either[ValidationErrors, B] =
         (ff, fa) match {
           case (Right(f), Right(a)) => Right(f(a))
           case (Left(fe), Left(ae)) => Left(fe ++ ae.toList)

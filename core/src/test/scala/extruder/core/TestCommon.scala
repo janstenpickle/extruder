@@ -26,12 +26,8 @@ object TestCommon {
 
   val finiteDurationGen: Gen[FiniteDuration] = Gen.chooseNum(0L, 5000L).map(Duration.fromNanos)
 
-  val durationGen: Gen[Duration] = Gen.oneOf(
-    finiteDurationGen,
-    Gen.const(Duration.Inf),
-    Gen.const(Duration.MinusInf),
-    Gen.const(Duration.Zero)
-  )
+  val durationGen: Gen[Duration] =
+    Gen.oneOf(finiteDurationGen, Gen.const(Duration.Inf), Gen.const(Duration.MinusInf), Gen.const(Duration.Zero))
 
   implicit def futureEq[A](implicit e: Eq[A]): Eq[Future[A]] = ioEq[A].on(fut => IO.fromFuture(Eval.later(fut)))
 

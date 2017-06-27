@@ -21,10 +21,15 @@ class ConfigSourceSpec extends Specification with ScalaCheck with ConfigSource {
 
 object ConfigSourceSpec {
   implicit val validationErrorsArb: Arbitrary[ValidationErrors] = Arbitrary(
-    Gen.nonEmptyListOf(Gen.alphaNumStr)
-      .map(li => NonEmptyList.of(li.head, li.tail: _*)
-      .flatMap[ValidationError](msg =>
-        NonEmptyList.of(ValidationFailure(msg), ValidationException(msg, new RuntimeException(msg)))
-      ))
+    Gen
+      .nonEmptyListOf(Gen.alphaNumStr)
+      .map(
+        li =>
+          NonEmptyList
+            .of(li.head, li.tail: _*)
+            .flatMap[ValidationError](
+              msg => NonEmptyList.of(ValidationFailure(msg), ValidationException(msg, new RuntimeException(msg)))
+          )
+      )
   )
 }

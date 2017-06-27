@@ -17,7 +17,8 @@ import scala.util.Try
 class TaskMonadErrorSpec extends Specification with Discipline {
   import TaskMonadErrorSpec._
 
-  override def is: SpecStructure = checkAll("Task Monad Error", MonadErrorTests[Task, Throwable].monadError[Int, Int, Int])
+  override def is: SpecStructure =
+    checkAll("Task Monad Error", MonadErrorTests[Task, Throwable].monadError[Int, Int, Int])
 }
 
 object TaskMonadErrorSpec {

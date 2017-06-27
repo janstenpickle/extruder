@@ -21,7 +21,9 @@ object FormatParameters {
     case _: Any => ""
   }
 
-  def asTable[T](pathToString: Seq[String] => String, namespace: Seq[String])(implicit parameters: Parameters[T]): String = {
+  def asTable[T](pathToString: Seq[String] => String, namespace: Seq[String])(
+    implicit parameters: Parameters[T]
+  ): String = {
     val params = parameters.eval(namespace)
     val maxKeyLength = maxLength(KeyCol, p => pathToString(p.path), params)
     val maxRequiredLength = maxLength(RequiredCol, p => convertRequired(p.required), params)
@@ -35,9 +37,10 @@ object FormatParameters {
       s"+${colSep(maxKeyLength)}+${colSep(maxRequiredLength)}+${colSep(maxTypeLength)}+${colSep(maxDefaultLength)}+${colSep(maxAllowedValuesLength)}+%n"
 
     val header = separator + leftAlignFormat.format(KeyCol, RequiredCol, TypeCol, DefaultCol, TypesCol) + separator
-    val rows = params.foldLeft("")((acc, p) => acc + leftAlignFormat.format(
-      pathToString(p.path), convertRequired(p.required), p.`type`, p.default.getOrElse(""), typesToString(p)
-    ))
+    val rows = params.foldLeft("") { (acc, p) =>
+      acc + leftAlignFormat
+        .format(pathToString(p.path), convertRequired(p.required), p.`type`, p.default.getOrElse(""), typesToString(p))
+    }
     (header + rows + separator).format()
   }
 }

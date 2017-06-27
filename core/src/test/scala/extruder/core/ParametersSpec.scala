@@ -27,19 +27,11 @@ class ParametersSpec extends Specification with ScalaCheck {
     List("String", "Int")
   )
 
-  def defaultTest: MatchResult[Any] = test[WithDefault](
-    List(List("WithDefault", "default")),
-    List(Some(default)),
-    List(false),
-    List("String")
-  )
+  def defaultTest: MatchResult[Any] =
+    test[WithDefault](List(List("WithDefault", "default")), List(Some(default)), List(false), List("String"))
 
-  def optionalTest: MatchResult[Any] = test[OptionalParam](
-    List(List("OptionalParam", "opt")),
-    List(None),
-    List(false),
-    List("String")
-  )
+  def optionalTest: MatchResult[Any] =
+    test[OptionalParam](List(List("OptionalParam", "opt")), List(None), List(false), List("String"))
 
   def sealedTest: MatchResult[Any] = test[Sealed](
     List(List("type"), List("CCImpl", "d")),
@@ -70,24 +62,25 @@ class ParametersSpec extends Specification with ScalaCheck {
     List("List[String]", "List[Int]")
   )
 
-  def test[T](expectedNames: List[List[String]],
-              expectedDefaults: List[Option[String]],
-              expectedRequired: List[Boolean],
-              expectedTypes: List[String] = List.empty,
-              expectedUnionTypes: List[NonEmptyList[String]] = List.empty)
-             (implicit params: Parameters[T]): MatchResult[Any] = {
+  def test[T](
+    expectedNames: List[List[String]],
+    expectedDefaults: List[Option[String]],
+    expectedRequired: List[Boolean],
+    expectedTypes: List[String] = List.empty,
+    expectedUnionTypes: List[NonEmptyList[String]] = List.empty
+  )(implicit params: Parameters[T]): MatchResult[Any] = {
     val repr = params.eval(Seq.empty)
-    (repr.map(_.path) === expectedNames) and
-    (repr.map(_.default) === expectedDefaults) and
-    (repr.map(_.required) === expectedRequired) and
-    (repr.flatMap {
-      case x: StableRepr => Some(x.`type`)
-      case _: Any => None
-    } === expectedTypes) and
-    (repr.flatMap {
-      case x: UnionRepr => Some(x.types)
-      case _: Any => None
-    } === expectedUnionTypes)
+    (repr.map(_.path) === expectedNames)
+      .and(repr.map(_.default) === expectedDefaults)
+      .and(repr.map(_.required) === expectedRequired)
+      .and(repr.flatMap {
+        case x: StableRepr => Some(x.`type`)
+        case _: Any => None
+      } === expectedTypes)
+      .and(repr.flatMap {
+        case x: UnionRepr => Some(x.types)
+        case _: Any => None
+      } === expectedUnionTypes)
   }
 }
 

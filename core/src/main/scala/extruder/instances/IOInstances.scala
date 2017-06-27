@@ -1,7 +1,7 @@
 package extruder.instances
 
 import cats.effect.IO
-import extruder.core.{ExtruderApplicativeError, IOConvert, IOF, IOFlatMap, Hints}
+import extruder.core.{ExtruderApplicativeError, Hints, IOConvert, IOF, IOFlatMap}
 
 import scala.concurrent.ExecutionContext
 

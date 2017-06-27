@@ -2,7 +2,7 @@ package extruder.fs2
 
 import cats.MonadError
 import cats.effect.IO
-import extruder.core.{ExtruderApplicativeError, IOConvert, IOF, IOFlatMap, Hints}
+import extruder.core.{ExtruderApplicativeError, Hints, IOConvert, IOF, IOFlatMap}
 import fs2.{Strategy, Task}
 
 trait Fs2Instances {
@@ -23,8 +23,10 @@ trait Fs2Instances {
     }
   }
 
-  implicit def taskApplicativeError(implicit s: Strategy,
-                                    IOC: IOConvert[Task]): ExtruderApplicativeError[Task, Throwable] =
+  implicit def taskApplicativeError(
+    implicit s: Strategy,
+    IOC: IOConvert[Task]
+  ): ExtruderApplicativeError[Task, Throwable] =
     new ExtruderApplicativeError.FromMonadError[Task] {
       override def attemptIO[A](a: IO[Task[A]])(implicit utils: Hints): Task[A] =
         IOC.fromIO(a).flatMap(identity)
@@ -40,11 +42,10 @@ trait Fs2Instances {
     }
   }
 
-  implicit def taskIOFFlatMap(implicit s: Strategy,
-                              IOC: IOConvert[Task]): IOFlatMap[Task] = new IOFlatMap[Task]() {
+  implicit def taskIOFFlatMap(implicit s: Strategy, IOC: IOConvert[Task]): IOFlatMap[Task] = new IOFlatMap[Task]() {
     override def flatMap[A, B](fa: IOF[Task, A])(f: (A) => IOF[Task, B]): IOF[Task, B] =
-      fa.flatMap(tsk =>
+      fa.flatMap { tsk =>
         IOC.toIO(tsk).map(f).flatMap(identity)
-      )
+      }
   }
 }

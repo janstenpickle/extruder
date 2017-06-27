@@ -19,5 +19,5 @@ class ConfigValidationFlatMapSpec extends Specification with Discipline with Con
     Arbitrary(Gen.oneOf(validationErrorsArb.arbitrary.map(_.invalid), tarb.arbitrary.map(_.valid)))
   val test: FlatMapTests[ConfigValidation] = FlatMapTests[ConfigValidation]
 
-  override def is: SpecStructure =  checkAll("ConfigValidation FlatMap instance", test.flatMap[Int, Int, Int] )
+  override def is: SpecStructure = checkAll("ConfigValidation FlatMap instance", test.flatMap[Int, Int, Int])
 }

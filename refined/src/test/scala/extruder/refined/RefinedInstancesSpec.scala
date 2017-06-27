@@ -21,7 +21,12 @@ import org.specs2.matcher.{EitherMatchers, MatchResult}
 import org.specs2.specification.core.SpecStructure
 import org.specs2.{ScalaCheck, Specification}
 
-class RefinedInstancesSpec extends Specification with ScalaCheck with EitherMatchers with MapEncoders with MapDecoders {
+class RefinedInstancesSpec
+    extends Specification
+    with ScalaCheck
+    with EitherMatchers
+    with MapEncoders
+    with MapDecoders {
   type ZeroToOne = Not[Less[W.`0.0`.T]] And Not[Greater[W.`1.0`.T]]
   type RegexMatch = MatchesRegex[W.`"[^0-9]+"`.T]
 
@@ -45,21 +50,24 @@ class RefinedInstancesSpec extends Specification with ScalaCheck with EitherMatc
         Char Refined Digit ${failEncodeDecode[Char Refined Digit, Char](Gen.alphaChar)}
       """
 
-  def encodeDecode[T](implicit arb: Arbitrary[T],
-                      encoder: MapEncoder[ConfigValidation, T],
-                      decoder: MapDecoder[ConfigValidation, T]): Prop = prop((v: T) =>
-    (for {
-      encoded <- encode[T](v).toEither
-      decoded <- decode[T](encoded).toEither
-    } yield decoded) must beRight(v)
-  )
-
-  def failEncodeDecode[T, V](gen: Gen[V])
-                            (implicit decoder: MapDecoder[ConfigValidation, T]): Prop =
-    Prop.forAll(gen)(src =>
-      decode[T](Map("" -> src.toString)).toEither must beLeft.which(failure =>
-        (failure.toList must haveSize(1)) and
-        (failure.toList.head.message.toLowerCase must contain("predicate"))
-      )
+  def encodeDecode[T](
+    implicit arb: Arbitrary[T],
+    encoder: MapEncoder[ConfigValidation, T],
+    decoder: MapDecoder[ConfigValidation, T]
+  ): Prop =
+    prop(
+      (v: T) =>
+        (for {
+          encoded <- encode[T](v).toEither
+          decoded <- decode[T](encoded).toEither
+        } yield decoded) must beRight(v)
     )
+
+  def failEncodeDecode[T, V](gen: Gen[V])(implicit decoder: MapDecoder[ConfigValidation, T]): Prop =
+    Prop.forAll(gen) { src =>
+      decode[T](Map("" -> src.toString)).toEither must beLeft.which(
+        failure =>
+          (failure.toList must haveSize(1)).and(failure.toList.head.message.toLowerCase must contain("predicate"))
+      )
+    }
 }

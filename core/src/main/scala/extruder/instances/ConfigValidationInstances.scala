@@ -4,7 +4,7 @@ import cats.FlatMap
 import cats.data.Validated.{Invalid, Valid}
 import cats.effect.IO
 import cats.syntax.validated._
-import extruder.core.{ConfigValidation, ExtruderApplicativeError, IOF, IOFlatMap, Hints, ValidationErrors}
+import extruder.core.{ConfigValidation, ExtruderApplicativeError, Hints, IOF, IOFlatMap, ValidationErrors}
 
 trait ConfigValidationInstances {
   import ExtruderApplicativeError._
@@ -22,17 +22,24 @@ trait ConfigValidationInstances {
     override def map[A, B](fa: ConfigValidation[A])(f: (A) => B): ConfigValidation[B] = fa.map(f)
   }
 
-  implicit val extruderApplicativeErrorForConfigValidation: ExtruderApplicativeError[ConfigValidation, ValidationErrors] =
+  implicit val extruderApplicativeErrorForConfigValidation: ExtruderApplicativeError[
+    ConfigValidation,
+    ValidationErrors
+  ] =
     new AccumulatesErrors[ConfigValidation] {
       override def raiseError[A](e: ValidationErrors): ConfigValidation[A] = e.invalid
-      override def handleErrorWith[A](fa: ConfigValidation[A])(f: (ValidationErrors) => ConfigValidation[A]): ConfigValidation[A] = fa.fold(f, _.validNel)
+      override def handleErrorWith[A](fa: ConfigValidation[A])(
+        f: (ValidationErrors) => ConfigValidation[A]
+      ): ConfigValidation[A] = fa.fold(f, _.validNel)
       override def pure[A](x: A): ConfigValidation[A] = x.validNel
       override def ap[A, B](ff: ConfigValidation[(A) => B])(fa: ConfigValidation[A]): ConfigValidation[B] =
         fa.ap(ff)
     }
 
   implicit val ioFlatMapForConfigValidation: IOFlatMap[ConfigValidation] = new IOFlatMap[ConfigValidation] {
-    override def flatMap[A, B](fa: IOF[ConfigValidation, A])(f: (A) => IOF[ConfigValidation, B]): IOF[ConfigValidation, B] =
+    override def flatMap[A, B](
+      fa: IOF[ConfigValidation, A]
+    )(f: (A) => IOF[ConfigValidation, B]): IOF[ConfigValidation, B] =
       fa.flatMap {
         case Valid(v) => f(v)
         case x @ Invalid(_) => IO(x)
