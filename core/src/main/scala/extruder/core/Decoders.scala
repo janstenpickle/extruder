@@ -3,13 +3,13 @@ package extruder.core
 import cats.effect.IO
 
 trait Decoders { self: DecodeTypes =>
-  protected def mkDecoder[F[_], T](f: (Seq[String], Option[T], DecodeConfig) => IO[F[T]]): Dec[F, T]
+  protected def mkDecoder[F[_], T](f: (List[String], Option[T], DecodeConfig) => IO[F[T]]): Dec[F, T]
 
   def apply[F[_], T](implicit decoder: Dec[F, T]): Dec[F, T] = decoder
 }
 
 trait Decode { self: DecodeTypes =>
-  protected def prepareConfig[F[_], E](namespace: Seq[String], config: InputConfig)(
+  protected def prepareConfig[F[_], E](namespace: List[String], config: InputConfig)(
     implicit AE: ExtruderApplicativeError[F, E],
     hints: Hint
   ): IO[F[DecodeConfig]]
@@ -43,7 +43,7 @@ trait Decode { self: DecodeTypes =>
     * @tparam T type to be decoded
     * @return Either the requested type or a non-empty list of validation errors
     */
-  def decode[T](namespace: Seq[String], config: InputConfig)(
+  def decode[T](namespace: List[String], config: InputConfig)(
     implicit decoder: Dec[ConfigValidation, T],
     AE: ExtruderApplicativeError[ConfigValidation, ValidationErrors],
     FM: IOFlatMap[ConfigValidation],
@@ -66,7 +66,7 @@ trait Decode { self: DecodeTypes =>
   def decode[T, F[_], E](
     config: InputConfig
   )(implicit decoder: Dec[F, T], AE: ExtruderApplicativeError[F, E], FM: IOFlatMap[F], hints: Hint): F[T] =
-    decode(Seq.empty, config)
+    decode(List.empty, config)
 
   /** Decode the specified type from given configuration source in a given namespace, wrapping the result in specified target monad
     * If the configuration source is asynchronous by nature this method will wait for the duration specified in `hints` for decoding to timeout
@@ -82,7 +82,7 @@ trait Decode { self: DecodeTypes =>
     * @return The requested type wrapped in the target monad
     */
   def decode[T, F[_], E](
-    namespace: Seq[String],
+    namespace: List[String],
     config: InputConfig
   )(implicit decoder: Dec[F, T], AE: ExtruderApplicativeError[F, E], FM: IOFlatMap[F], hints: Hint): F[T] =
     AE.attemptIO(decodeIO(namespace, config))
@@ -104,7 +104,7 @@ trait Decode { self: DecodeTypes =>
     FM: IOFlatMap[ConfigValidation],
     hints: Hint
   ): T =
-    decodeUnsafe[T](Seq.empty, config)
+    decodeUnsafe[T](List.empty, config)
 
   /** Decode the specified type from given configuration source in a given namespace
     * If the configuration source is asynchronous by nature this method will wait for the duration specified in `hints` for decoding to timeout
@@ -118,7 +118,7 @@ trait Decode { self: DecodeTypes =>
     * @throws Throwable any error encountered during decoding
     * @return the requested type
     */
-  def decodeUnsafe[T](namespace: Seq[String], config: InputConfig)(
+  def decodeUnsafe[T](namespace: List[String], config: InputConfig)(
     implicit decoder: Dec[ConfigValidation, T],
     AE: ExtruderApplicativeError[ConfigValidation, ValidationErrors],
     FM: IOFlatMap[ConfigValidation],
@@ -156,7 +156,7 @@ trait Decode { self: DecodeTypes =>
     * @tparam T type to be decoded
     * @return Either the requested type or a non-empty list of validation errors, wrapped in the IO monad
     */
-  def decodeIO[T](namespace: Seq[String], config: InputConfig)(
+  def decodeIO[T](namespace: List[String], config: InputConfig)(
     implicit decoder: Dec[ConfigValidation, T],
     AE: ExtruderApplicativeError[ConfigValidation, ValidationErrors],
     FM: IOFlatMap[ConfigValidation],
@@ -180,7 +180,7 @@ trait Decode { self: DecodeTypes =>
   def decodeIO[T, F[_], E](
     config: InputConfig
   )(implicit decoder: Dec[F, T], AE: ExtruderApplicativeError[F, E], FM: IOFlatMap[F], hints: Hint): IO[F[T]] =
-    decodeIO(Seq.empty, config)
+    decodeIO(List.empty, config)
 
   /** Decode the specified type from given configuration source in a given namespace, wrapping the result in specified target monad
     * Side effects in reading from the configuration source are encoded in the [[cats.effect.IO]] monad
@@ -196,7 +196,7 @@ trait Decode { self: DecodeTypes =>
     * @return The requested type wrapped in the target monad, wrapped in the IO monad
     */
   def decodeIO[T, F[_], E](
-    namespace: Seq[String],
+    namespace: List[String],
     config: InputConfig
   )(implicit decoder: Dec[F, T], AE: ExtruderApplicativeError[F, E], FM: IOFlatMap[F], hints: Hint): IO[F[T]] =
     FM.flatMap(prepareConfig(namespace, config))(decoder.read(namespace, None, _))
@@ -236,7 +236,7 @@ trait Decode { self: DecodeTypes =>
     * @tparam M monad representing side effects
     * @return Either the requested type or a non-empty list of validation errors, wrapped in the specified effect monad
     */
-  def decodeAsync[T, M[_]](namespace: Seq[String], config: InputConfig)(
+  def decodeAsync[T, M[_]](namespace: List[String], config: InputConfig)(
     implicit decoder: Dec[ConfigValidation, T],
     AE: ExtruderApplicativeError[ConfigValidation, ValidationErrors],
     FM: IOFlatMap[ConfigValidation],
@@ -266,7 +266,7 @@ trait Decode { self: DecodeTypes =>
     IOC: IOConvert[M],
     hints: Hint
   ): M[F[T]] =
-    decodeAsync[T, M, F, E](Seq.empty, config)
+    decodeAsync[T, M, F, E](List.empty, config)
 
   /** Decode the specified type from given configuration source, wrapping the result in specified target monad
     * Side effects in reading from the configuration source are encoded in `M`
@@ -282,7 +282,7 @@ trait Decode { self: DecodeTypes =>
     * @tparam E error type (e.g. `Exception`)
     * @return The requested type wrapped in the target monad, wrapped in the IO monad
     */
-  def decodeAsync[T, M[_], F[_], E](namespace: Seq[String], config: InputConfig)(
+  def decodeAsync[T, M[_], F[_], E](namespace: List[String], config: InputConfig)(
     implicit decoder: Dec[F, T],
     AE: ExtruderApplicativeError[F, E],
     FM: IOFlatMap[F],
@@ -299,7 +299,7 @@ trait Decode { self: DecodeTypes =>
     * @return a String table of parameters
     */
   def parameters[T](implicit params: Parameters[T], hints: Hint): String =
-    parameters(Seq.empty[String])
+    parameters(List.empty[String])
 
   /** Create a table of parameters as they should appear in the configuration source in a given namespace
     *
@@ -309,7 +309,7 @@ trait Decode { self: DecodeTypes =>
     * @tparam T type to be represented
     * @return a String table of parameters
     */
-  def parameters[T](namespace: Seq[String])(implicit params: Parameters[T], hints: Hint): String =
+  def parameters[T](namespace: List[String])(implicit params: Parameters[T], hints: Hint): String =
     FormatParameters.asTable[T](hints.pathToString, namespace)
 }
 
@@ -343,7 +343,7 @@ trait DecodeFromDefaultConfig { self: Decode with DecodeTypes =>
     * @tparam T type to be decoded
     * @return Either the requested type or a non-empty list of validation errors
     */
-  def decode[T](namespace: Seq[String])(
+  def decode[T](namespace: List[String])(
     implicit decoder: Dec[ConfigValidation, T],
     AE: ExtruderApplicativeError[ConfigValidation, ValidationErrors],
     FM: IOFlatMap[ConfigValidation],
@@ -368,7 +368,7 @@ trait DecodeFromDefaultConfig { self: Decode with DecodeTypes =>
     FM: IOFlatMap[F],
     hints: Hint
   ): F[T] =
-    decode[T, F, E](Seq.empty)
+    decode[T, F, E](List.empty)
 
   /** Decode the specified type from a default configuration source in a given namespace, wrapping the result in specified target monad
     * If the configuration source is asynchronous by nature this method will wait for the duration specified in `hints` for decoding to timeout
@@ -383,7 +383,7 @@ trait DecodeFromDefaultConfig { self: Decode with DecodeTypes =>
     * @return The requested type wrapped in the target monad
     */
   def decode[T, F[_], E](
-    namespace: Seq[String]
+    namespace: List[String]
   )(implicit decoder: Dec[F, T], AE: ExtruderApplicativeError[F, E], FM: IOFlatMap[F], hints: Hint): F[T] =
     AE.attemptIO(decodeIO[T, F, E](namespace))
 
@@ -403,7 +403,7 @@ trait DecodeFromDefaultConfig { self: Decode with DecodeTypes =>
     FM: IOFlatMap[ConfigValidation],
     hints: Hint
   ): T =
-    decodeUnsafe[T](Seq.empty)
+    decodeUnsafe[T](List.empty)
 
   /** Decode the specified type from a default configuration source in a given namespace
     * If the configuration source is asynchronous by nature this method will wait for the duration specified in `hints` for decoding to timeout
@@ -416,7 +416,7 @@ trait DecodeFromDefaultConfig { self: Decode with DecodeTypes =>
     * @throws Throwable any error encountered during decoding
     * @return the requested type
     */
-  def decodeUnsafe[T](namespace: Seq[String])(
+  def decodeUnsafe[T](namespace: List[String])(
     implicit decoder: Dec[ConfigValidation, T],
     AE: ExtruderApplicativeError[ConfigValidation, ValidationErrors],
     FM: IOFlatMap[ConfigValidation],
@@ -451,7 +451,7 @@ trait DecodeFromDefaultConfig { self: Decode with DecodeTypes =>
     * @tparam T type to be decoded
     * @return Either the requested type or a non-empty list of validation errors, wrapped in the IO monad
     */
-  def decodeIO[T](namespace: Seq[String])(
+  def decodeIO[T](namespace: List[String])(
     implicit decoder: Dec[ConfigValidation, T],
     AE: ExtruderApplicativeError[ConfigValidation, ValidationErrors],
     FM: IOFlatMap[ConfigValidation],
@@ -477,7 +477,7 @@ trait DecodeFromDefaultConfig { self: Decode with DecodeTypes =>
     dis: `decode disambiguator`.type,
     hints: Hint
   ): IO[F[T]] =
-    decodeIO[T, F, E](Seq.empty)
+    decodeIO[T, F, E](List.empty)
 
   /** Decode the specified type a default configuration source in a given namespace, wrapping the result in specified target monad
     * Side effects in reading from the configuration source are encoded in the [[cats.effect.IO]] monad
@@ -491,7 +491,7 @@ trait DecodeFromDefaultConfig { self: Decode with DecodeTypes =>
     * @tparam E error type (e.g. `Exception`)
     * @return The requested type wrapped in the target monad, wrapped in the IO monad
     */
-  def decodeIO[T, F[_], E](namespace: Seq[String])(
+  def decodeIO[T, F[_], E](namespace: List[String])(
     implicit decoder: Dec[F, T],
     AE: ExtruderApplicativeError[F, E],
     FM: IOFlatMap[F],
@@ -533,7 +533,7 @@ trait DecodeFromDefaultConfig { self: Decode with DecodeTypes =>
     * @tparam M monad representing side effects
     * @return Either the requested type or a non-empty list of validation errors, wrapped in the specified effect monad
     */
-  def decodeAsync[T, M[_]](namespace: Seq[String])(
+  def decodeAsync[T, M[_]](namespace: List[String])(
     implicit decoder: Dec[ConfigValidation, T],
     AE: ExtruderApplicativeError[ConfigValidation, ValidationErrors],
     FM: IOFlatMap[ConfigValidation],
@@ -562,7 +562,7 @@ trait DecodeFromDefaultConfig { self: Decode with DecodeTypes =>
     IOC: IOConvert[M],
     hints: Hint
   ): M[F[T]] =
-    decodeAsync[T, M, F, E](Seq.empty)
+    decodeAsync[T, M, F, E](List.empty)
 
   /** Decode the specified type from a default configuration source, wrapping the result in specified target monad
     * Side effects in reading from the configuration source are encoded in `M`
@@ -577,7 +577,7 @@ trait DecodeFromDefaultConfig { self: Decode with DecodeTypes =>
     * @tparam E error type (e.g. `Exception`)
     * @return The requested type wrapped in the target monad, wrapped in the specified effect monad
     */
-  def decodeAsync[T, M[_], F[_], E](namespace: Seq[String])(
+  def decodeAsync[T, M[_], F[_], E](namespace: List[String])(
     implicit decoder: Dec[F, T],
     AE: ExtruderApplicativeError[F, E],
     FM: IOFlatMap[F],
@@ -588,7 +588,7 @@ trait DecodeFromDefaultConfig { self: Decode with DecodeTypes =>
 }
 
 trait Decoder[F[_], T, C] {
-  def read(path: Seq[String], default: Option[T], config: C): IO[F[T]]
+  def read(path: List[String], default: Option[T], config: C): IO[F[T]]
 }
 
 trait DecodeTypes extends ConfigSource {

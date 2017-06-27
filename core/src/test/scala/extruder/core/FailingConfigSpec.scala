@@ -28,28 +28,28 @@ class FailingConfigSpec extends Specification with ScalaCheck with EitherMatcher
       """
 
   override protected def finalizeConfig[F[_], E](
-    namespace: Seq[String],
+    namespace: List[String],
     config: Map[String, String]
   )(implicit AE: ExtruderApplicativeError[F, E], util: Hint): IO[F[Map[String, String]]] =
     if (config.keys.forall(_.contains(finalizeFailKey))) IO.pure(AE.validationFailure(finalizeFailMessage))
     else IO.pure(AE.pure(config))
 
   override protected def prepareConfig[F[_], E](
-    namespace: Seq[String],
+    namespace: List[String],
     config: Map[String, String]
   )(implicit AE: ExtruderApplicativeError[F, E], util: Hint): IO[F[Map[String, String]]] =
     if (config.keys.forall(_.contains(prepareFailKey))) IO.pure(AE.validationFailure(prepareFailMessage))
     else IO.pure(AE.pure(config))
 
   override protected def lookupValue[F[_], E](
-    path: Seq[String],
+    path: List[String],
     config: Map[String, String]
   )(implicit utils: MapHints, AE: ExtruderApplicativeError[F, E]): IO[F[Option[String]]] =
     if (path.contains(okNamespace)) IO.pure(AE.pure(config.get(utils.pathToString(path))))
     else IO.pure(AE.validationFailure(lookupFailMessage))
 
   override protected def writeValue[F[_], E](
-    path: Seq[String],
+    path: List[String],
     value: String
   )(implicit utils: MapHints, AE: ExtruderApplicativeError[F, E]): IO[F[Map[String, String]]] =
     if (path.contains(okNamespace)) IO.pure(AE.validationFailure(writeFailMessage))
@@ -69,14 +69,14 @@ class FailingConfigSpec extends Specification with ScalaCheck with EitherMatcher
     implicit utils: MapHints,
     AE: ExtruderApplicativeError[ConfigValidation, NonEmptyList[ValidationError]]
   ): MatchResult[Any] =
-    cnilDecoder.read(Seq.empty, None, Map.empty) mustEqual IO.pure(
+    cnilDecoder.read(List.empty, None, Map.empty) mustEqual IO.pure(
       AE.validationFailure(
-        s"Could not find specified implementation of sealed type at configuration path '${utils.pathToStringWithType(Seq.empty)}'"
+        s"Could not find specified implementation of sealed type at configuration path '${utils.pathToStringWithType(List.empty)}'"
       )
     )
 
   def testDurationDecoder: MatchResult[Any] =
-    decode[FiniteDuration](Seq(okNamespace), Map(okNamespace -> "Inf")).toEither must beLeft(
+    decode[FiniteDuration](List(okNamespace), Map(okNamespace -> "Inf")).toEither must beLeft(
       NonEmptyList.of(
         ValidationFailure(
           s"Could not parse value 'Inf' at '$okNamespace': Could not parse value 'Inf' as a valid duration for type 'FiniteDuration'"
@@ -87,7 +87,7 @@ class FailingConfigSpec extends Specification with ScalaCheck with EitherMatcher
   def testCharDecoder: Prop =
     Prop.forAllNoShrink(Gen.alphaNumStr.suchThat(_.length > 1))(
       value =>
-        decode[Char](Seq(okNamespace), Map(okNamespace -> value)).toEither must beLeft(
+        decode[Char](List(okNamespace), Map(okNamespace -> value)).toEither must beLeft(
           NonEmptyList.of(ValidationFailure(s"Could not parse value '$value' at '$okNamespace': Not a valid Char"))
       )
     )
@@ -103,7 +103,7 @@ class FailingConfigSpec extends Specification with ScalaCheck with EitherMatcher
   def testFinalizeFail: Prop =
     Prop.forAll(Gen.alphaNumStr)(
       value =>
-        encode[String](Seq(finalizeFailKey), value).toEither must beLeft(
+        encode[String](List(finalizeFailKey), value).toEither must beLeft(
           NonEmptyList.of(ValidationFailure(finalizeFailMessage))
       )
     )

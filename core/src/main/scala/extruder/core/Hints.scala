@@ -5,12 +5,12 @@ import scala.concurrent.duration._
 trait Hints {
   val ListSeparator: String = ","
 
-  def pathWithType(path: Seq[String]): Seq[String] = path :+ TypeKey
+  def pathWithType(path: List[String]): List[String] = path :+ TypeKey
 
-  def pathToStringWithType(path: Seq[String]): String =
+  def pathToStringWithType(path: List[String]): String =
     pathToString(pathWithType(path))
 
-  def pathToString(path: Seq[String]): String
+  def pathToString(path: List[String]): String
 
   def ioTimeout: Duration = 3.seconds
 }

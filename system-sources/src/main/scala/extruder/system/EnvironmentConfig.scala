@@ -20,27 +20,27 @@ trait EnvironmentDecoders
   override type Hint = EnvironmentHints
 
   override protected def hasValue[F[_], E](
-    path: Seq[String],
+    path: List[String],
     config: Map[String, String]
   )(implicit utils: EnvironmentHints, AE: ExtruderApplicativeError[F, E]): IO[F[Boolean]] =
     lookupValue(path, config).map(AE.map(_)(_.isDefined))
 
   override protected def lookupValue[F[_], E](
-    path: Seq[String],
+    path: List[String],
     config: Map[String, String]
   )(implicit utils: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[Option[String]]] =
     IO(AE.pure(config.get(utils.pathToString(path))))
 
   override protected def mkDecoder[F[_], T](
-    f: (Seq[String], Option[T], Map[String, String]) => IO[F[T]]
+    f: (List[String], Option[T], Map[String, String]) => IO[F[T]]
   ): EnvironmentDecoder[F, T] =
     new EnvironmentDecoder[F, T] {
-      override def read(path: Seq[String], default: Option[T], config: Map[String, String]): IO[F[T]] =
+      override def read(path: List[String], default: Option[T], config: Map[String, String]): IO[F[T]] =
         f(path, default, config)
     }
 
   override protected def prepareConfig[F[_], E](
-    namespace: Seq[String],
+    namespace: List[String],
     config: java.util.Map[String, String]
   )(implicit AE: ExtruderApplicativeError[F, E], util: Hint): IO[F[Map[String, String]]] =
     IO(AE.pure(config.asScala.toMap.map { case (k, v) => k.toUpperCase -> v }))
@@ -56,6 +56,6 @@ trait EnvironmentHints extends Hints
 
 object EnvironmentHints extends HintsCompanion[EnvironmentHints] {
   override implicit val default: EnvironmentHints = new EnvironmentHints {
-    override def pathToString(path: Seq[String]): String = path.mkString("_").toUpperCase
+    override def pathToString(path: List[String]): String = path.mkString("_").toUpperCase
   }
 }

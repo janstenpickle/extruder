@@ -6,13 +6,13 @@ import cats.effect.IO
 trait Encoders { self: EncodeTypes =>
   protected def monoid: Monoid[EncodeConfig]
 
-  protected def mkEncoder[F[_], T](f: (Seq[String], T) => IO[F[EncodeConfig]]): Enc[F, T]
+  protected def mkEncoder[F[_], T](f: (List[String], T) => IO[F[EncodeConfig]]): Enc[F, T]
 
   def apply[F[_], T](implicit encoder: Enc[F, T]): Enc[F, T] = encoder
 }
 
 trait Encode { self: EncodeTypes =>
-  protected def finalizeConfig[F[_], E](namespace: Seq[String], inter: EncodeConfig)(
+  protected def finalizeConfig[F[_], E](namespace: List[String], inter: EncodeConfig)(
     implicit AE: ExtruderApplicativeError[F, E],
     hints: Hint
   ): IO[F[OutputConfig]]
@@ -43,7 +43,7 @@ trait Encode { self: EncodeTypes =>
     * @tparam T type to be encoded
     * @return Either the value encoded as [[OutputConfig]] or a non-empty list of errors
     */
-  def encode[T](namespace: Seq[String], value: T)(
+  def encode[T](namespace: List[String], value: T)(
     implicit encoder: Enc[ConfigValidation, T],
     AE: ExtruderApplicativeError[ConfigValidation, ValidationErrors],
     FM: IOFlatMap[ConfigValidation],
@@ -66,7 +66,7 @@ trait Encode { self: EncodeTypes =>
   def encode[T, F[_], E](
     value: T
   )(implicit encoder: Enc[F, T], AE: ExtruderApplicativeError[F, E], FM: IOFlatMap[F], hints: Hint): F[OutputConfig] =
-    encode(Seq.empty, value)
+    encode(List.empty, value)
 
   /** Encode the given value as configuration in a given namespace, wrapping the result in specified target monad
     * If the configuration source is asynchronous by nature this method will wait for the duration specified in `hints` for decoding to timeout
@@ -82,7 +82,7 @@ trait Encode { self: EncodeTypes =>
     * @return the value encoded as [[OutputConfig]] wrapped in the target monad
     */
   def encode[T, F[_], E](
-    namespace: Seq[String],
+    namespace: List[String],
     value: T
   )(implicit encoder: Enc[F, T], AE: ExtruderApplicativeError[F, E], FM: IOFlatMap[F], hints: Hint): F[OutputConfig] =
     AE.attemptIO(encodeIO(namespace, value))
@@ -102,7 +102,7 @@ trait Encode { self: EncodeTypes =>
     AE: ExtruderApplicativeError[ConfigValidation, ValidationErrors],
     hints: Hint
   ): OutputConfig =
-    encodeUnsafe[T](Seq.empty, value)
+    encodeUnsafe[T](List.empty, value)
 
   /** Encode the given value as configuration in a given namespace
     * If the configuration source is asynchronous by nature this method will wait for the duration specified in `hints` for decoding to timeout
@@ -115,7 +115,7 @@ trait Encode { self: EncodeTypes =>
     * @throws Throwable any error encountered during encoding
     * @return The value encoded as [[OutputConfig]]
     */
-  def encodeUnsafe[T](namespace: Seq[String], value: T)(
+  def encodeUnsafe[T](namespace: List[String], value: T)(
     implicit encoder: Enc[ConfigValidation, T],
     AE: ExtruderApplicativeError[ConfigValidation, ValidationErrors],
     hints: Hint
@@ -133,7 +133,7 @@ trait Encode { self: EncodeTypes =>
     * @tparam T type to be encoded
     * @return Either the value encoded as [[OutputConfig]] or a non-empty list of errors wrapped in the [[cats.effect.IO]] monad
     */
-  def encodeIO[T](namespace: Seq[String], value: T)(
+  def encodeIO[T](namespace: List[String], value: T)(
     implicit encoder: Enc[ConfigValidation, T],
     AE: ExtruderApplicativeError[ConfigValidation, ValidationErrors],
     FM: IOFlatMap[ConfigValidation],
@@ -179,7 +179,7 @@ trait Encode { self: EncodeTypes =>
     FM: IOFlatMap[F],
     hints: Hint
   ): IO[F[OutputConfig]] =
-    encodeIO(Seq.empty, value)
+    encodeIO(List.empty, value)
 
   /** Encode the given value as configuration in a given namespace
     * Side effects in reading from the configuration source are encoded in the [[cats.effect.IO]] monad
@@ -194,7 +194,7 @@ trait Encode { self: EncodeTypes =>
     * @tparam E error type (e.g. `Exception`)
     * @return The value encoded as [[OutputConfig]] wrapped in the target monad, wrapped in the IO monad
     */
-  def encodeIO[T, F[_], E](namespace: Seq[String], value: T)(
+  def encodeIO[T, F[_], E](namespace: List[String], value: T)(
     implicit encoder: Enc[F, T],
     AE: ExtruderApplicativeError[F, E],
     FM: IOFlatMap[F],
@@ -237,7 +237,7 @@ trait Encode { self: EncodeTypes =>
     * @tparam M monad representing side effects
     * @return Either the value encoded as [[OutputConfig]] or a non-empty list of errors wrapped in the specified effect monad
     */
-  def encodeAsync[T, M[_]](namespace: Seq[String], value: T)(
+  def encodeAsync[T, M[_]](namespace: List[String], value: T)(
     implicit encoder: Enc[ConfigValidation, T],
     AE: ExtruderApplicativeError[ConfigValidation, ValidationErrors],
     FM: IOFlatMap[ConfigValidation],
@@ -268,7 +268,7 @@ trait Encode { self: EncodeTypes =>
     IOC: IOConvert[M],
     hints: Hint
   ): M[F[OutputConfig]] =
-    encodeAsync[T, M, F, E](Seq.empty, value)
+    encodeAsync[T, M, F, E](List.empty, value)
 
   /** Encode the given value as configuration in a given namespace
     * Side effects in reading from the configuration source are encoded in `M`
@@ -285,7 +285,7 @@ trait Encode { self: EncodeTypes =>
     * @tparam E error type (e.g. `Exception`)
     * @return The value encoded as [[OutputConfig]] wrapped in the target monad, wrapped in the specified effect monad
     */
-  def encodeAsync[T, M[_], F[_], E](namespace: Seq[String], value: T)(
+  def encodeAsync[T, M[_], F[_], E](namespace: List[String], value: T)(
     implicit encoder: Enc[F, T],
     AE: ExtruderApplicativeError[F, E],
     FM: IOFlatMap[F],
@@ -296,7 +296,7 @@ trait Encode { self: EncodeTypes =>
 }
 
 trait Encoder[F[_], T, O] {
-  def write(path: Seq[String], in: T): IO[F[O]]
+  def write(path: List[String], in: T): IO[F[O]]
 }
 
 trait EncodeTypes extends ConfigSource {

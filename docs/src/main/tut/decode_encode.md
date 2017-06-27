@@ -17,7 +17,7 @@ There are a few types of methods for encoding and decoding documented below, ple
 |IO|The resulting output will be the same as _Simple_, except that the return type will also be wrapped in a [cats effect] `IO` monad|[`decodeIO`](api/extruder/core/Decode.html) [`encodeIO`](api/extruder/core/Encode.html)|
 |Async|The resulting output will be the same as _Simple_, except that the return type will also be wrapped in a specified type, for which there should be an [`IOConvert`](api/extruder/core/IOConvert.html) instance|[`decodeAsync`](api/extruder/core/Decode.html) [`encodeAsync`](api/extruder/core/Encode.html)|
 
-Normally when decoding you are required to pass the configuration and an optional namespace, however some configuration sources may provide some default configuration, such as from [system properties](api/extruder/system/SystemPropertiesConfig.html), [environment variables](http://127.0.0.1:4000/extruder/api/extruder/system/EnvironmentConfig$.html) or [typesafe config](api/extruder/typesafe/TypesafeConfig$.html). These all extend the trait [`DecodeFromDefaultConfig`](api/extruder/core/DecodeFromDefaultConfig.html) which includes a set of `decode` methods which do not require configuration to be passed.
+Normally when decoding you are required to pass the configuration and an optional namespace, however some configuration sources may provide some default configuration, such as from [system properties](api/extruder/system/SystemPropertiesConfig.html), [environment variables](api/extruder/system/EnvironmentConfig$.html) or [typesafe config](api/extruder/typesafe/TypesafeConfig$.html). These all extend the trait [`DecodeFromDefaultConfig`](api/extruder/core/DecodeFromDefaultConfig.html) which includes a set of `decode` methods which do not require configuration to be passed.
 
 ## Advanced Examples
 Extruder includes some default implementations for `IO`, `Future`, `Either` and `ValidatedNel`, as well as extension modules for [Monix] and [FS2].
@@ -32,14 +32,14 @@ import monix.eval.Task
 import monix.execution.Scheduler.Implicits.global
 import scala.concurrent.Future
 
-decode[String, IO, Throwable](Seq("a"), Map("a" -> "b")) // returns IO("b")
-decode[String, Future, Throwable](Seq("a"), Map("a" -> "b")) // returns Future("b")
-decode[String, Task, Throwable](Seq("a"), Map("a" -> "b")) // returns Task("b")
+decode[String, IO, Throwable](List("a"), Map("a" -> "b")) // returns IO("b")
+decode[String, Future, Throwable](List("a"), Map("a" -> "b")) // returns Future("b")
+decode[String, Task, Throwable](List("a"), Map("a" -> "b")) // returns Task("b")
 
-decodeIO[String, EitherThrowable, Throwable](Seq("a"), Map("a" -> "b")) // returns IO(Right("b"))
+decodeIO[String, EitherThrowable, Throwable](List("a"), Map("a" -> "b")) // returns IO(Right("b"))
 
-decodeAsync[String, Task](Seq("a"), Map("a" -> "b")) // returns Task(Valid("b"))
-decodeAsync[String, Task, EitherThrowable, Throwable](Seq("a"), Map("a" -> "b")) // returns Task(Right("b"))
+decodeAsync[String, Task](List("a"), Map("a" -> "b")) // returns Task(Valid("b"))
+decodeAsync[String, Task, EitherThrowable, Throwable](List("a"), Map("a" -> "b")) // returns Task(Right("b"))
 ```
 
 A couple of things to note in the examples above:
@@ -80,8 +80,8 @@ You can then import your new instances object to decode and encode using `Try` t
 ```tut:silent
 import TryExtruderInstances._
 
-encode[String, Try, Throwable](Seq("a"), "b")
-decode[String, Try, Throwable](Seq("a"), Map("a" -> "b"))
+encode[String, Try, Throwable](List("a"), "b")
+decode[String, Try, Throwable](List("a"), Map("a" -> "b"))
 ```
 
 ## `Either` Example
@@ -127,7 +127,7 @@ As with `Try` it is now possible to import your instances to decode and encode u
 ```tut:silent
 import EitherExtruderInstances._
 
-encode[String, EitherErrors, ValidationErrors](Seq("a"), "b")
-decode[String, EitherErrors, ValidationErrors](Seq("a"), Map("a" -> "b"))
+encode[String, EitherErrors, ValidationErrors](List("a"), "b")
+decode[String, EitherErrors, ValidationErrors](List("a"), Map("a" -> "b"))
 ```
 {% include references.md %}

@@ -54,12 +54,12 @@ trait ConfigSpec
   implicit val durationEq: Eq[Duration] = Eq.fromUniversalEquals
   implicit val finiteDurationEq: Eq[FiniteDuration] = Eq.fromUniversalEquals
 
-  val caseClassConfig: Map[Seq[String], String] =
-    Map(Seq("CaseClass", "s") -> "string", Seq("CaseClass", "i") -> "1", Seq("CaseClass", "l") -> "1")
+  val caseClassConfig: Map[List[String], String] =
+    Map(List("CaseClass", "s") -> "string", List("CaseClass", "i") -> "1", List("CaseClass", "l") -> "1")
 
   val expectedCaseClass = CaseClass("string", 1, 1L, None)
 
-  def convertConfig(map: Map[Seq[String], String])(implicit utils: Hint): InputConfig
+  def convertConfig(map: Map[List[String], String])(implicit utils: Hint): InputConfig
 
   override def is: SpecStructure =
     s2"""
@@ -196,26 +196,30 @@ trait ConfigSpec
       (s, i, l) =>
         decode[CaseClass](
           convertConfig(
-            Map(Seq("CaseClass", "s") -> s, Seq("CaseClass", "i") -> i.toString, Seq("CaseClass", "l") -> l.toString)
+            Map(
+              List("CaseClass", "s") -> s,
+              List("CaseClass", "i") -> i.toString,
+              List("CaseClass", "l") -> l.toString
+            )
           )
         ).toEither must beRight(CaseClass(s, i, l, None))
     )
 
   def testDefaultDecode(implicit cvEq: Eq[ConfigValidation[CaseClass]]): Boolean =
     cvEq.eqv(decode[CaseClass], expectedCaseClass.validNel) &&
-      cvEq.eqv(decode[CaseClass](Seq.empty), expectedCaseClass.validNel)
+      cvEq.eqv(decode[CaseClass](List.empty), expectedCaseClass.validNel)
 
   def testDefaultDecodeIO(implicit ioEq: Eq[IO[ConfigValidation[CaseClass]]]): Boolean =
     ioEq.eqv(decodeIO[CaseClass], IO(expectedCaseClass.validNel)) &&
-      ioEq.eqv(decodeIO[CaseClass](Seq.empty), IO(expectedCaseClass.validNel))
+      ioEq.eqv(decodeIO[CaseClass](List.empty), IO(expectedCaseClass.validNel))
 
   def testDefaultDecodeAsync(implicit futEq: Eq[Future[ConfigValidation[CaseClass]]]): Boolean =
     futEq.eqv(decodeAsync[CaseClass, Future], Future(expectedCaseClass.validNel)) &&
-      futEq.eqv(decodeAsync[CaseClass, Future](Seq.empty), Future(expectedCaseClass.validNel))
+      futEq.eqv(decodeAsync[CaseClass, Future](List.empty), Future(expectedCaseClass.validNel))
 
   def testDefaultDecodeUnsafe(implicit ccEq: Eq[CaseClass]): Boolean =
     ccEq.eqv(decodeUnsafe[CaseClass], expectedCaseClass) &&
-      ccEq.eqv(decodeUnsafe[CaseClass](Seq.empty), expectedCaseClass)
+      ccEq.eqv(decodeUnsafe[CaseClass](List.empty), expectedCaseClass)
 
   def testCaseClassParams(implicit utils: Hint): MatchResult[String] = parameters[CaseClass] !== ""
 }

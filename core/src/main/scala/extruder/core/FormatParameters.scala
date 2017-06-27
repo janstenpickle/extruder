@@ -21,7 +21,7 @@ object FormatParameters {
     case _: Any => ""
   }
 
-  def asTable[T](pathToString: Seq[String] => String, namespace: Seq[String])(
+  def asTable[T](pathToString: List[String] => String, namespace: List[String])(
     implicit parameters: Parameters[T]
   ): String = {
     val params = parameters.eval(namespace)

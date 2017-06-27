@@ -29,9 +29,9 @@ The following code shows how an integer value may be decoded and encoded from th
 ```tut:silent
 import extruder.core.MapConfig._
 
-decode[Int](Seq("some", "int"), Map("some.int" -> "23"))
+decode[Int](List("some", "int"), Map("some.int" -> "23"))
 
-encode[Int](Seq("some", "int"), 23)
+encode[Int](List("some", "int"), 23)
 ```
 
 ## Simple Case Class
@@ -52,13 +52,13 @@ decode[Example](Map("example.configuredstring" -> "configured"))
 decode[Example](Map("example.configuredstring" -> "configured", "example.optionalsting" -> "optional"))
 
 // Decodes with a namespace
-decode[Example](Seq("name", "space"), Map("name.space.example.configuredstring" -> "configured"))
+decode[Example](List("name", "space"), Map("name.space.example.configuredstring" -> "configured"))
 
 // Encodes case class to Map
 encode[Example](Example(configuredString = "configured", optionalString = None))
 
 // Encodes case class to Map with namespace
-encode[Example](Seq("name", "space"), Example(configuredString = "configured", optionalString = None))
+encode[Example](List("name", "space"), Example(configuredString = "configured", optionalString = None))
 ```
 
 ## Nested Case Classes
@@ -116,7 +116,7 @@ import extruder.core.MapConfig._
 import extruder.core.MapHints
 
 implicit val hints: MapHints = new MapHints {
-  override def pathToString(path: Seq[String]): String = path.mkString("_").toUpperCase
+  override def pathToString(path: List[String]): String = path.mkString("_").toUpperCase
 }
 
 case class Example(defaultedString: String = "default", configuredString: String, optionalString: Option[String])

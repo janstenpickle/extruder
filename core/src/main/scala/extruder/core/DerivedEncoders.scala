@@ -41,14 +41,14 @@ trait DerivedEncoders { self: Encoders with EncodeTypes =>
     mkEncoder((path, value) => underlying.value.write(path, gen.to(value)))
 
   trait DerivedEncoder[T, F[_], Repr <: HList] {
-    def write(path: Seq[String], value: Repr): IO[F[EncodeConfig]]
+    def write(path: List[String], value: Repr): IO[F[EncodeConfig]]
   }
 
   implicit def hNilDerivedEncoder[T, F[_], E](
     implicit AE: ExtruderApplicativeError[F, E]
   ): DerivedEncoder[T, F, HNil] =
     new DerivedEncoder[T, F, HNil] {
-      override def write(path: Seq[String], value: HNil): IO[F[EncodeConfig]] = IO(AE.pure(monoid.empty))
+      override def write(path: List[String], value: HNil): IO[F[EncodeConfig]] = IO(AE.pure(monoid.empty))
     }
 
   implicit def hConsDerivedEncoder[T, F[_], E, K <: Symbol, V, TailRepr <: HList](
@@ -58,7 +58,7 @@ trait DerivedEncoders { self: Encoders with EncodeTypes =>
     tailEncoder: Lazy[DerivedEncoder[T, F, TailRepr]]
   ): DerivedEncoder[T, F, FieldType[K, V] :: TailRepr] =
     new DerivedEncoder[T, F, FieldType[K, V] :: TailRepr] {
-      override def write(path: Seq[String], value: FieldType[K, V] :: TailRepr): IO[F[EncodeConfig]] = {
+      override def write(path: List[String], value: FieldType[K, V] :: TailRepr): IO[F[EncodeConfig]] = {
         val fieldName = key.value.name
 
         for {

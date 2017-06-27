@@ -49,14 +49,14 @@ trait DerivedDecoders { self: Decoders with DecodeTypes =>
     }
 
   trait DerivedDecoderWithDefault[T, F[_], Repr <: HList, DefaultRepr <: HList] {
-    def read(path: Seq[String], default: DefaultRepr, config: DecodeConfig): IO[F[Repr]]
+    def read(path: List[String], default: DefaultRepr, config: DecodeConfig): IO[F[Repr]]
   }
 
   implicit def hNilDerivedDecoder[T, F[_], E](
     implicit AE: ExtruderApplicativeError[F, E]
   ): DerivedDecoderWithDefault[T, F, HNil, HNil] =
     new DerivedDecoderWithDefault[T, F, HNil, HNil] {
-      override def read(path: Seq[String], default: HNil, config: DecodeConfig): IO[F[HNil]] = IO.pure(AE.pure(HNil))
+      override def read(path: List[String], default: HNil, config: DecodeConfig): IO[F[HNil]] = IO.pure(AE.pure(HNil))
     }
 
   implicit def hConsDerivedDecoder[T, F[_], E, K <: Symbol, V, TailRepr <: HList, DefaultsTailRepr <: HList](
@@ -67,7 +67,7 @@ trait DerivedDecoders { self: Decoders with DecodeTypes =>
   ): DerivedDecoderWithDefault[T, F, FieldType[K, V] :: TailRepr, Option[V] :: DefaultsTailRepr] =
     new DerivedDecoderWithDefault[T, F, FieldType[K, V] :: TailRepr, Option[V] :: DefaultsTailRepr] {
       override def read(
-        path: Seq[String],
+        path: List[String],
         default: Option[V] :: DefaultsTailRepr,
         config: DecodeConfig
       ): IO[F[::[FieldType[K, V], TailRepr]]] = {

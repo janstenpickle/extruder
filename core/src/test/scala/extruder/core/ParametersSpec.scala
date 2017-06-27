@@ -69,7 +69,7 @@ class ParametersSpec extends Specification with ScalaCheck {
     expectedTypes: List[String] = List.empty,
     expectedUnionTypes: List[NonEmptyList[String]] = List.empty
   )(implicit params: Parameters[T]): MatchResult[Any] = {
-    val repr = params.eval(Seq.empty)
+    val repr = params.eval(List.empty)
     (repr.map(_.path) === expectedNames)
       .and(repr.map(_.default) === expectedDefaults)
       .and(repr.map(_.required) === expectedRequired)

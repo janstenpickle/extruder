@@ -14,9 +14,7 @@ import shapeless._
 import scala.collection.JavaConverters._
 import extruder.core.ConfigValidationCatsInstances._
 
-class TypesafeConfigSpec extends ConfigSpec
-                         with TypesafeConfigDecoders
-                         with TypesafeConfigEncoders {
+class TypesafeConfigSpec extends ConfigSpec with TypesafeConfigDecoders with TypesafeConfigEncoders {
   import TypesafeConfigSpec._
 
   implicit val configValueEq: Eq[ConfigValue] = Eq.fromUniversalEquals
@@ -25,7 +23,7 @@ class TypesafeConfigSpec extends ConfigSpec
 
   override val supportsEmptyNamespace: Boolean = false
 
-  override def convertConfig(map: Map[Seq[String], String])(implicit utils: Hint): Config = {
+  override def convertConfig(map: Map[List[String], String])(implicit utils: Hint): Config = {
     val config = map.map { case (k, v) => utils.pathToString(k) -> v }.asJava
     ConfigFactory.parseMap(config)
   }
@@ -43,7 +41,7 @@ class TypesafeConfigSpec extends ConfigSpec
       """
 
   def testException: MatchResult[Any] =
-    decode[String](Seq(Key), new BrokenConfig(LookupFailureMessage)).toEither must beLeft.which(
+    decode[String](List(Key), new BrokenConfig(LookupFailureMessage)).toEither must beLeft.which(
       _.head.asInstanceOf[ValidationException].exception.getMessage === LookupFailureMessage
     )
 

@@ -13,16 +13,16 @@ import scala.concurrent.duration.Duration
 import scala.reflect.ClassTag
 
 trait PrimitiveDecoders { self: Decoders with DecodeTypes =>
-  protected def hasValue[F[_], E](path: Seq[String], config: DecodeConfig)(
+  protected def hasValue[F[_], E](path: List[String], config: DecodeConfig)(
     implicit utils: Hint,
     AE: ExtruderApplicativeError[F, E]
   ): IO[F[Boolean]]
-  protected def lookupValue[F[_], E](path: Seq[String], config: DecodeConfig)(
+  protected def lookupValue[F[_], E](path: List[String], config: DecodeConfig)(
     implicit utils: Hint,
     AE: ExtruderApplicativeError[F, E]
   ): IO[F[Option[String]]]
   protected def lookupList[F[_], E](
-    path: Seq[String],
+    path: List[String],
     config: DecodeConfig
   )(implicit utils: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[Option[List[String]]]] =
     lookupValue[F, E](path, config).map(_.map(_.map(_.split(utils.ListSeparator).toList.map(_.trim))))
@@ -70,16 +70,16 @@ trait PrimitiveDecoders { self: Decoders with DecodeTypes =>
 
   protected def resolveValue[F[_], E, T](
     parser: String => F[T]
-  )(implicit utils: Hint, AE: ExtruderApplicativeError[F, E]): (Seq[String], Option[T], DecodeConfig) => IO[F[T]] =
+  )(implicit utils: Hint, AE: ExtruderApplicativeError[F, E]): (List[String], Option[T], DecodeConfig) => IO[F[T]] =
     resolve[F, E, T, String](parser, lookupValue[F, E])
 
   protected def resolveList[F[_], E, T](
     parser: List[String] => F[T]
-  )(implicit utils: Hint, AE: ExtruderApplicativeError[F, E]): (Seq[String], Option[T], DecodeConfig) => IO[F[T]] =
+  )(implicit utils: Hint, AE: ExtruderApplicativeError[F, E]): (List[String], Option[T], DecodeConfig) => IO[F[T]] =
     resolve[F, E, T, List[String]](parser, lookupList[F, E])
 
-  protected def resolve[F[_], E, T, V](parser: V => F[T], lookup: (Seq[String], DecodeConfig) => IO[F[Option[V]]])(
-    path: Seq[String],
+  protected def resolve[F[_], E, T, V](parser: V => F[T], lookup: (List[String], DecodeConfig) => IO[F[Option[V]]])(
+    path: List[String],
     default: Option[T],
     config: DecodeConfig
   )(implicit utils: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[T]] = {
@@ -99,7 +99,7 @@ trait PrimitiveDecoders { self: Decoders with DecodeTypes =>
 
   protected def formatParserError[F[_], E, T](
     parser: Parser[T],
-    path: Seq[String]
+    path: List[String]
   )(implicit utils: Hint, AE: ExtruderApplicativeError[F, E]): String => F[T] =
     value =>
       parser

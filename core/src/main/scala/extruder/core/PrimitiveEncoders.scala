@@ -10,7 +10,7 @@ import shapeless._
 import scala.concurrent.duration.Duration
 
 trait PrimitiveEncoders { self: Encoders with EncodeTypes =>
-  protected def writeValue[F[_], E](path: Seq[String], value: String)(
+  protected def writeValue[F[_], E](path: List[String], value: String)(
     implicit utils: Hint,
     AE: ExtruderApplicativeError[F, E]
   ): IO[F[EncodeConfig]]

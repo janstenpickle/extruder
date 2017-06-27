@@ -20,7 +20,7 @@ abstract class ExtruderApplicativeErrorSpec[F[_], E](
     with ScalaCheck
     with Discipline {
   implicit val hints: Hints = new Hints {
-    override def pathToString(path: Seq[String]): String = path.mkString(".").toLowerCase
+    override def pathToString(path: List[String]): String = path.mkString(".").toLowerCase
   }
 
   def is: SpecStructure =

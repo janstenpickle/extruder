@@ -68,7 +68,7 @@ trait ParametersInstances extends Shows {
     implicit defaultOpts: Default.AsOptions.Aux[T, DefaultOptsRepr],
     lGen: LabelledGeneric.Aux[T, LGenRepr],
     keys: Keys.Aux[LGenRepr, KeysRepr],
-    constMapper: ConstMapper.Aux[Seq[String], KeysRepr, ConstRepr],
+    constMapper: ConstMapper.Aux[List[String], KeysRepr, ConstRepr],
     prefixZipper: Zip.Aux[KeysRepr :: ConstRepr :: HNil, PrefixZipperRepr],
     zipper: Zip.Aux[PrefixZipperRepr :: DefaultOptsRepr :: HNil, ZipperRepr],
     lazyMapper: Lazy[Mapper.Aux[readParams.type, ZipperRepr, MapperRepr]],
@@ -91,8 +91,8 @@ trait ParametersInstances extends Shows {
     implicit def casePrimitive[A <: Symbol, B](
       implicit show: Lazy[Show[B]],
       tag: TypeTag[B]
-    ): Case.Aux[((A, Seq[String]), Option[B]), List[ParamRepr]] =
-      at[((A, Seq[String]), Option[B])] {
+    ): Case.Aux[((A, List[String]), Option[B]), List[ParamRepr]] =
+      at[((A, List[String]), Option[B])] {
         case ((key, prefix), default) =>
           List(StableRepr(prefix :+ key.name, default.isEmpty, ttToString[B], default.map(show.value.show)))
       }
@@ -100,23 +100,23 @@ trait ParametersInstances extends Shows {
     implicit def caseOptionalPrimitive[A <: Symbol, B](
       implicit show: Lazy[Show[B]],
       tag: TypeTag[B]
-    ): Case.Aux[((A, Seq[String]), Option[Option[B]]), List[ParamRepr]] =
-      at[((A, Seq[String]), Option[Option[B]])] {
+    ): Case.Aux[((A, List[String]), Option[Option[B]]), List[ParamRepr]] =
+      at[((A, List[String]), Option[Option[B]])] {
         case ((key, prefix), default) =>
           List(StableRepr(prefix :+ key.name, required = false, ttToString[B], default.flatten.map(show.value.show)))
       }
 
     implicit def caseProduct[A <: Symbol, B](
       implicit show: Lazy[Parameters[B]]
-    ): Case.Aux[((A, Seq[String]), Option[B]), List[ParamRepr]] =
-      at[((A, Seq[String]), Option[B])] { case ((key, prefix), _) => show.value.eval(prefix :+ key.name) }
+    ): Case.Aux[((A, List[String]), Option[B]), List[ParamRepr]] =
+      at[((A, List[String]), Option[B])] { case ((key, prefix), _) => show.value.eval(prefix :+ key.name) }
 
     implicit def caseTraversable[A <: Symbol, B, F[C] <: TraversableOnce[C]](
       implicit show: Lazy[Show[B]],
       tag: TypeTag[B],
       traversableTag: TypeTag[F[B]]
-    ): Case.Aux[((A, Seq[String]), Option[F[B]]), List[ParamRepr]] =
-      at[((A, Seq[String]), Option[F[B]])] {
+    ): Case.Aux[((A, List[String]), Option[F[B]]), List[ParamRepr]] =
+      at[((A, List[String]), Option[F[B]])] {
         case ((key, prefix), default) =>
           List(
             StableRepr(
@@ -132,8 +132,8 @@ trait ParametersInstances extends Shows {
       implicit show: Lazy[Show[B]],
       tag: TypeTag[B],
       traversableTag: TypeTag[F[B]]
-    ): Case.Aux[((A, Seq[String]), Option[Option[F[B]]]), List[ParamRepr]] =
-      at[((A, Seq[String]), Option[Option[F[B]]])] {
+    ): Case.Aux[((A, List[String]), Option[Option[F[B]]]), List[ParamRepr]] =
+      at[((A, List[String]), Option[Option[F[B]]])] {
         case ((key, prefix), default) =>
           List(
             StableRepr(
@@ -167,7 +167,7 @@ trait ParametersInstances extends Shows {
     s"${ttToString[F[A]]}[${ttToString[A]}]"
 }
 
-case class Parameters[T](eval: Seq[String] => List[ParamRepr])
+case class Parameters[T](eval: List[String] => List[ParamRepr])
 
 object Parameters extends ParametersInstances {
   def apply[T](implicit params: Parameters[T]): Parameters[T] = params
@@ -180,19 +180,19 @@ object TypeNames extends ParametersInstances {
 }
 
 trait ParamRepr {
-  def path: Seq[String]
+  def path: List[String]
   def required: Boolean
   def default: Option[String]
   def updateRequired(req: Boolean): ParamRepr
   def `type`: String
 }
 
-case class StableRepr(path: Seq[String], required: Boolean, `type`: String, default: Option[String])
+case class StableRepr(path: List[String], required: Boolean, `type`: String, default: Option[String])
     extends ParamRepr {
   override def updateRequired(req: Boolean): StableRepr = copy(required = req)
 }
 
-case class UnionRepr(path: Seq[String], types: NonEmptyList[String]) extends ParamRepr {
+case class UnionRepr(path: List[String], types: NonEmptyList[String]) extends ParamRepr {
   override val required: Boolean = true
   override val default: Option[String] = None
   override val `type`: String = "String"

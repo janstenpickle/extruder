@@ -13,7 +13,7 @@ trait SystemPropertiesDecoders extends BaseMapDecoders with Decode with DecodeFr
   override type OutputConfig = Unit
 
   override protected def prepareConfig[F[_], E](
-    namespace: Seq[String],
+    namespace: List[String],
     config: java.util.Properties
   )(implicit AE: ExtruderApplicativeError[F, E], util: Hint): IO[F[Map[String, String]]] =
     IO(AE.pure(config.asScala.toMap.map { case (k, v) => k.toLowerCase -> v }))
@@ -27,7 +27,7 @@ trait SystemPropertiesEncoders extends BaseMapEncoders with Encode {
   override type OutputConfig = Unit
 
   override protected def finalizeConfig[F[_], E](
-    namespace: Seq[String],
+    namespace: List[String],
     inter: Map[String, String]
   )(implicit AE: ExtruderApplicativeError[F, E], util: Hint): IO[F[Unit]] = IO.pure {
     inter
