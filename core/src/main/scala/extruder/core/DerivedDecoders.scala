@@ -12,7 +12,7 @@ trait DerivedDecoders { self: Decoders with DecodeTypes =>
     mkDecoder[F, CNil] { (path, _, _) =>
       IO.pure(
         AE.validationFailure(
-          s"Could not find specified implementation of sealed type at configuration path '${hints.pathToStringWithType(path)}'"
+          s"Could not find specified implementation of sealed type at path '${hints.pathToStringWithType(path)}'"
         )
       )
     }
@@ -22,19 +22,19 @@ trait DerivedDecoders { self: Decoders with DecodeTypes =>
     headResolve: Dec[F, H],
     tailResolve: Lazy[Dec[F, T]],
     typeResolver: Lazy[Dec[F, Option[String]]],
-    utils: Hint,
+    hints: Hint,
     AE: ExtruderApplicativeError[F, E],
     FM: IOFlatMap[F]
   ): Dec[F, FieldType[K, H] :+: T] =
-    mkDecoder { (path, _, config) =>
+    mkDecoder { (path, _, data) =>
       val onValidType: Option[String] => IO[F[FieldType[K, H] :+: T]] = {
         case None =>
-          IO.pure(AE.missing(s"Could not type of sealed instance at path '${utils.pathToStringWithType(path)}'"))
+          IO.pure(AE.missing(s"Could not type of sealed instance at path '${hints.pathToStringWithType(path)}'"))
         case Some(tpe) if tpe == key.value.name =>
-          headResolve.read(path, None, config).map(AE.map(_)(v => Inl(field[K](v))))
-        case _ => tailResolve.value.read(path, None, config).map(AE.map(_)(Inr(_)))
+          headResolve.read(path, None, data).map(AE.map(_)(v => Inl(field[K](v))))
+        case _ => tailResolve.value.read(path, None, data).map(AE.map(_)(Inr(_)))
       }
-      FM.flatMap(typeResolver.value.read(utils.pathWithType(path), None, config))(onValidType)
+      FM.flatMap(typeResolver.value.read(hints.pathWithType(path), None, data))(onValidType)
     }
 
   implicit def unionDecoder[F[_], E, T, V <: Coproduct](
@@ -44,19 +44,19 @@ trait DerivedDecoders { self: Decoders with DecodeTypes =>
     FM: IOFlatMap[F],
     lp: LowPriority
   ): Dec[F, T] =
-    mkDecoder { (path, _, config) =>
-      underlying.value.read(path, None, config).map(AE.map(_)(gen.from))
+    mkDecoder { (path, _, data) =>
+      underlying.value.read(path, None, data).map(AE.map(_)(gen.from))
     }
 
   trait DerivedDecoderWithDefault[T, F[_], Repr <: HList, DefaultRepr <: HList] {
-    def read(path: List[String], default: DefaultRepr, config: DecodeConfig): IO[F[Repr]]
+    def read(path: List[String], default: DefaultRepr, data: DecodeData): IO[F[Repr]]
   }
 
   implicit def hNilDerivedDecoder[T, F[_], E](
     implicit AE: ExtruderApplicativeError[F, E]
   ): DerivedDecoderWithDefault[T, F, HNil, HNil] =
     new DerivedDecoderWithDefault[T, F, HNil, HNil] {
-      override def read(path: List[String], default: HNil, config: DecodeConfig): IO[F[HNil]] = IO.pure(AE.pure(HNil))
+      override def read(path: List[String], default: HNil, data: DecodeData): IO[F[HNil]] = IO.pure(AE.pure(HNil))
     }
 
   implicit def hConsDerivedDecoder[T, F[_], E, K <: Symbol, V, TailRepr <: HList, DefaultsTailRepr <: HList](
@@ -69,13 +69,13 @@ trait DerivedDecoders { self: Decoders with DecodeTypes =>
       override def read(
         path: List[String],
         default: Option[V] :: DefaultsTailRepr,
-        config: DecodeConfig
+        data: DecodeData
       ): IO[F[::[FieldType[K, V], TailRepr]]] = {
         val fieldName = key.value.name
 
         for {
-          head <- decoder.value.read(path :+ fieldName, default.head, config)
-          tail <- tailDecoder.value.read(path, default.tail, config)
+          head <- decoder.value.read(path :+ fieldName, default.head, data)
+          tail <- tailDecoder.value.read(path, default.tail, data)
         } yield (head |@| tail).map((h, t) => field[K](h) :: t)
       }
     }
@@ -88,8 +88,8 @@ trait DerivedDecoders { self: Decoders with DecodeTypes =>
     decoder: Lazy[DerivedDecoderWithDefault[T, F, GenRepr, DefaultOptsRepr]]
   ): Dec[F, T] = {
     lazy val className: String = tag.tpe.typeSymbol.name.toString
-    mkDecoder { (path, _, config) =>
-      decoder.value.read(path :+ className, defaults(), config).map(AE.map(_)(gen.from))
+    mkDecoder { (path, _, data) =>
+      decoder.value.read(path :+ className, defaults(), data).map(AE.map(_)(gen.from))
     }
   }
 

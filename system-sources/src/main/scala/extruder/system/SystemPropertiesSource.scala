@@ -8,25 +8,25 @@ import extruder.core._
 
 import scala.collection.JavaConverters._
 
-trait SystemPropertiesDecoders extends BaseMapDecoders with Decode with DecodeFromDefaultConfig with DecodeTypes {
-  override type InputConfig = java.util.Properties
-  override type OutputConfig = Unit
+trait SystemPropertiesDecoders extends BaseMapDecoders with Decode with DecodeFromDefaultSource with DecodeTypes {
+  override type InputData = java.util.Properties
+  override type OutputData = Unit
 
-  override protected def prepareConfig[F[_], E](
+  override protected def prepareInput[F[_], E](
     namespace: List[String],
-    config: java.util.Properties
+    data: java.util.Properties
   )(implicit AE: ExtruderApplicativeError[F, E], util: Hint): IO[F[Map[String, String]]] =
-    IO(AE.pure(config.asScala.toMap.map { case (k, v) => k.toLowerCase -> v }))
+    IO(AE.pure(data.asScala.toMap.map { case (k, v) => k.toLowerCase -> v }))
 
-  override def loadConfig: IO[Properties] = IO(System.getProperties)
+  override def loadInput: IO[Properties] = IO(System.getProperties)
 }
 
 object SystemPropertiesDecoder extends SystemPropertiesDecoders
 
 trait SystemPropertiesEncoders extends BaseMapEncoders with Encode {
-  override type OutputConfig = Unit
+  override type OutputData = Unit
 
-  override protected def finalizeConfig[F[_], E](
+  override protected def finalizeOutput[F[_], E](
     namespace: List[String],
     inter: Map[String, String]
   )(implicit AE: ExtruderApplicativeError[F, E], util: Hint): IO[F[Unit]] = IO.pure {
@@ -38,8 +38,8 @@ trait SystemPropertiesEncoders extends BaseMapEncoders with Encode {
 
 object SystemPropertiesEncoder extends SystemPropertiesEncoders
 
-trait SystemPropertiesConfig extends SystemPropertiesDecoders with SystemPropertiesEncoders {
+trait SystemPropertiesSource extends SystemPropertiesDecoders with SystemPropertiesEncoders {
   override type Hint = MapHints
 }
 
-object SystemPropertiesConfig extends SystemPropertiesConfig
+object SystemPropertiesSource extends SystemPropertiesSource

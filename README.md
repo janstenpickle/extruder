@@ -4,7 +4,7 @@
 
 [![Typelevel Incubator](https://img.shields.io/badge/typelevel-incubator-green.svg)](http://typelevel.org/projects) [![Build Status](https://travis-ci.org/janstenpickle/extruder.svg?branch=master)](https://travis-ci.org/janstenpickle/extruder) [![codecov](https://codecov.io/gh/janstenpickle/extruder/branch/master/graph/badge.svg)](https://codecov.io/gh/janstenpickle/extruder)
 
-This library uses [shapeless](https://github.com/milessabin/shapeless) and [cats](https://github.com/typelevel/cats) to provide a neat syntax to instantiate Scala case classes from a configuration source.
+This library uses [shapeless](https://github.com/milessabin/shapeless) and [cats](https://github.com/typelevel/cats) to provide a neat syntax to instantiate Scala case classes from a data source.
 
 [See the extruder microsite for detailed documentation.](https://janstenpickle.github.io/extruder/)
 
@@ -29,6 +29,12 @@ libraryDependencies += "extruder" %% "extruder-typesafe" % "0.6.0"
 
 // only if you require support for refined types
 libraryDependencies += "extruder" %% "extruder-refined" % "0.6.0"
+
+// only if you require support for wrapping result in monix's task
+libraryDependencies += "extruder" %% "extruder-monix" % "0.6.0"
+
+// only if you require support for wrapping result in fs2's task
+libraryDependencies += "extruder" %% "extruder-fs2" % "0.6.0"
 ```
 
 # Participation

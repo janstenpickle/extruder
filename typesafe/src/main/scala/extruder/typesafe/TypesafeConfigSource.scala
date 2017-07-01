@@ -12,28 +12,28 @@ import scala.collection.JavaConverters._
 
 trait TypesafeConfigDecoders
     extends Decode
-    with DecodeFromDefaultConfig
+    with DecodeFromDefaultSource
     with Decoders
     with PrimitiveDecoders
     with DerivedDecoders
     with DecodeTypes {
-  override type InputConfig = TConfig
-  override type DecodeConfig = TConfig
+  override type InputData = TConfig
+  override type DecodeData = TConfig
   override type Hint = TypesafeConfigHints
   override type Dec[F[_], T] = TypesafeConfigDecoder[F, T]
 
-  private def lookup[T, F[_], E](f: TConfig => T, path: List[String], config: TConfig)(
-    implicit utils: Hint,
+  private def lookup[T, F[_], E](f: TConfig => T, path: List[String], data: TConfig)(
+    implicit hints: Hint,
     AE: ExtruderApplicativeError[F, E]
   ): IO[F[Option[T]]] = IO {
     Either
-      .catchNonFatal(f(config))
+      .catchNonFatal(f(data))
       .fold(
         {
           case _: Missing => AE.pure(None)
           case th: Any =>
             AE.validationException(
-              s"Could not retrieve config '${utils.pathToString(path)}' from supplied Typesafe config",
+              s"Could not retrieve config '${hints.pathToString(path)}' from supplied Typesafe config",
               th
             )
         },
@@ -41,61 +41,59 @@ trait TypesafeConfigDecoders
       )
   }
 
-  override protected def prepareConfig[F[_], E](
+  override protected def prepareInput[F[_], E](
     namespace: List[String],
-    config: TConfig
-  )(implicit AE: ExtruderApplicativeError[F, E], utils: Hint): IO[F[TConfig]] =
-    IO(AE.pure(config))
+    data: TConfig
+  )(implicit AE: ExtruderApplicativeError[F, E], hints: Hint): IO[F[TConfig]] =
+    IO(AE.pure(data))
 
   override protected def hasValue[F[_], E](
     path: List[String],
-    config: TConfig
-  )(implicit utils: TypesafeConfigHints, AE: ExtruderApplicativeError[F, E]): IO[F[Boolean]] =
-    lookup[ConfigValue, F, E](_.getValue(utils.pathToString(path)), path, config).map(AE.map(_)(_.isDefined))
+    data: TConfig
+  )(implicit hints: TypesafeConfigHints, AE: ExtruderApplicativeError[F, E]): IO[F[Boolean]] =
+    lookup[ConfigValue, F, E](_.getValue(hints.pathToString(path)), path, data).map(AE.map(_)(_.isDefined))
 
   override protected def lookupValue[F[_], E](
     path: List[String],
-    config: TConfig
-  )(implicit utils: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[Option[String]]] =
-    lookup(_.getString(utils.pathToString(path)), path, config)
+    data: TConfig
+  )(implicit hints: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[Option[String]]] =
+    lookup(_.getString(hints.pathToString(path)), path, data)
 
   override protected def lookupList[F[_], E](
     path: List[String],
-    config: TConfig
-  )(implicit utils: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[Option[List[String]]]] =
-    lookup(_.getStringList(utils.pathToString(path)).asScala.toList, path, config)
+    data: TConfig
+  )(implicit hints: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[Option[List[String]]]] =
+    lookup(_.getStringList(hints.pathToString(path)).asScala.toList, path, data)
 
   private def resolve[F[_], E, T](
     lookup: (List[String], TConfig) => IO[F[Option[T]]]
   )(implicit AE: ExtruderApplicativeError[F, E]): (List[String], Option[T], TConfig) => IO[F[T]] =
     resolve[F, E, T, T](AE.pure, lookup)
 
-  implicit def configValueDecoder[F[_], E](
-    implicit utils: Hint,
+  implicit def dataValueDecoder[F[_], E](
+    implicit hints: Hint,
     AE: ExtruderApplicativeError[F, E]
   ): TypesafeConfigDecoder[F, ConfigValue] =
-    mkDecoder(resolve[F, E, ConfigValue]((path, config) => lookup(_.getValue(utils.pathToString(path)), path, config)))
+    mkDecoder(resolve[F, E, ConfigValue]((path, data) => lookup(_.getValue(hints.pathToString(path)), path, data)))
 
-  implicit def configListDecoder[F[_], E](
-    implicit utils: Hint,
+  implicit def dataListDecoder[F[_], E](
+    implicit hints: Hint,
     AE: ExtruderApplicativeError[F, E]
   ): TypesafeConfigDecoder[F, ConfigList] =
-    mkDecoder(resolve[F, E, ConfigList]((path, config) => lookup(_.getList(utils.pathToString(path)), path, config)))
+    mkDecoder(resolve[F, E, ConfigList]((path, data) => lookup(_.getList(hints.pathToString(path)), path, data)))
 
-  implicit def configObjectDecoder[F[_], E](
-    implicit utils: Hint,
+  implicit def dataObjectDecoder[F[_], E](
+    implicit hints: Hint,
     AE: ExtruderApplicativeError[F, E]
   ): TypesafeConfigDecoder[F, ConfigObject] =
-    mkDecoder(
-      resolve[F, E, ConfigObject]((path, config) => lookup(_.getObject(utils.pathToString(path)), path, config))
-    )
+    mkDecoder(resolve[F, E, ConfigObject]((path, data) => lookup(_.getObject(hints.pathToString(path)), path, data)))
 
   override def mkDecoder[F[_], T](f: (List[String], Option[T], TConfig) => IO[F[T]]): TypesafeConfigDecoder[F, T] =
     new TypesafeConfigDecoder[F, T] {
-      override def read(path: List[String], default: Option[T], config: TConfig): IO[F[T]] = f(path, default, config)
+      override def read(path: List[String], default: Option[T], data: TConfig): IO[F[T]] = f(path, default, data)
     }
 
-  override def loadConfig: IO[TConfig] = IO(ConfigFactory.load())
+  override def loadInput: IO[TConfig] = IO(ConfigFactory.load())
 }
 
 trait TypesafeConfigDecoder[F[_], T] extends Decoder[F, T, TConfig]
@@ -108,8 +106,8 @@ trait TypesafeConfigEncoders
     with PrimitiveEncoders
     with DerivedEncoders
     with EncodeTypes {
-  override type OutputConfig = TConfig
-  override type EncodeConfig = ConfigMap
+  override type OutputData = TConfig
+  override type EncodeData = ConfigMap
   override type Enc[F[_], T] = TypesafeConfigEncoder[F, T]
   override type Hint = TypesafeConfigHints
 
@@ -121,19 +119,19 @@ trait TypesafeConfigEncoders
   private def valueToConfig[F[_], E](
     path: List[String],
     value: ConfigTypes
-  )(implicit utils: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[ConfigMap]] =
-    IO(AE.pure(Map(utils.pathToString(path) -> value)))
+  )(implicit hints: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[ConfigMap]] =
+    IO(AE.pure(Map(hints.pathToString(path) -> value)))
 
   override protected def writeValue[F[_], E](
     path: List[String],
     value: String
-  )(implicit utils: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[ConfigMap]] =
+  )(implicit hints: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[ConfigMap]] =
     valueToConfig(path, Coproduct[ConfigTypes](value))
 
-  override protected def finalizeConfig[F[_], E](
+  override protected def finalizeOutput[F[_], E](
     namespace: List[String],
     inter: ConfigMap
-  )(implicit AE: ExtruderApplicativeError[F, E], utils: Hint): IO[F[TConfig]] =
+  )(implicit AE: ExtruderApplicativeError[F, E], hints: Hint): IO[F[TConfig]] =
     IO(AE.catchNonFatal(ConfigFactory.parseMap(inter.flatMap {
       case (k, v) =>
         (v.select[String].toList ++
@@ -145,35 +143,35 @@ trait TypesafeConfigEncoders
 
   override implicit def traversableEncoder[F[_], E, T, FF[T] <: TraversableOnce[T]](
     implicit shows: Show[T],
-    utils: Hint,
+    hints: Hint,
     AE: ExtruderApplicativeError[F, E]
   ): TypesafeConfigEncoder[F, FF[T]] =
     mkEncoder { (path, value) =>
-      IO(AE.pure(Map(utils.pathToString(path) -> Coproduct[ConfigTypes](value.map(shows.show).toList))))
+      IO(AE.pure(Map(hints.pathToString(path) -> Coproduct[ConfigTypes](value.map(shows.show).toList))))
     }
 
-  implicit def configValueEncoder[F[_], E](
-    implicit utils: Hint,
+  implicit def dataValueEncoder[F[_], E](
+    implicit hints: Hint,
     AE: ExtruderApplicativeError[F, E]
   ): TypesafeConfigEncoder[F, ConfigValue] =
     mkEncoder { (path, value) =>
-      IO(AE.pure(Map(utils.pathToString(path) -> Coproduct[ConfigTypes](value))))
+      IO(AE.pure(Map(hints.pathToString(path) -> Coproduct[ConfigTypes](value))))
     }
 
-  implicit def configListEncoder[F[_], E](
-    implicit utils: Hint,
+  implicit def dataListEncoder[F[_], E](
+    implicit hints: Hint,
     AE: ExtruderApplicativeError[F, E]
   ): TypesafeConfigEncoder[F, ConfigList] =
     mkEncoder { (path, value) =>
-      IO(AE.pure(Map(utils.pathToString(path) -> Coproduct[ConfigTypes](value))))
+      IO(AE.pure(Map(hints.pathToString(path) -> Coproduct[ConfigTypes](value))))
     }
 
-  implicit def configObjectEncoder[F[_], E](
-    implicit utils: Hint,
+  implicit def dataObjectEncoder[F[_], E](
+    implicit hints: Hint,
     AE: ExtruderApplicativeError[F, E]
   ): TypesafeConfigEncoder[F, ConfigObject] =
     mkEncoder { (path, value) =>
-      IO(AE.pure(Map(utils.pathToString(path) -> Coproduct[ConfigTypes](value))))
+      IO(AE.pure(Map(hints.pathToString(path) -> Coproduct[ConfigTypes](value))))
     }
 
   override def mkEncoder[F[_], T](f: (List[String], T) => IO[F[ConfigMap]]): TypesafeConfigEncoder[F, T] =
@@ -186,7 +184,7 @@ trait TypesafeConfigEncoder[F[_], T] extends Encoder[F, T, ConfigMap]
 
 object TypesafeConfigEncoder extends TypesafeConfigEncoders
 
-object TypesafeConfig extends TypesafeConfigDecoders with TypesafeConfigEncoders
+object TypesafeConfigSource extends TypesafeConfigDecoders with TypesafeConfigEncoders
 
 trait TypesafeConfigHints extends Hints
 

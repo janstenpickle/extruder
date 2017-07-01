@@ -5,7 +5,7 @@ options:
     url: usage.html
   - title: Decoding and encoding
     url: decode_encode.html
-  - title: Extending a Config Source
+  - title: Extending a Data Source
     url: extending.html
-  - title: Implementing a Config Source
+  - title: Implementing a Data Source
     url: config.html

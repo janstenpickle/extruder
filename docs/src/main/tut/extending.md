@@ -1,11 +1,11 @@
 ---
 layout: docs
-title:  "Extending an Existing Config Source"
+title:  "Extending an Existing Data Source"
 position: 4
 ---
-## Extending an Existing Config Source
+## Extending an Existing Data Source
 
-Say you wanted to add a resolver for a certain type it is possible to extend an existing implementation of a configuration source to parse the new type. Below is an example adding a new decoder for `URL`:
+Say you wanted to add a resolver for a certain type it is possible to extend an existing implementation of a data source to parse the new type. Below is an example adding a new decoder for `URL`:
 
 ```tut:silent
 import cats.effect.IO
@@ -14,11 +14,11 @@ import cats.syntax.validated._
 import java.net.URL
 import extruder.core._
 
-trait WithURL extends MapConfig {
+trait WithURL extends MapSource {
   implicit def urlDecoder[F[_], E](implicit hints: Hint,
                                    AE: ExtruderApplicativeError[F, E]): MapDecoder[F, URL] =
-    mkDecoder[F, URL]((path, default, config) => IO {
-      (config.get(hints.pathToString(path)), default) match {
+    mkDecoder[F, URL]((path, default, src) => IO {
+      (src.get(hints.pathToString(path)), default) match {
         case (Some(v), _) => Either.catchNonFatal(new URL(v)).fold(ex =>
             AE.validationException(ex.getMessage, ex),
             AE.pure
@@ -38,9 +38,9 @@ trait WithURL extends MapConfig {
 object WithURL extends WithURL
 ```
 
-This is a fairly verbose implementation which repeats some of the abstracted functionality found in `PrimitiveDecoders` and `PrimitiveEncoders`, it must also be implemented for each configuration type.
+This is a fairly verbose implementation which repeats some of the abstracted functionality found in `PrimitiveDecoders` and `PrimitiveEncoders`, it must also be implemented for each data type.
 
-This functionality can be implemented more simply and so that it works for all configuration backends which implement the `PrimitiveDecoders` and `PrimitiveEncoders` traits:
+This functionality can be implemented more simply and so that it works for all backends which implement the `PrimitiveDecoders` and `PrimitiveEncoders` traits:
 
 ```tut:silent
 import cats.syntax.either._

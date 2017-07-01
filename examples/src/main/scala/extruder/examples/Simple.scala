@@ -2,7 +2,7 @@ package extruder.examples
 
 import java.net.URL
 
-import extruder.core.MapConfig._
+import extruder.core.MapSource._
 import extruder.core.{EitherErrors, EitherThrowable, ValidationErrors}
 import extruder.monix._
 import monix.eval.Task

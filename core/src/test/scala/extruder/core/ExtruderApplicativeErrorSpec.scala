@@ -105,8 +105,8 @@ abstract class ExtruderApplicativeErrorValidationErrorsSpec[F[_]](
   implicit AE: ExtruderApplicativeError[F, ValidationErrors]
 ) extends ExtruderApplicativeErrorSpec[F, ValidationErrors]()(
       AE,
-      ConfigValidationCatsInstances.validationErrorsArb,
-      ConfigValidationCatsInstances.vCogen,
+      ValidationCatsInstances.validationErrorsArb,
+      ValidationCatsInstances.vCogen,
       Eq.fromUniversalEquals
     ) {
   override def missingValue(message: String): ValidationErrors = NonEmptyList.of(Missing(message))

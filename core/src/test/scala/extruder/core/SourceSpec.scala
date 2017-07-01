@@ -7,8 +7,8 @@ import cats.instances.all._
 import cats.kernel.laws.GroupLaws
 import cats.syntax.all._
 import cats.{Eq, FlatMap}
-import extruder.core.ConfigValidationCatsInstances._
-import extruder.instances.ConfigValidationInstances
+import extruder.core.ValidationCatsInstances._
+import extruder.instances.ValidationInstances
 import org.scalacheck.Gen.Choose
 import org.scalacheck.Shapeless._
 import org.scalacheck.{Gen, Prop}
@@ -24,12 +24,7 @@ import TestCommon._
 
 import scala.util.Try
 
-trait ConfigSpec
-    extends Specification
-    with ScalaCheck
-    with EitherMatchers
-    with Discipline
-    with ConfigValidationInstances {
+trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with Discipline with ValidationInstances {
   self: Encode
     with Encoders
     with PrimitiveEncoders
@@ -37,29 +32,29 @@ trait ConfigSpec
     with EncodeTypes
     with Decode
     with Decoders
-    with DecodeFromDefaultConfig
+    with DecodeFromDefaultSource
     with PrimitiveDecoders
     with DerivedDecoders
     with DecodeTypes =>
 
-  override type OutputConfig = InputConfig
+  override type OutputData = InputData
 
   val supportsEmptyNamespace: Boolean = true
   def ext: SpecStructure = s2""""""
-  def monoidGroupLaws: GroupLaws[EncodeConfig]
-  implicit def utils: Hint
+  def monoidGroupLaws: GroupLaws[EncodeData]
+  implicit def hints: Hint
 
   implicit val caseClassEq: Eq[CaseClass] = Eq.fromUniversalEquals
   implicit val urlEq: Eq[URL] = Eq.fromUniversalEquals
   implicit val durationEq: Eq[Duration] = Eq.fromUniversalEquals
   implicit val finiteDurationEq: Eq[FiniteDuration] = Eq.fromUniversalEquals
 
-  val caseClassConfig: Map[List[String], String] =
+  val caseClassData: Map[List[String], String] =
     Map(List("CaseClass", "s") -> "string", List("CaseClass", "i") -> "1", List("CaseClass", "l") -> "1")
 
   val expectedCaseClass = CaseClass("string", 1, 1L, None)
 
-  def convertConfig(map: Map[List[String], String])(implicit utils: Hint): InputConfig
+  def convertData(map: Map[List[String], String])(implicit hints: Hint): InputData
 
   override def is: SpecStructure =
     s2"""
@@ -78,7 +73,7 @@ trait ConfigSpec
         Case class tree ${test(Gen.resultOf(CaseClass))}
         Case class with defaults set $testDefaults
 
-      Can load config defaults with
+      Can load data defaults with
         Standard sync decode $testDefaultDecode
         IO async decode $testDefaultDecodeIO
         Future async decode $testDefaultDecodeAsync
@@ -92,12 +87,12 @@ trait ConfigSpec
       """
 
   def testNumeric[T: Numeric](
-    implicit encoder: Enc[ConfigValidation, T],
-    decoder: Dec[ConfigValidation, T],
+    implicit encoder: Enc[Validation, T],
+    decoder: Dec[Validation, T],
     eitherEncoder: Enc[EitherErrors, T],
     eitherDecoder: Dec[EitherErrors, T],
-    listEncoder: Enc[ConfigValidation, List[T]],
-    listDecoder: Dec[ConfigValidation, List[T]],
+    listEncoder: Enc[Validation, List[T]],
+    listDecoder: Dec[Validation, List[T]],
     tEq: Eq[T],
     choose: Choose[T]
   ): Prop =
@@ -105,12 +100,12 @@ trait ConfigSpec
       testType(Gen.negNum[T])
 
   def testType[T](gen: Gen[T])(
-    implicit encoder: Enc[ConfigValidation, T],
-    decoder: Dec[ConfigValidation, T],
+    implicit encoder: Enc[Validation, T],
+    decoder: Dec[Validation, T],
     eitherEncoder: Enc[EitherErrors, T],
     eitherDecoder: Dec[EitherErrors, T],
-    listEncoder: Enc[ConfigValidation, List[T]],
-    listDecoder: Dec[ConfigValidation, List[T]],
+    listEncoder: Enc[Validation, List[T]],
+    listDecoder: Dec[Validation, List[T]],
     tEq: Eq[T]
   ): Prop =
     test(gen) ++
@@ -122,7 +117,7 @@ trait ConfigSpec
 
   def testList[T, F[T] <: TraversableOnce[T]](
     gen: Gen[F[T]]
-  )(implicit encoder: Enc[ConfigValidation, F[T]], decoder: Dec[ConfigValidation, F[T]]): Prop =
+  )(implicit encoder: Enc[Validation, F[T]], decoder: Dec[Validation, F[T]]): Prop =
     Prop.forAll(gen, namespaceGen) { (value, namespace) =>
       (for {
         encoded <- encode[F[T]](namespace, value).toEither
@@ -131,14 +126,14 @@ trait ConfigSpec
     }
 
   def test[T](gen: Gen[T])(
-    implicit encoder: Enc[ConfigValidation, T],
-    decoder: Dec[ConfigValidation, T],
+    implicit encoder: Enc[Validation, T],
+    decoder: Dec[Validation, T],
     teq: Eq[T],
-    equals: Eq[ConfigValidation[T]],
-    FM: FlatMap[ConfigValidation]
+    equals: Eq[Validation[T]],
+    FM: FlatMap[Validation]
   ): Prop =
     Prop.forAll(gen, namespaceGen) { (value, namespace) =>
-      def eqv(encoded: ConfigValidation[OutputConfig], decoded: InputConfig => ConfigValidation[T]): Boolean =
+      def eqv(encoded: Validation[OutputData], decoded: InputData => Validation[T]): Boolean =
         equals.eqv(FM.flatMap(encoded)(decoded), value.validNel)
 
       eqv(encode[T](namespace, value), decode[T](namespace, _)) &&
@@ -146,45 +141,42 @@ trait ConfigSpec
     }
 
   def testIO[T](gen: Gen[T])(
-    implicit encoder: Enc[ConfigValidation, T],
-    decoder: Dec[ConfigValidation, T],
+    implicit encoder: Enc[Validation, T],
+    decoder: Dec[Validation, T],
     teq: Eq[T],
-    equals: Eq[IO[ConfigValidation[T]]]
+    equals: Eq[IO[Validation[T]]]
   ): Prop = Prop.forAll(gen, namespaceGen) { (value, namespace) =>
-    def eqv(encoded: IO[ConfigValidation[OutputConfig]], decoded: InputConfig => IO[ConfigValidation[T]]): Boolean =
-      equals.eqv(ioFlatMapForConfigValidation.flatMap(encoded)(decoded), IO(value.validNel))
+    def eqv(encoded: IO[Validation[OutputData]], decoded: InputData => IO[Validation[T]]): Boolean =
+      equals.eqv(ioFlatMapForValidation.flatMap(encoded)(decoded), IO(value.validNel))
 
     eqv(encodeIO[T](namespace, value), decodeIO[T](namespace, _)) &&
     (if (supportsEmptyNamespace) eqv(encodeIO[T](value), decodeIO[T]) else true)
   }
 
   def testAsync[T](gen: Gen[T])(
-    implicit encoder: Enc[ConfigValidation, T],
-    decoder: Dec[ConfigValidation, T],
+    implicit encoder: Enc[Validation, T],
+    decoder: Dec[Validation, T],
     teq: Eq[T],
-    equals: Eq[IO[ConfigValidation[T]]],
+    equals: Eq[IO[Validation[T]]],
     ioc: IOConvert[Future]
   ): Prop = Prop.forAll(gen, namespaceGen) { (value, namespace) =>
-    def eqv(
-      encoded: Future[ConfigValidation[OutputConfig]],
-      decoded: InputConfig => Future[ConfigValidation[T]]
-    ): Boolean =
+    def eqv(encoded: Future[Validation[OutputData]], decoded: InputData => Future[Validation[T]]): Boolean =
       equals
-        .eqv(ioFlatMapForConfigValidation.flatMap(ioc.toIO(encoded))(e => ioc.toIO(decoded(e))), IO(value.validNel))
+        .eqv(ioFlatMapForValidation.flatMap(ioc.toIO(encoded))(e => ioc.toIO(decoded(e))), IO(value.validNel))
 
     eqv(encodeAsync[T, Future](namespace, value), decodeAsync[T, Future](namespace, _)) &&
     (if (supportsEmptyNamespace) eqv(encodeAsync[T, Future](value), decodeAsync[T, Future]) else true)
   }
 
   def testUnsafe[T](gen: Gen[T])(
-    implicit encoder: Enc[ConfigValidation, T],
-    decoder: Dec[ConfigValidation, T],
+    implicit encoder: Enc[Validation, T],
+    decoder: Dec[Validation, T],
     teq: Eq[T],
     equals: Eq[Try[T]],
     FM: FlatMap[Try]
   ): Prop =
     Prop.forAll(gen, namespaceGen) { (value, namespace) =>
-      def eqv(encoded: Try[OutputConfig], decoded: InputConfig => Try[T]): Boolean =
+      def eqv(encoded: Try[OutputData], decoded: InputData => Try[T]): Boolean =
         equals.eqv(FM.flatMap(encoded)(decoded), Try(value))
 
       eqv(Try(encodeUnsafe[T](namespace, value)), v => Try(decodeUnsafe[T](namespace, v))) &&
@@ -195,7 +187,7 @@ trait ConfigSpec
     Prop.forAll(Gen.alphaNumStr, Gen.posNum[Int], Gen.posNum[Long])(
       (s, i, l) =>
         decode[CaseClass](
-          convertConfig(
+          convertData(
             Map(
               List("CaseClass", "s") -> s,
               List("CaseClass", "i") -> i.toString,
@@ -205,15 +197,15 @@ trait ConfigSpec
         ).toEither must beRight(CaseClass(s, i, l, None))
     )
 
-  def testDefaultDecode(implicit cvEq: Eq[ConfigValidation[CaseClass]]): Boolean =
+  def testDefaultDecode(implicit cvEq: Eq[Validation[CaseClass]]): Boolean =
     cvEq.eqv(decode[CaseClass], expectedCaseClass.validNel) &&
       cvEq.eqv(decode[CaseClass](List.empty), expectedCaseClass.validNel)
 
-  def testDefaultDecodeIO(implicit ioEq: Eq[IO[ConfigValidation[CaseClass]]]): Boolean =
+  def testDefaultDecodeIO(implicit ioEq: Eq[IO[Validation[CaseClass]]]): Boolean =
     ioEq.eqv(decodeIO[CaseClass], IO(expectedCaseClass.validNel)) &&
       ioEq.eqv(decodeIO[CaseClass](List.empty), IO(expectedCaseClass.validNel))
 
-  def testDefaultDecodeAsync(implicit futEq: Eq[Future[ConfigValidation[CaseClass]]]): Boolean =
+  def testDefaultDecodeAsync(implicit futEq: Eq[Future[Validation[CaseClass]]]): Boolean =
     futEq.eqv(decodeAsync[CaseClass, Future], Future(expectedCaseClass.validNel)) &&
       futEq.eqv(decodeAsync[CaseClass, Future](List.empty), Future(expectedCaseClass.validNel))
 
@@ -221,5 +213,5 @@ trait ConfigSpec
     ccEq.eqv(decodeUnsafe[CaseClass], expectedCaseClass) &&
       ccEq.eqv(decodeUnsafe[CaseClass](List.empty), expectedCaseClass)
 
-  def testCaseClassParams(implicit utils: Hint): MatchResult[String] = parameters[CaseClass] !== ""
+  def testCaseClassParams(implicit hints: Hint): MatchResult[String] = parameters[CaseClass] !== ""
 }

@@ -13,7 +13,7 @@ class FutureExtruderApplicativeError extends ExtruderApplicativeErrorThrowableSp
   override implicit def feq[A](implicit e: Eq[A]): Eq[Future[A]] = futureEq
 }
 
-class ConfigValidationExtruderApplicativeError extends ExtruderApplicativeErrorValidationErrorsSpec[ConfigValidation]
+class ValidationExtruderApplicativeError extends ExtruderApplicativeErrorValidationErrorsSpec[Validation]
 
 class EitherThrowableExtruderApplicativeError extends ExtruderApplicativeErrorThrowableSpec[Either[Throwable, ?]] {
   override implicit def feq[A](implicit e: Eq[A]): Eq[Either[Throwable, A]] = Eq[String].on(_.toString)

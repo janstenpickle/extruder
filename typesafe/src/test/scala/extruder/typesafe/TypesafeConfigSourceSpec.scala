@@ -5,17 +5,17 @@ import cats.effect.IO
 import cats.kernel.laws.GroupLaws
 import cats.instances.all._
 import com.typesafe.config._
-import extruder.core.{ConfigSpec, ValidationException}
+import extruder.core.{SourceSpec, ValidationException}
 import org.scalacheck.{Arbitrary, Gen}
 import org.specs2.matcher.MatchResult
 import org.specs2.specification.core.SpecStructure
 import shapeless._
 
 import scala.collection.JavaConverters._
-import extruder.core.ConfigValidationCatsInstances._
+import extruder.core.ValidationCatsInstances._
 
-class TypesafeConfigSpec extends ConfigSpec with TypesafeConfigDecoders with TypesafeConfigEncoders {
-  import TypesafeConfigSpec._
+class TypesafeConfigSourceSpec extends SourceSpec with TypesafeConfigDecoders with TypesafeConfigEncoders {
+  import TypesafeConfigSourceSpec._
 
   implicit val configValueEq: Eq[ConfigValue] = Eq.fromUniversalEquals
   implicit val configObjectEq: Eq[ConfigObject] = Eq.fromUniversalEquals
@@ -23,12 +23,12 @@ class TypesafeConfigSpec extends ConfigSpec with TypesafeConfigDecoders with Typ
 
   override val supportsEmptyNamespace: Boolean = false
 
-  override def convertConfig(map: Map[List[String], String])(implicit utils: Hint): Config = {
-    val config = map.map { case (k, v) => utils.pathToString(k) -> v }.asJava
+  override def convertData(map: Map[List[String], String])(implicit hints: Hint): Config = {
+    val config = map.map { case (k, v) => hints.pathToString(k) -> v }.asJava
     ConfigFactory.parseMap(config)
   }
 
-  override def loadConfig: IO[InputConfig] = IO(convertConfig(caseClassConfig))
+  override def loadInput: IO[InputData] = IO(convertData(caseClassData))
 
   override def ext: SpecStructure =
     s2"""
@@ -47,10 +47,10 @@ class TypesafeConfigSpec extends ConfigSpec with TypesafeConfigDecoders with Typ
 
   override def monoidGroupLaws: GroupLaws[ConfigMap] = GroupLaws[ConfigMap]
 
-  override implicit def utils: TypesafeConfigHints = TypesafeConfigHints.default
+  override implicit def hints: TypesafeConfigHints = TypesafeConfigHints.default
 }
 
-object TypesafeConfigSpec {
+object TypesafeConfigSourceSpec {
   val Key = "x"
   val LookupFailureMessage = "boom!"
 

@@ -18,15 +18,17 @@ libraryDependencies += "extruder" %% "extruder-monix" % "0.6.0"
 libraryDependencies += "extruder" %% "extruder-fs2" % "0.6.0"
 ```
 
-**Rules for configuration resolution are specified in the declaration of the case class itself:**
+**Rules for resolution are specified in the declaration of the case class itself:**
 
-In `ApplicationConfig` below `default` will be set to `100`, `noDefault` will cause a validation failure to be logged and `optional` will be set to `None`, should the configuration source not contain a value for each parameter:
+In `ApplicationConfig` below `default` will be set to `100`, `noDefault` will cause a validation failure to be logged and `optional` will be set to `None`, should the data source not contain a value for each parameter.
+
+See the page on [decoding and encoding](decode_encode.html) for more information on the different types of `decode` and `encode` methods.
 
 ```tut:silent
 import cats.data.ValidatedNel
 import cats.effect.IO
 import extruder.core._
-import extruder.core.MapConfig._
+import extruder.core.MapSource._
 import extruder.monix._
 import monix.eval.Task
 import monix.execution.Scheduler.Implicits.global
@@ -58,12 +60,15 @@ val encodedAsync: Future[ValidatedNel[ValidationError, Map[String, String]]] =
   encodeAsync[ApplicationConfig, Future](applicationConfig)
 val encodedAsyncEither: Future[Either[ValidationErrors, Map[String, String]]] =
   encodeAsync[ApplicationConfig, Future, EitherErrors, ValidationErrors](applicationConfig)
+```
 
-// Show configuration parameters as a table
+It is also possible to print parameters as a table, with keys formatted as they would be in the source data:
+
+```
 val params: String = parameters[ApplicationConfig]
 println(params)
 ```
-Printing configuration parameters outputs the following:
+Which outputs the following:
 ```
 +-----------------------------+----------+--------+---------+------------------+
 | Key                         | Required | Type   | Default | Permitted Values |

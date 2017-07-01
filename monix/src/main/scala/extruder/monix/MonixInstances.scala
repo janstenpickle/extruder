@@ -14,7 +14,7 @@ trait MonixInstances {
     IOC: IOConvert[Task]
   ): ExtruderApplicativeError[Task, Throwable] =
     new ExtruderApplicativeError.FromMonadError[Task]() {
-      override def attemptIO[A](a: IO[Task[A]])(implicit utils: Hints): Task[A] =
+      override def attemptIO[A](a: IO[Task[A]])(implicit hints: Hints): Task[A] =
         IOC.fromIO(a).flatten
     }
 

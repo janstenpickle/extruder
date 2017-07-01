@@ -10,68 +10,68 @@ import org.specs2.{ScalaCheck, Specification}
 
 import scala.concurrent.duration.FiniteDuration
 
-class FailingConfigSpec extends Specification with ScalaCheck with EitherMatchers with MapDecoders with MapEncoders {
-  import FailingConfigSpec._
+class FailingSourceSpec extends Specification with ScalaCheck with EitherMatchers with MapDecoders with MapEncoders {
+  import FailingSourceSpec._
   import TestCommon._
 
   override def is: SpecStructure =
     s2"""
        Returns an error when
-        Lookup in the configuration source fails ${testLookupFail(Gen.alphaNumStr)}
-        Writing to a configuration sink fails ${testWriteFail(Gen.alphaNumStr)}
+        Lookup in the data source fails ${testLookupFail(Gen.alphaNumStr)}
+        Writing to a data sink fails ${testWriteFail(Gen.alphaNumStr)}
         The type specified for a sealed trait implementation is invalid $testCnilDecoder
         The value specified for a duration is invalid $testDurationDecoder
         Cannot decode a char type $testCharDecoder
         Lookup of an optional case class fails ${testLookupFail[Option[CC]](Gen.resultOf(CC).map(Some(_)))}
-        Preparation of the configuration source fails $testPrepareFail
-        Finalization of the configuration sink fails $testFinalizeFail
+        Preparation of the data source fails $testPrepareFail
+        Finalization of the data sink fails $testFinalizeFail
       """
 
-  override protected def finalizeConfig[F[_], E](
+  override protected def finalizeOutput[F[_], E](
     namespace: List[String],
-    config: Map[String, String]
+    data: Map[String, String]
   )(implicit AE: ExtruderApplicativeError[F, E], util: Hint): IO[F[Map[String, String]]] =
-    if (config.keys.forall(_.contains(finalizeFailKey))) IO.pure(AE.validationFailure(finalizeFailMessage))
-    else IO.pure(AE.pure(config))
+    if (data.keys.forall(_.contains(finalizeFailKey))) IO.pure(AE.validationFailure(finalizeFailMessage))
+    else IO.pure(AE.pure(data))
 
-  override protected def prepareConfig[F[_], E](
+  override protected def prepareInput[F[_], E](
     namespace: List[String],
-    config: Map[String, String]
+    data: Map[String, String]
   )(implicit AE: ExtruderApplicativeError[F, E], util: Hint): IO[F[Map[String, String]]] =
-    if (config.keys.forall(_.contains(prepareFailKey))) IO.pure(AE.validationFailure(prepareFailMessage))
-    else IO.pure(AE.pure(config))
+    if (data.keys.forall(_.contains(prepareFailKey))) IO.pure(AE.validationFailure(prepareFailMessage))
+    else IO.pure(AE.pure(data))
 
   override protected def lookupValue[F[_], E](
     path: List[String],
-    config: Map[String, String]
-  )(implicit utils: MapHints, AE: ExtruderApplicativeError[F, E]): IO[F[Option[String]]] =
-    if (path.contains(okNamespace)) IO.pure(AE.pure(config.get(utils.pathToString(path))))
+    data: Map[String, String]
+  )(implicit hints: MapHints, AE: ExtruderApplicativeError[F, E]): IO[F[Option[String]]] =
+    if (path.contains(okNamespace)) IO.pure(AE.pure(data.get(hints.pathToString(path))))
     else IO.pure(AE.validationFailure(lookupFailMessage))
 
   override protected def writeValue[F[_], E](
     path: List[String],
     value: String
-  )(implicit utils: MapHints, AE: ExtruderApplicativeError[F, E]): IO[F[Map[String, String]]] =
+  )(implicit hints: MapHints, AE: ExtruderApplicativeError[F, E]): IO[F[Map[String, String]]] =
     if (path.contains(okNamespace)) IO.pure(AE.validationFailure(writeFailMessage))
-    else IO.pure(AE.pure(Map(utils.pathToString(path) -> value)))
+    else IO.pure(AE.pure(Map(hints.pathToString(path) -> value)))
 
   def testLookupFail[T](
     gen: Gen[T]
-  )(implicit encoder: MapEncoder[ConfigValidation, T], decoder: MapDecoder[ConfigValidation, T]): Prop =
+  )(implicit encoder: MapEncoder[Validation, T], decoder: MapDecoder[Validation, T]): Prop =
     test[T](gen, _ mustEqual NonEmptyList.of(ValidationFailure(lookupFailMessage)))
 
   def testWriteFail[T](
     gen: Gen[T]
-  )(implicit encoder: MapEncoder[ConfigValidation, T], decoder: MapDecoder[ConfigValidation, T]): Prop =
+  )(implicit encoder: MapEncoder[Validation, T], decoder: MapDecoder[Validation, T]): Prop =
     test[T](gen, _ mustEqual NonEmptyList.of(ValidationFailure(writeFailMessage)), Some(okNamespace))
 
   def testCnilDecoder(
-    implicit utils: MapHints,
-    AE: ExtruderApplicativeError[ConfigValidation, NonEmptyList[ValidationError]]
+    implicit hints: MapHints,
+    AE: ExtruderApplicativeError[Validation, NonEmptyList[ValidationError]]
   ): MatchResult[Any] =
     cnilDecoder.read(List.empty, None, Map.empty) mustEqual IO.pure(
       AE.validationFailure(
-        s"Could not find specified implementation of sealed type at configuration path '${utils.pathToStringWithType(List.empty)}'"
+        s"Could not find specified implementation of sealed type at path '${hints.pathToStringWithType(List.empty)}'"
       )
     )
 
@@ -112,7 +112,7 @@ class FailingConfigSpec extends Specification with ScalaCheck with EitherMatcher
     gen: Gen[T],
     expected: NonEmptyList[ValidationError] => MatchResult[Any],
     namespacePrefix: Option[String] = None
-  )(implicit encoder: MapEncoder[ConfigValidation, T], decoder: MapDecoder[ConfigValidation, T]): Prop =
+  )(implicit encoder: MapEncoder[Validation, T], decoder: MapDecoder[Validation, T]): Prop =
     Prop.forAll(gen, namespaceGen) { (value, namespace) =>
       val ns = namespacePrefix.fold(namespace)(namespace :+ _)
       (for {
@@ -122,13 +122,13 @@ class FailingConfigSpec extends Specification with ScalaCheck with EitherMatcher
     }
 }
 
-object FailingConfigSpec {
+object FailingSourceSpec {
   val okNamespace = "lookupwillbesuccessful"
   val lookupFailMessage = "something went wrong with lookup"
   val writeFailMessage = "couldn't write"
   val prepareFailKey = "preparefail"
-  val prepareFailMessage = "failure in preparing config"
+  val prepareFailMessage = "failure in preparing data"
   val finalizeFailKey = "finalizefail"
-  val finalizeFailMessage = "failure in finalizing config"
+  val finalizeFailMessage = "failure in finalizing data"
   case class CC(s: String)
 }

@@ -7,27 +7,27 @@ position: 2
 {:toc}
 # Supported Functionality
 
-Below are examples of encoding and decoding configuration using the map configuration source.
+Below are examples of encoding and decoding case classes using the map data source.
 
-Each implementation of a configuration source may provide differing implementations of `encode` and `decode` methods. However all must implement the most basic methods for decoding and encoding:
+Each implementation of a data source may provide differing implementations of `encode` and `decode` methods. However all must implement the most basic methods for decoding and encoding:
 
-- **Decode** which takes a type parameter of the expected type to be decoded, an optional namespace argument and the configuration source, returning the validated type.
+- **Decode** which takes a type parameter of the expected type to be decoded, an optional namespace argument and the data source, returning the validated type.
 
-- **Encode** which takes an optional namespace argument and the value to be encoded, returning the value encoded as the configuration type.
+- **Encode** which takes an optional namespace argument and the value to be encoded, returning the value encoded as the data type.
 
-In this section the default return type of `ConfigValidation` which is a type alias for the [cats] `ValidatedNel` applicative functor. See the [section on decoding and encoding](decode_encode.html) for information of how to specify different monads.
+In this section the default return type of `Validation` which is a type alias for the [cats] `ValidatedNel` applicative functor. See the [section on decoding and encoding](decode_encode.html) for information of how to specify different monads.
 
 ## Primitive Types
-Provided there is a [`Decoder`](concepts.html#Terms) instance for the type you wish to decode, or an [`Encoder`](concepts.html#Terms) instance you wish to encode compilation will work. [It is possible to extend existing configuration sources if you wish to add support for more types](extending.html).
+Provided there is a [`Decoder`](concepts.html#Terms) instance for the type you wish to decode, or an [`Encoder`](concepts.html#Terms) instance you wish to encode compilation will work. [It is possible to extend existing data sources if you wish to add support for more types](extending.html).
 
 The following primitive types are provided by the [`PrimitiveDecoders`](https://github.com/janstenpickle/extruder/blob/master/core/src/main/scala/extruder/core/PrimitiveDecoders.scala) and [`PrimitiveEncoders`](https://github.com/janstenpickle/extruder/blob/master/core/src/main/scala/extruder/core/PrimitiveEncoders.scala) classes.
 
 {% include primitives.md %}
 
-The following code shows how an integer value may be decoded and encoded from the [map configuration source](https://github.com/janstenpickle/extruder/blob/master/core/src/main/scala/extruder/core/Map.scala).
+The following code shows how an integer value may be decoded and encoded from the [map data source](https://github.com/janstenpickle/extruder/blob/master/core/src/main/scala/extruder/core/Map.scala).
 
 ```tut:silent
-import extruder.core.MapConfig._
+import extruder.core.MapSource._
 
 decode[Int](List("some", "int"), Map("some.int" -> "23"))
 
@@ -38,7 +38,7 @@ encode[Int](List("some", "int"), 23)
 When encoding or decoding a case class the name of the case class is automatically included in the namespace, so there is not always a need to provide one:
 
 ```tut:silent
-import extruder.core.MapConfig._
+import extruder.core.MapSource._
 
 case class Example(defaultedString: String = "default", configuredString: String, optionalString: Option[String])
 
@@ -63,10 +63,10 @@ encode[Example](List("name", "space"), Example(configuredString = "configured", 
 
 ## Nested Case Classes
 
-Case classes may be nested within on another. The key in the configuration must contain the complete path to the final primitive value:
+Case classes may be nested within on another. The key in the data must contain the complete path to the final primitive value:
 
 ```tut:silent
-import extruder.core.MapConfig._
+import extruder.core.MapSource._
 
 case class NestedTwo(value: String)
 case class NestedOne(value: String, nested: NestedTwo)
@@ -85,7 +85,7 @@ decode[Example](config)
 Extruder also supports resolution of sealed type members. In order to pick the implementation of the specified trait to decode a `type` value must be provided:
 
 ```tut:silent
-import extruder.core.MapConfig._
+import extruder.core.MapSource._
 
 sealed trait Sealed
 case object ExampleObj extends Sealed
@@ -108,11 +108,11 @@ decode[Example](Map("example.a.type" -> "ExampleObj", "example.a.examplecc.a" ->
 encode[Example](Example(ExampleCC(1)))
 ```
 
-## Changing Configuration Format
+## Changing Key Format
 As implied in the above examples the configuration keys are dot (`.`) separated and all lowercase. This is configurable by creating a new implicit instance of `Hints` for the configuration source.
 
 ```tut:silent
-import extruder.core.MapConfig._
+import extruder.core.MapSource._
 import extruder.core.MapHints
 
 implicit val hints: MapHints = new MapHints {
@@ -140,7 +140,7 @@ The [Utils](https://github.com/janstenpickle/extruder/blob/master/core/src/main/
 
 **Cyclical references**
 ```scala
-import extruder.system.SystemPropertiesConfig._
+import extruder.system.SystemPropertiesSource._
 
 case class Example(e: Example)
 

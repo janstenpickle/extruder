@@ -6,7 +6,7 @@ import cats.data.Validated.{Invalid, Valid}
 import org.scalacheck.{Arbitrary, Cogen, Gen}
 import cats.instances.all._
 
-object ConfigValidationCatsInstances {
+object ValidationCatsInstances {
   implicit val validationErrorsArb: Arbitrary[ValidationErrors] = Arbitrary(
     Gen
       .nonEmptyListOf(
@@ -19,8 +19,8 @@ object ConfigValidationCatsInstances {
       .map(l => NonEmptyList.of(l.head, l.tail: _*))
   )
 
-  implicit def validationErrorsEq[A](implicit aEq: Eq[A]): Eq[ConfigValidation[A]] = new Eq[ConfigValidation[A]] {
-    override def eqv(x: ConfigValidation[A], y: ConfigValidation[A]): Boolean = (x, y) match {
+  implicit def validationErrorsEq[A](implicit aEq: Eq[A]): Eq[Validation[A]] = new Eq[Validation[A]] {
+    override def eqv(x: Validation[A], y: Validation[A]): Boolean = (x, y) match {
       case (Valid(xx), Valid(yy)) => aEq.eqv(xx, yy)
       case (Invalid(xx), Invalid(yy)) => Eq[String].on[ValidationErrors](_.toString).eqv(xx, yy)
       case _ => false

@@ -52,8 +52,8 @@ class RefinedInstancesSpec
 
   def encodeDecode[T](
     implicit arb: Arbitrary[T],
-    encoder: MapEncoder[ConfigValidation, T],
-    decoder: MapDecoder[ConfigValidation, T]
+    encoder: MapEncoder[Validation, T],
+    decoder: MapDecoder[Validation, T]
   ): Prop =
     prop(
       (v: T) =>
@@ -63,7 +63,7 @@ class RefinedInstancesSpec
         } yield decoded) must beRight(v)
     )
 
-  def failEncodeDecode[T, V](gen: Gen[V])(implicit decoder: MapDecoder[ConfigValidation, T]): Prop =
+  def failEncodeDecode[T, V](gen: Gen[V])(implicit decoder: MapDecoder[Validation, T]): Prop =
     Prop.forAll(gen) { src =>
       decode[T](Map("" -> src.toString)).toEither must beLeft.which(
         failure =>

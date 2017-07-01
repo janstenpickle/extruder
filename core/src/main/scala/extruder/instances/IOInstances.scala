@@ -10,7 +10,7 @@ trait IOInstances {
 
   implicit def extruderApplicativeErrorForIo(implicit ec: ExecutionContext): ExtruderApplicativeError[IO, Throwable] =
     new FromMonadError[IO]() {
-      override def attemptIO[A](a: IO[IO[A]])(implicit utils: Hints): IO[A] = a.flatMap(identity)
+      override def attemptIO[A](a: IO[IO[A]])(implicit hints: Hints): IO[A] = a.flatMap(identity)
     }
 
   implicit val ioConvertForIo: IOConvert[IO] = new IOConvert[IO] {

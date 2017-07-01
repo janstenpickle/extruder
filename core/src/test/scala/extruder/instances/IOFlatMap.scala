@@ -4,7 +4,7 @@ import cats.effect.IO
 import cats.instances.all._
 import cats.{Eq, Eval}
 import extruder.core.TestCommon._
-import extruder.core.{ConfigValidation, ConfigValidationCatsInstances, IOFlatMapSpec, ValidationErrors}
+import extruder.core.{IOFlatMapSpec, Validation, ValidationCatsInstances, ValidationErrors}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -28,9 +28,9 @@ class EitherIOFlatMapSpec extends IOFlatMapSpec[Either[Throwable, ?], Throwable]
 class EitherNelIOFlatMapSpec extends IOFlatMapSpec[Either[ValidationErrors, ?], ValidationErrors] {
   override implicit def feq[A](implicit e: Eq[A]): Eq[Either[ValidationErrors, A]] = Eq.fromUniversalEquals
 }
-class ConfigValidationIOFlatMapSpec extends IOFlatMapSpec[ConfigValidation, ValidationErrors] {
-  override implicit def feq[A](implicit e: Eq[A]): Eq[ConfigValidation[A]] =
-    ConfigValidationCatsInstances.validationErrorsEq
+class ValidationIOFlatMapSpec extends IOFlatMapSpec[Validation, ValidationErrors] {
+  override implicit def feq[A](implicit e: Eq[A]): Eq[Validation[A]] =
+    ValidationCatsInstances.validationErrorsEq
 }
 class IOIOFlatMapSpec extends IOFlatMapSpec[IO, Throwable] {
   override implicit def feq[A](implicit e: Eq[A]): Eq[IO[A]] = ioEq

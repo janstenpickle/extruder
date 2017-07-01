@@ -1,8 +1,8 @@
 package extruder.core
 
-trait ConfigSource {
-  type InputConfig
-  type OutputConfig
+trait DataSource {
+  type InputData
+  type OutputData
   type Hint <: Hints
 
   def errorsToThrowable(errs: ValidationErrors): Throwable = {

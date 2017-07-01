@@ -1,6 +1,6 @@
 ---
 layout: docs
-title:  "Implementing a Configuration Source"
+title:  "Implementing a Data Source"
 position: 5
 ---
 Coming soon!

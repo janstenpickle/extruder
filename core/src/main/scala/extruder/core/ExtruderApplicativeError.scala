@@ -3,7 +3,7 @@ package extruder.core
 import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.{ApplicativeError, FlatMap, MonadError}
-import extruder.instances.{ConfigValidationInstances, EitherInstances, FutureInstances, IOInstances}
+import extruder.instances.{EitherInstances, FutureInstances, IOInstances, ValidationInstances}
 
 import scala.util.{Failure, Success, Try}
 
@@ -17,14 +17,14 @@ abstract class ExtruderApplicativeError[F[_], E](implicit FM: FlatMap[F]) extend
   def validationFailure[A](message: String): F[A]
   def validationException[A](message: String, ex: Throwable): F[A]
 
-  def attemptIO[A](a: IO[F[A]])(implicit utils: Hints): F[A] =
-    flatMap(catchNonFatal(a.unsafeRunTimed(utils.ioTimeout)))(
+  def attemptIO[A](a: IO[F[A]])(implicit hints: Hints): F[A] =
+    flatMap(catchNonFatal(a.unsafeRunTimed(hints.ioTimeout)))(
       _.fold[F[A]](validationFailure("Failed to evaluate IO, timed out"))(identity)
     )
 }
 
 object ExtruderApplicativeError
-    extends ConfigValidationInstances
+    extends ValidationInstances
     with FutureInstances
     with EitherInstances
     with IOInstances {

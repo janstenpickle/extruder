@@ -13,49 +13,47 @@ import scala.concurrent.duration.Duration
 import scala.reflect.ClassTag
 
 trait PrimitiveDecoders { self: Decoders with DecodeTypes =>
-  protected def hasValue[F[_], E](path: List[String], config: DecodeConfig)(
-    implicit utils: Hint,
+  protected def hasValue[F[_], E](path: List[String], data: DecodeData)(
+    implicit hints: Hint,
     AE: ExtruderApplicativeError[F, E]
   ): IO[F[Boolean]]
-  protected def lookupValue[F[_], E](path: List[String], config: DecodeConfig)(
-    implicit utils: Hint,
+  protected def lookupValue[F[_], E](path: List[String], data: DecodeData)(
+    implicit hints: Hint,
     AE: ExtruderApplicativeError[F, E]
   ): IO[F[Option[String]]]
   protected def lookupList[F[_], E](
     path: List[String],
-    config: DecodeConfig
-  )(implicit utils: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[Option[List[String]]]] =
-    lookupValue[F, E](path, config).map(_.map(_.map(_.split(utils.ListSeparator).toList.map(_.trim))))
+    data: DecodeData
+  )(implicit hints: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[Option[List[String]]]] =
+    lookupValue[F, E](path, data).map(_.map(_.map(_.split(hints.ListSeparator).toList.map(_.trim))))
 
   implicit def primitiveDecoder[F[_], E, T](
     implicit parser: Parser[T],
-    utils: Hint,
+    hints: Hint,
     AE: ExtruderApplicativeError[F, E]
   ): Dec[F, T] =
-    mkDecoder[F, T](
-      (path, default, config) => resolveValue(formatParserError(parser, path)).apply(path, default, config)
-    )
+    mkDecoder[F, T]((path, default, data) => resolveValue(formatParserError(parser, path)).apply(path, default, data))
 
   implicit def traversableDecoder[F[_], E, T, FF[T] <: TraversableOnce[T]](
     implicit parser: Parser[T],
     cbf: CanBuildFrom[FF[T], T, FF[T]],
-    utils: Hint,
+    hints: Hint,
     AE: ExtruderApplicativeError[F, E]
   ): Dec[F, FF[T]] =
-    mkDecoder { (path, default, config) =>
+    mkDecoder { (path, default, data) =>
       resolveList { x =>
         val seq: F[List[T]] = AE.sequence(x.filterNot(_.isEmpty).map(formatParserError(parser, path)))
 
         AE.map(seq)(_.foldLeft(cbf())(_ += _).result())
-      }.apply(path, default, config)
+      }.apply(path, default, data)
     }
 
   implicit def optionalDecoder[F[_], E, T](
     implicit decoder: Lazy[Dec[F, T]],
-    utils: Hint,
+    hints: Hint,
     AE: ExtruderApplicativeError[F, E]
   ): Dec[F, Option[T]] =
-    mkDecoder[F, Option[T]] { (path, _, config) =>
+    mkDecoder[F, Option[T]] { (path, _, data) =>
       val evaluateOptional: (Either[E, T], Boolean) => F[Option[T]] = {
         case (Right(v), _) => AE.pure(Some(v))
         case (Left(e), true) => AE.raiseError(e)
@@ -63,33 +61,33 @@ trait PrimitiveDecoders { self: Decoders with DecodeTypes =>
       }
 
       for {
-        attempted <- decoder.value.read(path, None, config).map(AE.attempt)
-        lookedUp <- hasValue[F, E](path, config)
+        attempted <- decoder.value.read(path, None, data).map(AE.attempt)
+        lookedUp <- hasValue[F, E](path, data)
       } yield AE.flatMap(attempted)(att => AE.flatMap(lookedUp)(lu => evaluateOptional(att, lu)))
     }
 
   protected def resolveValue[F[_], E, T](
     parser: String => F[T]
-  )(implicit utils: Hint, AE: ExtruderApplicativeError[F, E]): (List[String], Option[T], DecodeConfig) => IO[F[T]] =
+  )(implicit hints: Hint, AE: ExtruderApplicativeError[F, E]): (List[String], Option[T], DecodeData) => IO[F[T]] =
     resolve[F, E, T, String](parser, lookupValue[F, E])
 
   protected def resolveList[F[_], E, T](
     parser: List[String] => F[T]
-  )(implicit utils: Hint, AE: ExtruderApplicativeError[F, E]): (List[String], Option[T], DecodeConfig) => IO[F[T]] =
+  )(implicit hints: Hint, AE: ExtruderApplicativeError[F, E]): (List[String], Option[T], DecodeData) => IO[F[T]] =
     resolve[F, E, T, List[String]](parser, lookupList[F, E])
 
-  protected def resolve[F[_], E, T, V](parser: V => F[T], lookup: (List[String], DecodeConfig) => IO[F[Option[V]]])(
+  protected def resolve[F[_], E, T, V](parser: V => F[T], lookup: (List[String], DecodeData) => IO[F[Option[V]]])(
     path: List[String],
     default: Option[T],
-    config: DecodeConfig
-  )(implicit utils: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[T]] = {
+    data: DecodeData
+  )(implicit hints: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[T]] = {
 
-    lookup(path, config).map(
+    lookup(path, data).map(
       AE.flatMap[Option[V], T](_)(
         v =>
           (v, default) match {
             case (None, None) =>
-              AE.missing(s"Could not find configuration at '${utils.pathToString(path)}' and no default available")
+              AE.missing(s"Could not find datauration at '${hints.pathToString(path)}' and no default available")
             case (None, Some(value)) => AE.pure(value)
             case (Some(value), _) => parser(value)
         }
@@ -100,12 +98,12 @@ trait PrimitiveDecoders { self: Decoders with DecodeTypes =>
   protected def formatParserError[F[_], E, T](
     parser: Parser[T],
     path: List[String]
-  )(implicit utils: Hint, AE: ExtruderApplicativeError[F, E]): String => F[T] =
+  )(implicit hints: Hint, AE: ExtruderApplicativeError[F, E]): String => F[T] =
     value =>
       parser
         .parse(value)
         .fold[F[T]](
-          err => AE.validationFailure(s"Could not parse value '$value' at '${utils.pathToString(path)}': $err"),
+          err => AE.validationFailure(s"Could not parse value '$value' at '${hints.pathToString(path)}': $err"),
           AE.pure
       )
 }

@@ -15,7 +15,7 @@ trait FutureInstances {
     implicit ec: ExecutionContext,
     IOC: IOConvert[Future]
   ): ExtruderApplicativeError[Future, Throwable] = new FromMonadError[Future] {
-    override def attemptIO[A](a: IO[Future[A]])(implicit utils: Hints): Future[A] = IOC.fromIO(a).flatMap(identity)
+    override def attemptIO[A](a: IO[Future[A]])(implicit hints: Hints): Future[A] = IOC.fromIO(a).flatMap(identity)
 
     override def ap[A, B](ff: Future[(A) => B])(fa: Future[A]): Future[B] = {
       def tryToEither[T]: Try[T] => Either[Throwable, T] = {

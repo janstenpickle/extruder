@@ -159,7 +159,7 @@ lazy val aggregateCompile =
 
 lazy val docSettings = commonSettings ++ Seq(
   micrositeName := "extruder",
-  micrositeDescription := "Populate Scala case classes from any configuration source",
+  micrositeDescription := "Populate Scala case classes from any data source",
   micrositeAuthor := "Chris Jansen",
   micrositeHighlightTheme := "atom-one-light",
   micrositeHomepage := "https://janstenpickle.github.io/extruder/",

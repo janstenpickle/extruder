@@ -12,12 +12,12 @@ There are a few types of methods for encoding and decoding documented below, ple
 |---+---+---|
 | Method Type|Description|Names|
 |---+---+---|
-|Simple|Decode or encode a certain type, wrapping the result in [`ConfigValidation`](api/extruder/core/index.html#ConfigValidation[T]=cats.data.ValidatedNel[extruder.core.ValidationError,T]) or a specified type with a corresponding implicit [`ExtruderApplicativeError`](api/extruder/core/ExtruderApplicativeError.html)|[`decode`](api/extruder/core/Decode.html) [`encode`](api/extruder/core/Encode.html)|
+|Simple|Decode or encode a certain type, wrapping the result in [`Validation`](api/extruder/core/index.html#Validation[T]=cats.data.ValidatedNel[extruder.core.ValidationError,T]) or a specified type with a corresponding implicit [`ExtruderApplicativeError`](api/extruder/core/ExtruderApplicativeError.html)|[`decode`](api/extruder/core/Decode.html) [`encode`](api/extruder/core/Encode.html)|
 |Unsafe|Similar to simple except that any errors will be thrown as exceptions|[`decodeUnsafe`](api/extruder/core/Decode.html) [`encodeUnsafe`](api/extruder/core/Encode.html)|
 |IO|The resulting output will be the same as _Simple_, except that the return type will also be wrapped in a [cats effect] `IO` monad|[`decodeIO`](api/extruder/core/Decode.html) [`encodeIO`](api/extruder/core/Encode.html)|
 |Async|The resulting output will be the same as _Simple_, except that the return type will also be wrapped in a specified type, for which there should be an [`IOConvert`](api/extruder/core/IOConvert.html) instance|[`decodeAsync`](api/extruder/core/Decode.html) [`encodeAsync`](api/extruder/core/Encode.html)|
 
-Normally when decoding you are required to pass the configuration and an optional namespace, however some configuration sources may provide some default configuration, such as from [system properties](api/extruder/system/SystemPropertiesConfig.html), [environment variables](api/extruder/system/EnvironmentConfig$.html) or [typesafe config](api/extruder/typesafe/TypesafeConfig$.html). These all extend the trait [`DecodeFromDefaultConfig`](api/extruder/core/DecodeFromDefaultConfig.html) which includes a set of `decode` methods which do not require configuration to be passed.
+Normally when decoding you are required to pass the data and an optional namespace, however some data sources may provide default data, such as from [system properties](api/extruder/system/SystemPropertiesSource.html), [environment variables](api/extruder/system/EnvironmentConfig$.html) or [typesafe config](api/extruder/typesafe/TypesafeConfigSource$.html). These all extend the trait [`DecodeFromDefaultSource`](api/extruder/core/DecodeFromDefaultSource.html) which includes a set of `decode` methods which do not require data to be passed.
 
 ## Advanced Examples
 Extruder includes some default implementations for `IO`, `Future`, `Either` and `ValidatedNel`, as well as extension modules for [Monix] and [FS2].
@@ -26,7 +26,7 @@ Extruder includes some default implementations for `IO`, `Future`, `Either` and 
 import cats.effect.IO
 import extruder.core._
 import extruder.core.EitherThrowable
-import extruder.core.MapConfig._
+import extruder.core.MapSource._
 import extruder.monix._
 import monix.eval.Task
 import monix.execution.Scheduler.Implicits.global
@@ -48,7 +48,7 @@ A couple of things to note in the examples above:
 
 # Implementing Your Own Target Monads
 
-As mentioned in [Concepts](concepts.html), Extruder allows you to specify target monads for your desired return types. Internally the side effects are modelled with the [cats effect] `IO` monad and validation failures are handled by a user specified monad. Values retrieved from asynchronous configuration sources may be lifted into the `IO` monad using an `IOConvert` instance.
+As mentioned in [Concepts](concepts.html), Extruder allows you to specify target monads for your desired return types. Internally the side effects are modelled with the [cats effect] `IO` monad and validation failures are handled by a user specified monad. Values retrieved from asynchronous data sources may be lifted into the `IO` monad using an `IOConvert` instance.
 
 ## `Try` Example
 
@@ -56,7 +56,7 @@ The example below demonstrates what is needed to create implicit instances to al
 
 ```tut:silent
 import extruder.core._
-import extruder.core.MapConfig._
+import extruder.core.MapSource._
 import cats.instances.TryInstances
 import cats.effect.IO
 import scala.util.{Failure, Success, Try}
@@ -92,7 +92,7 @@ It also demonstrates how when overriding the `ap` method it is possible to accum
 
 ```tut:silent
 import extruder.core._
-import extruder.core.MapConfig._
+import extruder.core.MapSource._
 import cats.instances.EitherInstances
 import cats.syntax.either._
 import cats.effect.IO

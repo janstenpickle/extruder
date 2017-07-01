@@ -11,13 +11,13 @@ import scala.concurrent.duration.Duration
 
 trait PrimitiveEncoders { self: Encoders with EncodeTypes =>
   protected def writeValue[F[_], E](path: List[String], value: String)(
-    implicit utils: Hint,
+    implicit hints: Hint,
     AE: ExtruderApplicativeError[F, E]
-  ): IO[F[EncodeConfig]]
+  ): IO[F[EncodeData]]
 
   implicit def primitiveEncoder[F[_], E, T](
     implicit shows: Show[T],
-    utils: Hint,
+    hints: Hint,
     AE: ExtruderApplicativeError[F, E]
   ): Enc[F, T] =
     mkEncoder[F, T] { (path, value) =>
@@ -26,20 +26,20 @@ trait PrimitiveEncoders { self: Encoders with EncodeTypes =>
 
   implicit def optionalEncoder[F[_], E, T](
     implicit encoder: Lazy[Enc[F, T]],
-    utils: Hint,
+    hints: Hint,
     AE: ExtruderApplicativeError[F, E]
   ): Enc[F, Option[T]] =
     mkEncoder[F, Option[T]] { (path, value) =>
-      value.fold[IO[F[EncodeConfig]]](IO(AE.pure(monoid.empty)))(encoder.value.write(path, _))
+      value.fold[IO[F[EncodeData]]](IO(AE.pure(monoid.empty)))(encoder.value.write(path, _))
     }
 
   implicit def traversableEncoder[F[_], E, T, FF[T] <: TraversableOnce[T]](
     implicit shows: Show[T],
-    utils: Hint,
+    hints: Hint,
     AE: ExtruderApplicativeError[F, E]
   ): Enc[F, FF[T]] =
     mkEncoder { (path, value) =>
-      writeValue(path, value.map(shows.show).filter(_.trim.nonEmpty).mkString(utils.ListSeparator))
+      writeValue(path, value.map(shows.show).filter(_.trim.nonEmpty).mkString(hints.ListSeparator))
     }
 }
 

@@ -51,8 +51,8 @@ trait ParametersInstances extends Shows {
         )
     }
 
-  implicit def optionParameters[T](implicit getMeAConfigPath: Parameters[T]): Parameters[Option[T]] =
-    new Parameters[Option[T]](path => getMeAConfigPath.eval(path).map(_.updateRequired(false)))
+  implicit def optionParameters[T](implicit params: Parameters[T]): Parameters[Option[T]] =
+    new Parameters[Option[T]](path => params.eval(path).map(_.updateRequired(false)))
 
   // scalastyle:off parameter.number
   implicit def productParameters[

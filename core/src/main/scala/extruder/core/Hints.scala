@@ -17,5 +17,5 @@ trait Hints {
 
 trait HintsCompanion[T <: Hints] {
   implicit def default: T
-  def apply(implicit utils: T): T = utils
+  def apply(implicit hints: T): T = hints
 }
