@@ -1,4 +1,4 @@
-import microsites.ExtraMdFileConfig
+import microsites._
 
 val specs2Ver = "3.9.1"
 val latestScalafmt = "1.0.0-RC4"
@@ -180,6 +180,11 @@ lazy val docSettings = commonSettings ++ Seq(
   ),
   micrositePushSiteWith := GitHub4s,
   micrositeGithubToken := sys.env.get("GITHUB_TOKEN"),
+  micrositeGitterChannel := false,
+  micrositeCDNDirectives := CdnDirectives(
+    jsList = List("https://cdn.rawgit.com/knsv/mermaid/6.0.0/dist/mermaid.min.js"),
+    cssList = List("https://cdn.rawgit.com/knsv/mermaid/6.0.0/dist/mermaid.css")
+  ),
   addMappingsToSiteDir(mappings in (ScalaUnidoc, packageDoc), micrositeDocumentationUrl),
   ghpagesNoJekyll := false,
   scalacOptions in (ScalaUnidoc, unidoc) ++= Seq(
