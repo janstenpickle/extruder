@@ -1,5 +1,11 @@
 options:
-  - title: Config Resolution
-    url: resolution.html
-  - title: Extending a Config Source
+  - title: Concepts
+    url: concepts.html
+  - title: Usage
+    url: usage.html
+  - title: Decoding and encoding
+    url: decode_encode.html
+  - title: Extending a Data Source
     url: extending.html
+  - title: Implementing a Data Source
+    url: config.html

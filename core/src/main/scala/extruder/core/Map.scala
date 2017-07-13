@@ -1,67 +1,92 @@
 package extruder.core
 
 import cats.Monoid
-import cats.syntax.validated._
+import cats.effect.IO
 
-trait BaseMapEncoders extends Encoders[Map[String, String], MapEncoder]
-                      with PrimitiveEncoders[Map[String, String], MapEncoder]
-                      with DerivedEncoders[Map[String, String], MapEncoder] { self: UtilsMixin =>
+trait BaseMapEncoders extends Encoders with PrimitiveEncoders with DerivedEncoders with EncodeTypes {
+  override type EncodeData = Map[String, String]
+  override type Enc[F[_], T] = MapEncoder[F, T]
+
   override protected val monoid: Monoid[Map[String, String]] = new Monoid[Map[String, String]] {
     override def empty: Map[String, String] = Map.empty
     override def combine(x: Map[String, String], y: Map[String, String]): Map[String, String] = x ++ y
   }
 
-  override protected def writeValue(path: Seq[String], value: String): ConfigValidation[Map[String, String]] =
-    Map(utils.pathToString(path) -> value).validNel
+  override protected def writeValue[F[_], E](
+    path: List[String],
+    value: String
+  )(implicit hints: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[Map[String, String]]] =
+    IO(AE.pure(Map(hints.pathToString(path) -> value)))
 
-  override protected def mkEncoder[T](f: (Seq[String], T) => ConfigValidation[Map[String, String]]): MapEncoder[T] =
-    new MapEncoder[T] {
-      override def write(path: Seq[String], in: T): ConfigValidation[Map[String, String]] = f(path, in)
+  override protected def mkEncoder[F[_], T](f: (List[String], T) => IO[F[Map[String, String]]]): MapEncoder[F, T] =
+    new MapEncoder[F, T] {
+      override def write(path: List[String], in: T): IO[F[Map[String, String]]] = f(path, in)
     }
 }
 
-trait BaseMapDecoders extends Decoders[Map[String, String], MapDecoder]
-                      with PrimitiveDecoders[Map[String, String], MapDecoder]
-                      with DerivedDecoders[Map[String, String], MapDecoder] { self: UtilsMixin =>
-  override protected def lookupValue(path: Seq[String], config: Map[String, String]): ConfigValidation[Option[String]] =
-    config.get(utils.pathToString(path)).validNel
+trait BaseMapDecoders extends Decoders with PrimitiveDecoders with DerivedDecoders with DecodeTypes {
+  override type DecodeData = Map[String, String]
+  override type Dec[F[_], T] = MapDecoder[F, T]
 
-  override protected def mkDecoder[T](f: (Seq[String], Option[T], Map[String, String]) => ConfigValidation[T]): MapDecoder[T] =
-    new MapDecoder[T] {
-      override def read(path: Seq[String], default: Option[T], config: Map[String, String]): ConfigValidation[T] = f(path, default, config)
+  override protected def hasValue[F[_], E](
+    path: List[String],
+    data: Map[String, String]
+  )(implicit hints: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[Boolean]] =
+    lookupValue(path, data).map(AE.map(_)(_.isDefined))
+
+  override protected def lookupValue[F[_], E](
+    path: List[String],
+    data: Map[String, String]
+  )(implicit hints: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[Option[String]]] =
+    IO(AE.pure(data.get(hints.pathToString(path))))
+
+  override protected def mkDecoder[F[_], T](
+    f: (List[String], Option[T], Map[String, String]) => IO[F[T]]
+  ): MapDecoder[F, T] =
+    new MapDecoder[F, T] {
+      override def read(path: List[String], default: Option[T], data: Map[String, String]): IO[F[T]] =
+        f(path, default, data)
     }
 }
 
-trait MapDecoder[T] extends Decoder[T, Map[String, String]]
+trait MapDecoder[F[_], T] extends Decoder[F, T, Map[String, String]]
 
-trait MapDecoders extends BaseMapDecoders with Decode[Map[String, String], Map[String, String], MapDecoder] with MapUtilsMixin {
-  override protected def prepareConfig(config: Map[String, String]): ConfigValidation[Map[String, String]] =
-    config.map{ case (k, v) => (k.toLowerCase, v) }.validNel
+trait MapDecoders extends BaseMapDecoders with Decode with MapDataSource {
+  override protected def prepareInput[F[_], E](
+    namespace: List[String],
+    data: Map[String, String]
+  )(implicit AE: ExtruderApplicativeError[F, E], util: Hint): IO[F[Map[String, String]]] =
+    IO(AE.pure(data.map { case (k, v) => (k.toLowerCase, v) }))
 }
 
 object MapDecoder extends MapDecoders
 
-trait MapEncoder[T] extends Encoder[T, Map[String, String]]
+trait MapEncoder[F[_], T] extends Encoder[F, T, Map[String, String]]
 
-trait MapEncoders extends BaseMapEncoders with Encode[Map[String, String], Map[String, String], MapEncoder] with MapUtilsMixin {
-  override protected def finalizeConfig(inter: Map[String, String]): ConfigValidation[Map[String, String]] = inter.validNel
+trait MapEncoders extends BaseMapEncoders with Encode with MapDataSource {
+  override protected def finalizeOutput[F[_], E](
+    namespace: List[String],
+    inter: Map[String, String]
+  )(implicit AE: ExtruderApplicativeError[F, E], util: Hint): IO[F[Map[String, String]]] =
+    IO(AE.pure(inter))
 }
 
 object MapEncoder extends MapEncoders
 
-trait MapConfig extends MapEncoders with MapDecoders
+trait MapSource extends MapEncoders with MapDecoders
 
-object MapConfig extends MapConfig
+object MapSource extends MapSource
 
-trait MapUtils extends Utils
+trait MapHints extends Hints
 
-object MapUtils extends UtilsCompanion[MapUtils] {
-  override implicit val default: MapUtils = new MapUtils {
-    override def pathToString(path: Seq[String]): String = path.mkString(".").toLowerCase
+object MapHints extends HintsCompanion[MapHints] {
+  override implicit val default: MapHints = new MapHints {
+    override def pathToString(path: List[String]): String = path.mkString(".").toLowerCase
   }
 }
 
-trait MapUtilsMixin extends UtilsMixin {
-  override type U = MapUtils
-  override val utils: MapUtils = implicitly[MapUtils]
+trait MapDataSource extends DataSource {
+  override type InputData = Map[String, String]
+  override type OutputData = Map[String, String]
+  override type Hint = MapHints
 }

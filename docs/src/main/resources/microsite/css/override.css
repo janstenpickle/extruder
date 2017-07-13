@@ -14,3 +14,22 @@
   width: 36px;
   background-size: 100%;
 }
+
+#markdown-toc::before {
+    font-weight: bold;
+}
+
+#markdown-toc ul {
+    list-style: decimal;
+}
+
+#markdown-toc {
+    padding: 1.5em;
+    list-style: decimal;
+    display: inline-block;
+}
+
+.mermaid {
+	height: 100px;
+	width: 100%;
+}

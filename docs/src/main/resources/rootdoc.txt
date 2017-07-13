@@ -1,14 +1,15 @@
-This is the API documentation for [[https://github.com/janstenpickle/extruder extruder]], a configuration library for
-Scala
+This is the API documentation for [[https://github.com/janstenpickle/extruder extruder]].
 
 The library is divided into a number of modules that either provide core
 functionality, support additional features via third-party dependencies, or
 facilitate integration with other libraries or frameworks.
 
  - [[extruder.core core]]: core functionality
- - [[extruder.system system]]: system configuration sources; system properties and environment variables
- - [[extruder.typesafe typesafe]]: [[https://github.com/typesafehub/config Typesafe config]] configuration source
+ - [[extruder.system system]]: system data sources; system properties and environment variables
+ - [[extruder.typesafe typesafe]]: [[https://github.com/typesafehub/config Typesafe config]] data source
  - [[extruder.refined refined]]: [[https://github.com/fthomas/refined Refined]] types support
+ - [[extruder.monix monix]]: [[https://monix.io Monix]] typeclass instances
+ - [[extruder.fs2 FS2]]: [[https://github.com/functional-streams-for-scala/fs2 FS2]] typeclass instances
 
 Please refer to the [[https://janstenpickle.github.io/extruder/ documentation]] for a more
 detailed introduction to the library.

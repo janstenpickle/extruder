@@ -5,7 +5,7 @@ import cats.data.{NonEmptyList, Reader}
 import extruder.core.{ValidationError, ValidationException}
 import org.zalando.grafter.GenericReader._
 import org.zalando.grafter._
-import extruder.system.SystemPropertiesConfig._
+import extruder.system.SystemPropertiesSource._
 
 case class ApplicationConfig(http: HttpConfig, db: DbConfig)
 
@@ -40,7 +40,6 @@ case class Database(dbConfig: DbConfig) extends Start {
 object Database {
   implicit def reader: Reader[ApplicationConfig, Database] = genericReader
 }
-
 
 object Grafter extends App {
   System.setProperty("applicationconfig.http.httpconfig.host", "localhost")

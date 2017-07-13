@@ -1,78 +1,83 @@
 package extruder.core
 
+import cats.effect.IO
 import cats.syntax.cartesian._
-import cats.syntax.validated._
 import shapeless._
 import shapeless.labelled.FieldType
-import shapeless.ops.hlist.{ConstMapper, Mapper, RightFolder, Zip}
-import shapeless.ops.record.Keys
 
 import scala.reflect.runtime.universe.TypeTag
 
-trait DerivedEncoders[C, E[T] <: Encoder[T, C]] { self: Encoders[C, E] with UtilsMixin =>
-  implicit val cnilEncoder: E[CNil] = mkEncoder((_, _) =>
-    ValidationFailure(s"Impossible!").invalidNel
-  )
+trait DerivedEncoders { self: Encoders with EncodeTypes =>
+  implicit def cnilEncoder[F[_], E](implicit AE: ExtruderApplicativeError[F, E]): Enc[F, CNil] = mkEncoder { (_, _) =>
+    IO.pure(AE.validationFailure(s"Impossible!"))
+  }
 
-  implicit def cconsEncoder[K <: Symbol, H, T <: Coproduct](implicit key: Witness.Aux[K],
-                                                     headEncode: Lazy[E[H]],
-                                                     tailEncode: Lazy[E[T]],
-                                                     typeEncode: Lazy[E[String]]): E[FieldType[K, H] :+: T] =
-  mkEncoder((path, value) =>
-    (typeEncode.value.write(utils.pathWithType(path), key.value.name) |@| (value match {
-      case Inl(h) => headEncode.value.write(path, h)
-      case Inr(t) => tailEncode.value.write(path, t)
-    })).map(monoid.combine)
-  )
+  implicit def cconsEncoder[F[_], E, K <: Symbol, H, T <: Coproduct](
+    implicit key: Witness.Aux[K],
+    headEncode: Enc[F, H],
+    tailEncode: Lazy[Enc[F, T]],
+    typeEncode: Lazy[Enc[F, String]],
+    hints: Hint,
+    AE: ExtruderApplicativeError[F, E]
+  ): Enc[F, FieldType[K, H] :+: T] =
+    mkEncoder { (path, value) =>
+      val chooseEncoder: IO[F[EncodeData]] = value match {
+        case Inl(h) => headEncode.write(path, h)
+        case Inr(t) => tailEncode.value.write(path, t)
+      }
 
-  implicit def unionEncoder[T, O <: Coproduct](implicit gen: LabelledGeneric.Aux[T, O],
-                                   underlying: Lazy[E[O]]): E[T] =
+      for {
+        tpe <- typeEncode.value.write(hints.pathWithType(path), key.value.name)
+        v <- chooseEncoder
+      } yield (tpe |@| v).map(monoid.combine)
+    }
+
+  implicit def unionEncoder[F[_], E, T, O <: Coproduct](
+    implicit gen: LabelledGeneric.Aux[T, O],
+    underlying: Lazy[Enc[F, O]],
+    AE: ExtruderApplicativeError[F, E],
+    lp: LowPriority
+  ): Enc[F, T] =
     mkEncoder((path, value) => underlying.value.write(path, gen.to(value)))
 
-  // scalastyle:off
-  implicit def productEncoder[T,
-                             GenRepr <: HList,
-                             LGenRepr <: HList,
-                             KeysRepr <: HList,
-                             ConstRepr <: HList,
-                             ZipperRepr <: HList,
-                             PrefixZipperRepr <: HList,
-                             MapperRepr <: HList](implicit gen: Generic.Aux[T, GenRepr],
-                                                  lGen: LabelledGeneric.Aux[T, LGenRepr],
-                                                  keys: Keys.Aux[LGenRepr, KeysRepr],
-                                                  constMapper: ConstMapper.Aux[Seq[String], KeysRepr, ConstRepr],
-                                                  prefixZipper: Zip.Aux[KeysRepr :: ConstRepr :: HNil, PrefixZipperRepr],
-                                                  zipper: Zip.Aux[PrefixZipperRepr :: GenRepr :: HNil, ZipperRepr],
-                                                  lazyMapper: Lazy[Mapper.Aux[writeConfig.type, ZipperRepr, MapperRepr]],
-                                                  rightFolder: RightFolder.Aux[MapperRepr, ConfigValidation[C], folder.type, ConfigValidation[C]],
-                                                  tag: TypeTag[T]): E[T] = {
-    implicit val mapper: Mapper.Aux[writeConfig.type, ZipperRepr, MapperRepr] = lazyMapper.value
+  trait DerivedEncoder[T, F[_], Repr <: HList] {
+    def write(path: List[String], value: Repr): IO[F[EncodeData]]
+  }
+
+  implicit def hNilDerivedEncoder[T, F[_], E](
+    implicit AE: ExtruderApplicativeError[F, E]
+  ): DerivedEncoder[T, F, HNil] =
+    new DerivedEncoder[T, F, HNil] {
+      override def write(path: List[String], value: HNil): IO[F[EncodeData]] = IO(AE.pure(monoid.empty))
+    }
+
+  implicit def hConsDerivedEncoder[T, F[_], E, K <: Symbol, V, TailRepr <: HList](
+    implicit key: Witness.Aux[K],
+    AE: ExtruderApplicativeError[F, E],
+    encoder: Lazy[Enc[F, V]],
+    tailEncoder: Lazy[DerivedEncoder[T, F, TailRepr]]
+  ): DerivedEncoder[T, F, FieldType[K, V] :: TailRepr] =
+    new DerivedEncoder[T, F, FieldType[K, V] :: TailRepr] {
+      override def write(path: List[String], value: FieldType[K, V] :: TailRepr): IO[F[EncodeData]] = {
+        val fieldName = key.value.name
+
+        for {
+          head <- encoder.value.write(path :+ fieldName, value.head)
+          tail <- tailEncoder.value.write(path, value.tail)
+        } yield (head |@| tail).map(monoid.combine)
+      }
+    }
+
+  implicit def productEncoder[F[_], E, T, GenRepr <: HList](
+    implicit gen: LabelledGeneric.Aux[T, GenRepr],
+    tag: TypeTag[T],
+    AE: ExtruderApplicativeError[F, E],
+    encoder: Lazy[DerivedEncoder[T, F, GenRepr]]
+  ): Enc[F, T] = {
     lazy val className: String = tag.tpe.typeSymbol.name.toString
-    val keyNames = Keys[LGenRepr].apply()
-    mkEncoder((path, value) =>
-      keyNames
-        .zip(keyNames.mapConst(path :+ className))
-        .zip(gen.to(value))
-        .map(writeConfig)
-        .foldRight(monoid.empty.validNel[ValidationError])(folder)
-    )
-  }
-  // scalastyle:on
-
-  object writeConfig extends Poly1 {
-    implicit def caseAny[A <: Symbol, B](implicit encoder: Lazy[E[B]]): Case.Aux[((A, Seq[String]), B), ConfigValidation[C]] =
-      at[((A, Seq[String]), B)]{ case ((key, prefix), value) => encoder.value.write(prefix :+ key.name, value) }
+    mkEncoder[F, T] { (path, value) =>
+      encoder.value.write(path :+ className, gen.to(value))
+    }
   }
 
-  // scalastyle:off
-  object folder extends Poly2 {
-    implicit def caseHList: Case.Aux[ConfigValidation[C], ConfigValidation[C], ConfigValidation[C]] =
-      at[ConfigValidation[C], ConfigValidation[C]]((a, b) => (a |@| b).map(monoid.combine))
-  }
-  // scalastyle:on
-
-
-  implicit def caseObjectEncoder[T](implicit gen: Generic.Aux[T, HNil],
-                                    stringEncoder: Lazy[E[String]]): E[T] =
-    mkEncoder((path, value) => stringEncoder.value.write(utils.pathWithType(path), value.toString))
 }

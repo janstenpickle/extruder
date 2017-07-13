@@ -1,55 +1,51 @@
 ---
 layout: docs
-title:  "Extending an Existing Config Source"
-position: 2
+title:  "Extending an Existing Data Source"
+position: 4
 ---
-## Extending an Existing Config Source
+## Extending an Existing Data Source
 
-Say you wanted to add a resolver for a certain type it is possible to extend an existing implementation of a configuration source to parse the new type. Below is an example adding a new decoder for `URL`:
+Say you wanted to add a resolver for a certain type it is possible to extend an existing implementation of a data source to parse the new type. Below is an example adding a new decoder for `URL`:
 
 ```tut:silent
+import cats.effect.IO
 import cats.syntax.either._
 import cats.syntax.validated._
 import java.net.URL
-import extruder.core.ConfigValidation
-import extruder.core.MapConfig
-import extruder.core.MapDecoder
-import extruder.core.MapEncoder
-import extruder.core.Parser
-import extruder.core.Missing
-import extruder.core.ValidationException
+import extruder.core._
 
-trait WithURL extends MapConfig {
-  implicit val urlDecoder: MapDecoder[URL] =
-    mkDecoder[URL]((path, default, config) =>
-      (config.get(utils.pathToString(path)), default) match {
-        case (Some(v), _) => Either.catchNonFatal(new URL(v)).leftMap(ex =>
-            ValidationException(ex.getMessage, ex)
-          ).toValidatedNel
-        case (None, Some(url)) => url.validNel
-        case _ => Missing(s"Could not find value for ${utils.pathToString(path)}").invalidNel
+trait WithURL extends MapSource {
+  implicit def urlDecoder[F[_], E](implicit hints: Hint,
+                                   AE: ExtruderApplicativeError[F, E]): MapDecoder[F, URL] =
+    mkDecoder[F, URL]((path, default, src) => IO {
+      (src.get(hints.pathToString(path)), default) match {
+        case (Some(v), _) => Either.catchNonFatal(new URL(v)).fold(ex =>
+            AE.validationException(ex.getMessage, ex),
+            AE.pure
+          )
+        case (None, Some(url)) => AE.pure(url)
+        case _ => AE.missing(s"Could not find value for ${hints.pathToString(path)}")
       }
-    )
+    })
 
-  implicit val urlEncoder: MapEncoder[URL] =
-    mkEncoder[URL]((path, value) =>
-      Map(utils.pathToString(path) -> value.toString).validNel
+  implicit def urlEncoder[F[_], E](implicit hints: Hint,
+                                   AE: ExtruderApplicativeError[F, E]): MapEncoder[F, URL] =
+    mkEncoder[F, URL]((path, value) =>
+      IO(AE.pure(Map(hints.pathToString(path) -> value.toString)))
     )
 }
 
 object WithURL extends WithURL
 ```
 
-This is a fairly verbose implementation which repeats some of the abstracted functionality found in `PrimitiveDecoders` and `PrimitiveEncoders`, it must also be implemented for each configuration type.
+This is a fairly verbose implementation which repeats some of the abstracted functionality found in `PrimitiveDecoders` and `PrimitiveEncoders`, it must also be implemented for each data type.
 
-This functionality can be implemented more simply and so that it works for all configuration backends which implement the `PrimitiveDecoders` and `PrimitiveEncoders` traits:
+This functionality can be implemented more simply and so that it works for all backends which implement the `PrimitiveDecoders` and `PrimitiveEncoders` traits:
 
 ```tut:silent
 import cats.syntax.either._
 import java.net.URL
-import extruder.core.MapConfig
-import extruder.core.Parser
-import extruder.core.Show
+import extruder.core._
 
 object WithURL {
   implicit val urlParser: Parser[URL] = Parser.fromEitherException(url =>

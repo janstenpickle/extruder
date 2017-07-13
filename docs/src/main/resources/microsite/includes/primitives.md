@@ -1,0 +1,12 @@
+  - Char
+  - String
+  - Int
+  - Long
+  - Double
+  - Float
+  - Short
+  - Byte
+  - Boolean
+  - URL
+  - Duration
+  - Finite Duration

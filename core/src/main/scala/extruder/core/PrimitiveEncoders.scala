@@ -2,26 +2,45 @@ package extruder.core
 
 import java.net.URL
 
+import cats.effect.IO
 import cats.instances.all._
-import cats.syntax.validated._
 import cats.{Show => CatsShow}
 import shapeless._
 
 import scala.concurrent.duration.Duration
 
-trait PrimitiveEncoders[C, E[T] <: Encoder[T, C]] { self: Encoders[C, E] with UtilsMixin =>
-  protected def writeValue(path: Seq[String], value: String): ConfigValidation[C]
+trait PrimitiveEncoders { self: Encoders with EncodeTypes =>
+  protected def writeValue[F[_], E](path: List[String], value: String)(
+    implicit hints: Hint,
+    AE: ExtruderApplicativeError[F, E]
+  ): IO[F[EncodeData]]
 
-  implicit def primitiveEncoder[T](implicit shows: Show[T]): E[T] =
-    mkEncoder[T]((path, value) => writeValue(path, shows.show(value)))
+  implicit def primitiveEncoder[F[_], E, T](
+    implicit shows: Show[T],
+    hints: Hint,
+    AE: ExtruderApplicativeError[F, E]
+  ): Enc[F, T] =
+    mkEncoder[F, T] { (path, value) =>
+      writeValue(path, shows.show(value))
+    }
 
-  implicit def optionalEncoder[T](implicit encoder: Lazy[E[T]]): E[Option[T]] =
-    mkEncoder[Option[T]]((path, value) =>
-      value.fold[ConfigValidation[C]](monoid.empty.validNel)(encoder.value.write(path, _))
-    )
+  implicit def optionalEncoder[F[_], E, T](
+    implicit encoder: Lazy[Enc[F, T]],
+    hints: Hint,
+    AE: ExtruderApplicativeError[F, E]
+  ): Enc[F, Option[T]] =
+    mkEncoder[F, Option[T]] { (path, value) =>
+      value.fold[IO[F[EncodeData]]](IO(AE.pure(monoid.empty)))(encoder.value.write(path, _))
+    }
 
-  implicit def traversableEncoder[T, F[T] <: TraversableOnce[T]](implicit shows: Show[T]): E[F[T]] =
-    mkEncoder((path, value) => writeValue(path, value.map(shows.show).filter(_.trim.nonEmpty).mkString(utils.ListSeparator)))
+  implicit def traversableEncoder[F[_], E, T, FF[T] <: TraversableOnce[T]](
+    implicit shows: Show[T],
+    hints: Hint,
+    AE: ExtruderApplicativeError[F, E]
+  ): Enc[F, FF[T]] =
+    mkEncoder { (path, value) =>
+      writeValue(path, value.map(shows.show).filter(_.trim.nonEmpty).mkString(hints.ListSeparator))
+    }
 }
 
 trait Shows {
@@ -35,11 +54,12 @@ trait Shows {
   implicit val byteShow: Show[Byte] = Show(catsStdShowForByte)
   implicit val booleanShow: Show[Boolean] = Show(catsStdShowForBoolean)
   implicit val urlShow: Show[URL] = Show(CatsShow.fromToString[URL])
-  implicit def durationShow[T <: Duration]: Show[T] = Show(CatsShow.show[T] {
-    case x: Duration if x == Duration.Inf => "Inf"
-    case x: Duration if x == Duration.MinusInf => "MinusInf"
-    case x: Any => x.toString
-  })
+  implicit def durationShow[T <: Duration]: Show[T] =
+    Show(CatsShow.show[T] {
+      case x: Duration if x == Duration.Inf => "Inf"
+      case x: Duration if x == Duration.MinusInf => "MinusInf"
+      case x: Any => x.toString
+    })
 }
 
 case class Show[T](show: T => String)
