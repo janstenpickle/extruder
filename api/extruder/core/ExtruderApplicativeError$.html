@@ -1,0 +1,1150 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+          <title></title>
+          <meta name="description" content="" />
+          <meta name="keywords" content="" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../lib/index.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../lib/jquery.js"></script>
+      <script type="text/javascript" src="../../lib/jquery.panzoom.min.js"></script>
+      <script type="text/javascript" src="../../lib/jquery.mousewheel.min.js"></script>
+      <script type="text/javascript" src="../../lib/index.js"></script>
+      <script type="text/javascript" src="../../index.js"></script>
+      <script type="text/javascript" src="../../lib/scheduler.js"></script>
+      <script type="text/javascript" src="../../lib/template.js"></script>
+      <script type="text/javascript" src="../../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+        /* this variable can be used by the JS to determine the path to the root document */
+        var toRoot = '../../';
+      </script>
+    
+        </head>
+        <body>
+      <div id="search">
+        <span id="doc-title"><span id="doc-version"></span></span>
+        <span class="close-results"><span class="left">&lt;</span> Back</span>
+        <div id="textfilter">
+          <span class="input">
+            <input autocapitalize="none" placeholder="Search" id="index-input" type="text" accesskey="/" />
+            <i class="clear material-icons"></i>
+            <i id="search-icon" class="material-icons"></i>
+          </span>
+        </div>
+    </div>
+      <div id="search-results">
+        <div id="search-progress">
+          <div id="progress-fill"></div>
+        </div>
+        <div id="results-content">
+          <div id="entity-results"></div>
+          <div id="member-results"></div>
+        </div>
+      </div>
+      <div id="content-scroll-container" style="-webkit-overflow-scrolling: touch;">
+        <div id="content-container" style="-webkit-overflow-scrolling: touch;">
+          <div id="subpackage-spacer">
+            <div id="packages">
+              <h1>Packages</h1>
+              <ul>
+                <li name="_root_.root" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="_root_"></a><a id="root:_root_"></a>
+      <span class="permalink">
+      <a href="index.html#_root_" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="This is the API documentation for extruder." href="../../index.html">
+              <span class="name">root</span>
+            </a>
+      </span>
+      
+      <p class="shortcomment cmt">This is the API documentation for <a href="https://github.com/janstenpickle/extruder" target="_blank">extruder</a>.</p><div class="fullcomment"><div class="comment cmt"><p>This is the API documentation for <a href="https://github.com/janstenpickle/extruder" target="_blank">extruder</a>.</p><p>The library is divided into a number of modules that either provide core
+functionality, support additional features via third-party dependencies, or
+facilitate integration with other libraries or frameworks.</p><ul><li><a href="index.html" class="extype" name="extruder.core">core</a>: core functionality</li><li><a href="../system/index.html" class="extype" name="extruder.system">system</a>: system data sources; system properties and environment variables</li><li><a href="../typesafe/index.html" class="extype" name="extruder.typesafe">typesafe</a>: <a href="https://github.com/typesafehub/config" target="_blank">Typesafe config</a> data source</li><li><a href="../refined/index.html" class="extype" name="extruder.refined">refined</a>: <a href="https://github.com/fthomas/refined" target="_blank">Refined</a> types support</li><li><a href="../monix/index.html" class="extype" name="extruder.monix">monix</a>: <a href="https://monix.io" target="_blank">Monix</a> typeclass instances</li><li><a href="../fs2/index.html" class="extype" name="extruder.fs2">FS2</a>: <a href="https://github.com/functional-streams-for-scala/fs2" target="_blank">FS2</a> typeclass instances</li></ul><p>Please refer to the <a href="https://janstenpickle.github.io/extruder/" target="_blank">documentation</a> for a more
+detailed introduction to the library.</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../../index.html" class="extype" name="_root_">root</a></dd></dl></div>
+    </li><li name="_root_.extruder" visbl="pub" class="indented1 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="extruder"></a><a id="extruder:extruder"></a>
+      <span class="permalink">
+      <a href="index.html#extruder" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="../index.html">
+              <span class="name">extruder</span>
+            </a>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../../index.html" class="extype" name="_root_">root</a></dd></dl></div>
+    </li><li name="extruder.core" visbl="pub" class="indented2 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="core"></a><a id="core:core"></a>
+      <span class="permalink">
+      <a href="../extruder/index.html#core" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="index.html">
+              <span class="name">core</span>
+            </a>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../index.html" class="extype" name="extruder">extruder</a></dd></dl></div>
+    </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="BaseMapDecoders.html" title=""></a>
+                        <a href="BaseMapDecoders.html" title="">
+                          BaseMapDecoders
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="BaseMapEncoders.html" title=""></a>
+                        <a href="BaseMapEncoders.html" title="">
+                          BaseMapEncoders
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="DataSource.html" title=""></a>
+                        <a href="DataSource.html" title="">
+                          DataSource
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="Decode.html" title=""></a>
+                        <a href="Decode.html" title="">
+                          Decode
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="DecodeFromDefaultSource.html" title=""></a>
+                        <a href="DecodeFromDefaultSource.html" title="">
+                          DecodeFromDefaultSource
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="DecodeTypes.html" title=""></a>
+                        <a href="DecodeTypes.html" title="">
+                          DecodeTypes
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="Decoder.html" title=""></a>
+                        <a href="Decoder.html" title="">
+                          Decoder
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="Decoders.html" title=""></a>
+                        <a href="Decoders.html" title="">
+                          Decoders
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="DerivedDecoders.html" title=""></a>
+                        <a href="DerivedDecoders.html" title="">
+                          DerivedDecoders
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="DerivedEncoders.html" title=""></a>
+                        <a href="DerivedEncoders.html" title="">
+                          DerivedEncoders
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="Encode.html" title=""></a>
+                        <a href="Encode.html" title="">
+                          Encode
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="EncodeTypes.html" title=""></a>
+                        <a href="EncodeTypes.html" title="">
+                          EncodeTypes
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="Encoder.html" title=""></a>
+                        <a href="Encoder.html" title="">
+                          Encoder
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="Encoders.html" title=""></a>
+                        <a href="Encoders.html" title="">
+                          Encoders
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="" title=""></a>
+                        <a class="class" href="ExtruderApplicativeError.html" title=""></a>
+                        <a href="ExtruderApplicativeError.html" title="">
+                          ExtruderApplicativeError
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="object" href="FormatParameters$.html" title=""></a>
+                        <a href="FormatParameters$.html" title="">
+                          FormatParameters
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="Hints.html" title=""></a>
+                        <a href="Hints.html" title="">
+                          Hints
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="HintsCompanion.html" title=""></a>
+                        <a href="HintsCompanion.html" title="">
+                          HintsCompanion
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="IOConvert$.html" title=""></a>
+                        <a class="trait" href="IOConvert.html" title=""></a>
+                        <a href="IOConvert.html" title="">
+                          IOConvert
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="IOFlatMap$.html" title=""></a>
+                        <a class="class" href="IOFlatMap.html" title=""></a>
+                        <a href="IOFlatMap.html" title="">
+                          IOFlatMap
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="MapDataSource.html" title=""></a>
+                        <a href="MapDataSource.html" title="">
+                          MapDataSource
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="MapDecoder$.html" title=""></a>
+                        <a class="trait" href="MapDecoder.html" title=""></a>
+                        <a href="MapDecoder.html" title="">
+                          MapDecoder
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="MapDecoders.html" title=""></a>
+                        <a href="MapDecoders.html" title="">
+                          MapDecoders
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="MapEncoder$.html" title=""></a>
+                        <a class="trait" href="MapEncoder.html" title=""></a>
+                        <a href="MapEncoder.html" title="">
+                          MapEncoder
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="MapEncoders.html" title=""></a>
+                        <a href="MapEncoders.html" title="">
+                          MapEncoders
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="MapHints$.html" title=""></a>
+                        <a class="trait" href="MapHints.html" title=""></a>
+                        <a href="MapHints.html" title="">
+                          MapHints
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="MapSource$.html" title=""></a>
+                        <a class="trait" href="MapSource.html" title=""></a>
+                        <a href="MapSource.html" title="">
+                          MapSource
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="Missing.html" title=""></a>
+                        <a href="Missing.html" title="">
+                          Missing
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="ParamRepr.html" title=""></a>
+                        <a href="ParamRepr.html" title="">
+                          ParamRepr
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="Parameters$.html" title=""></a>
+                        <a class="class" href="Parameters.html" title=""></a>
+                        <a href="Parameters.html" title="">
+                          Parameters
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="ParametersInstances.html" title=""></a>
+                        <a href="ParametersInstances.html" title="">
+                          ParametersInstances
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="Parser$.html" title=""></a>
+                        <a class="class" href="Parser.html" title=""></a>
+                        <a href="Parser.html" title="">
+                          Parser
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="Parsers.html" title=""></a>
+                        <a href="Parsers.html" title="">
+                          Parsers
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="PrimitiveDecoders.html" title=""></a>
+                        <a href="PrimitiveDecoders.html" title="">
+                          PrimitiveDecoders
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="PrimitiveEncoders.html" title=""></a>
+                        <a href="PrimitiveEncoders.html" title="">
+                          PrimitiveEncoders
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="Show$.html" title=""></a>
+                        <a class="class" href="Show.html" title=""></a>
+                        <a href="Show.html" title="">
+                          Show
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="Shows.html" title=""></a>
+                        <a href="Shows.html" title="">
+                          Shows
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="StableRepr.html" title=""></a>
+                        <a href="StableRepr.html" title="">
+                          StableRepr
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="TypeNames$.html" title=""></a>
+                        <a class="class" href="TypeNames.html" title=""></a>
+                        <a href="TypeNames.html" title="">
+                          TypeNames
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="UnionRepr.html" title=""></a>
+                        <a href="UnionRepr.html" title="">
+                          UnionRepr
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="ValidationError.html" title=""></a>
+                        <a href="ValidationError.html" title="">
+                          ValidationError
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="ValidationException.html" title=""></a>
+                        <a href="ValidationException.html" title="">
+                          ValidationException
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="ValidationFailure.html" title=""></a>
+                        <a href="ValidationFailure.html" title="">
+                          ValidationFailure
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="object" href="package$$decode$u0020disambiguator$.html" title=""></a>
+                        <a href="package$$decode$u0020disambiguator$.html" title="">
+                          decode disambiguator
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="object" href="package$$decode$u0020without$u0020input$u0020disambiguator$.html" title=""></a>
+                        <a href="package$$decode$u0020without$u0020input$u0020disambiguator$.html" title="">
+                          decode without input disambiguator
+                        </a>
+                      </li>
+              </ul>
+            </div>
+          </div>
+          <div id="content">
+            <body class="object value">
+      <div id="definition">
+        <a href="ExtruderApplicativeError.html" title="See companion class"><div class="big-circle object-companion-class">o</div></a>
+        <p id="owner"><a href="../index.html" class="extype" name="extruder">extruder</a>.<a href="index.html" class="extype" name="extruder.core">core</a></p>
+        <h1><a href="ExtruderApplicativeError.html" title="See companion class">ExtruderApplicativeError</a><span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span></h1>
+        <h3><span class="morelinks"><div>
+            Companion <a href="ExtruderApplicativeError.html" title="See companion class">class ExtruderApplicativeError</a>
+          </div></span></h3>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ExtruderApplicativeError</span><span class="result"> extends <a href="../instances/ValidationInstances.html" class="extype" name="extruder.instances.ValidationInstances">ValidationInstances</a> with <a href="../instances/FutureInstances.html" class="extype" name="extruder.instances.FutureInstances">FutureInstances</a> with <a href="../instances/EitherInstances.html" class="extype" name="extruder.instances.EitherInstances">EitherInstances</a> with <a href="../instances/IOInstances.html" class="extype" name="extruder.instances.IOInstances">IOInstances</a> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4>
+
+      
+          <div id="comment" class="fullcommenttop"><div class="toggleContainer block">
+          <span class="toggle">
+            Linear Supertypes
+          </span>
+          <div class="superTypes hiddenContent"><span class="extype" name="scala.Serializable">Serializable</span>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="../instances/IOInstances.html" class="extype" name="extruder.instances.IOInstances">IOInstances</a>, <a href="../instances/EitherInstances.html" class="extype" name="extruder.instances.EitherInstances">EitherInstances</a>, <a href="../instances/FutureInstances.html" class="extype" name="extruder.instances.FutureInstances">FutureInstances</a>, <a href="../instances/ValidationInstances.html" class="extype" name="extruder.instances.ValidationInstances">ValidationInstances</a>, <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
+        </div></div>
+        
+
+      <div id="mbrsel">
+        <div class="toggle"></div>
+        <div id="memberfilter">
+          <i class="material-icons arrow"></i>
+          <span class="input">
+            <input id="mbrsel-input" placeholder="Filter all members" type="text" accesskey="/" />
+          </span>
+          <i class="clear material-icons"></i>
+        </div>
+        <div id="filterby">
+          <div id="order">
+            <span class="filtertype">Ordering</span>
+            <ol>
+              
+              <li class="alpha in"><span>Alphabetic</span></li>
+              <li class="inherit out"><span>By Inheritance</span></li>
+            </ol>
+          </div>
+          <div class="ancestors">
+                  <span class="filtertype">Inherited<br />
+                  </span>
+                  <ol id="linearization">
+                    <li class="in" name="extruder.core.ExtruderApplicativeError"><span>ExtruderApplicativeError</span></li><li class="in" name="scala.Serializable"><span>Serializable</span></li><li class="in" name="java.io.Serializable"><span>Serializable</span></li><li class="in" name="extruder.instances.IOInstances"><span>IOInstances</span></li><li class="in" name="extruder.instances.EitherInstances"><span>EitherInstances</span></li><li class="in" name="extruder.instances.FutureInstances"><span>FutureInstances</span></li><li class="in" name="extruder.instances.ValidationInstances"><span>ValidationInstances</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                  </ol>
+                </div><div class="ancestors">
+              <span class="filtertype"></span>
+              <ol>
+                <li class="hideall out"><span>Hide All</span></li>
+                <li class="showall in"><span>Show All</span></li>
+              </ol>
+            </div>
+          <div id="visbl">
+              <span class="filtertype">Visibility</span>
+              <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+            </div>
+        </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="extruder.core.ExtruderApplicativeError.AccumulatesErrors" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="AccumulatesErrors[M[_]]extendsExtruderApplicativeError[M,extruder.core.ValidationErrors]"></a><a id="AccumulatesErrors[M[_]]:AccumulatesErrors[M]"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#AccumulatesErrors[M[_]]extendsExtruderApplicativeError[M,extruder.core.ValidationErrors]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="ExtruderApplicativeError$$AccumulatesErrors.html">
+              <span class="name">AccumulatesErrors</span>
+            </a><span class="tparams">[<span name="M">M<span class="tparams">[<span name="_">_</span>]</span></span>]</span><span class="result"> extends <a href="ExtruderApplicativeError.html" class="extype" name="extruder.core.ExtruderApplicativeError">ExtruderApplicativeError</a>[<span class="extype" name="extruder.core.ExtruderApplicativeError.AccumulatesErrors.M">M</span>, <a href="index.html#ValidationErrors=cats.data.NonEmptyList[extruder.core.ValidationError]" class="extmbr" name="extruder.core.ValidationErrors">ValidationErrors</a>]</span>
+      </span>
+      
+      
+    </li><li name="extruder.core.ExtruderApplicativeError.FromMonadError" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="FromMonadError[M[_]]extendsExtruderApplicativeError[M,Throwable]withExtruderApplicativeError.WithMonadError[M,Throwable]"></a><a id="FromMonadError[M[_]]:FromMonadError[M]"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#FromMonadError[M[_]]extendsExtruderApplicativeError[M,Throwable]withExtruderApplicativeError.WithMonadError[M,Throwable]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="ExtruderApplicativeError$$FromMonadError.html">
+              <span class="name">FromMonadError</span>
+            </a><span class="tparams">[<span name="M">M<span class="tparams">[<span name="_">_</span>]</span></span>]</span><span class="result"> extends <a href="ExtruderApplicativeError.html" class="extype" name="extruder.core.ExtruderApplicativeError">ExtruderApplicativeError</a>[<span class="extype" name="extruder.core.ExtruderApplicativeError.FromMonadError.M">M</span>, <span class="extype" name="scala.Throwable">Throwable</span>] with <a href="ExtruderApplicativeError$$WithMonadError.html" class="extype" name="extruder.core.ExtruderApplicativeError.WithMonadError">WithMonadError</a>[<span class="extype" name="extruder.core.ExtruderApplicativeError.FromMonadError.M">M</span>, <span class="extype" name="scala.Throwable">Throwable</span>]</span>
+      </span>
+      
+      
+    </li><li name="extruder.core.ExtruderApplicativeError.FromMonadErrorAccumulatesErrors" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="FromMonadErrorAccumulatesErrors[M[_]]extendsExtruderApplicativeError[M,extruder.core.ValidationErrors]withExtruderApplicativeError.WithMonadError[M,extruder.core.ValidationErrors]withExtruderApplicativeError.AccumulatesErrors[M]"></a><a id="FromMonadErrorAccumulatesErrors[M[_]]:FromMonadErrorAccumulatesErrors[M]"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#FromMonadErrorAccumulatesErrors[M[_]]extendsExtruderApplicativeError[M,extruder.core.ValidationErrors]withExtruderApplicativeError.WithMonadError[M,extruder.core.ValidationErrors]withExtruderApplicativeError.AccumulatesErrors[M]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">abstract </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="ExtruderApplicativeError$$FromMonadErrorAccumulatesErrors.html">
+              <span class="name">FromMonadErrorAccumulatesErrors</span>
+            </a><span class="tparams">[<span name="M">M<span class="tparams">[<span name="_">_</span>]</span></span>]</span><span class="result"> extends <a href="ExtruderApplicativeError.html" class="extype" name="extruder.core.ExtruderApplicativeError">ExtruderApplicativeError</a>[<span class="extype" name="extruder.core.ExtruderApplicativeError.FromMonadErrorAccumulatesErrors.M">M</span>, <a href="index.html#ValidationErrors=cats.data.NonEmptyList[extruder.core.ValidationError]" class="extmbr" name="extruder.core.ValidationErrors">ValidationErrors</a>] with <a href="ExtruderApplicativeError$$WithMonadError.html" class="extype" name="extruder.core.ExtruderApplicativeError.WithMonadError">WithMonadError</a>[<span class="extype" name="extruder.core.ExtruderApplicativeError.FromMonadErrorAccumulatesErrors.M">M</span>, <a href="index.html#ValidationErrors=cats.data.NonEmptyList[extruder.core.ValidationError]" class="extmbr" name="extruder.core.ValidationErrors">ValidationErrors</a>] with <a href="ExtruderApplicativeError$$AccumulatesErrors.html" class="extype" name="extruder.core.ExtruderApplicativeError.AccumulatesErrors">AccumulatesErrors</a>[<span class="extype" name="extruder.core.ExtruderApplicativeError.FromMonadErrorAccumulatesErrors.M">M</span>]</span>
+      </span>
+      
+      
+    </li><li name="extruder.core.ExtruderApplicativeError.WithMonadError" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="WithMonadError[M[_],E]extendsExtruderApplicativeError[M,E]"></a><a id="WithMonadError[M[_],E]:WithMonadError[M,E]"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#WithMonadError[M[_],E]extendsExtruderApplicativeError[M,E]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="ExtruderApplicativeError$$WithMonadError.html">
+              <span class="name">WithMonadError</span>
+            </a><span class="tparams">[<span name="M">M<span class="tparams">[<span name="_">_</span>]</span></span>, <span name="E">E</span>]</span><span class="result"> extends <a href="ExtruderApplicativeError.html" class="extype" name="extruder.core.ExtruderApplicativeError">ExtruderApplicativeError</a>[<span class="extype" name="extruder.core.ExtruderApplicativeError.WithMonadError.M">M</span>, <span class="extype" name="extruder.core.ExtruderApplicativeError.WithMonadError.E">E</span>]</span>
+      </span>
+      
+      
+    </li></ol>
+            </div>
+
+        
+
+        <div class="values members">
+              <h3>Value Members</h3>
+              <ol>
+                <li name="scala.AnyRef#!=" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="!=(x$1:Any):Boolean"></a><a id="!=(Any):Boolean"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#!=(x$1:Any):Boolean" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef###" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="##():Int"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html###():Int" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#==" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="==(x$1:Any):Boolean"></a><a id="==(Any):Boolean"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#==(x$1:Any):Boolean" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="extruder.core.ExtruderApplicativeError#appendThrowables" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="appendThrowables[A,B]:(extruder.core.EitherThrowable[A=&gt;B],extruder.core.EitherThrowable[A])=&gt;extruder.core.EitherThrowable[B]"></a><a id="appendThrowables[A,B]:(EitherThrowable[(A)⇒B],EitherThrowable[A])⇒EitherThrowable[B]"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#appendThrowables[A,B]:(extruder.core.EitherThrowable[A=&gt;B],extruder.core.EitherThrowable[A])=&gt;extruder.core.EitherThrowable[B]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">appendThrowables</span><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span><span class="result">: (<a href="index.html#EitherThrowable[T]=Either[Throwable,T]" class="extmbr" name="extruder.core.EitherThrowable">EitherThrowable</a>[(<span class="extype" name="extruder.core.ExtruderApplicativeError.appendThrowables.A">A</span>) ⇒ <span class="extype" name="extruder.core.ExtruderApplicativeError.appendThrowables.B">B</span>], <a href="index.html#EitherThrowable[T]=Either[Throwable,T]" class="extmbr" name="extruder.core.EitherThrowable">EitherThrowable</a>[<span class="extype" name="extruder.core.ExtruderApplicativeError.appendThrowables.A">A</span>]) ⇒ <a href="index.html#EitherThrowable[T]=Either[Throwable,T]" class="extmbr" name="extruder.core.EitherThrowable">EitherThrowable</a>[<span class="extype" name="extruder.core.ExtruderApplicativeError.appendThrowables.B">B</span>]</span>
+      </span>
+      
+      
+    </li><li name="extruder.core.ExtruderApplicativeError#apply" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="apply[M[_],E](AE:extruder.core.ExtruderApplicativeError[M,E]):extruder.core.ExtruderApplicativeError[M,E]"></a><a id="apply[M[_],E](ExtruderApplicativeError[M,E]):ExtruderApplicativeError[M,E]"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#apply[M[_],E](AE:extruder.core.ExtruderApplicativeError[M,E]):extruder.core.ExtruderApplicativeError[M,E]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">apply</span><span class="tparams">[<span name="M">M<span class="tparams">[<span name="_">_</span>]</span></span>, <span name="E">E</span>]</span><span class="params">(<span name="AE">AE: <a href="ExtruderApplicativeError.html" class="extype" name="extruder.core.ExtruderApplicativeError">ExtruderApplicativeError</a>[<span class="extype" name="extruder.core.ExtruderApplicativeError.apply.M">M</span>, <span class="extype" name="extruder.core.ExtruderApplicativeError.apply.E">E</span>]</span>)</span><span class="result">: <a href="ExtruderApplicativeError.html" class="extype" name="extruder.core.ExtruderApplicativeError">ExtruderApplicativeError</a>[<span class="extype" name="extruder.core.ExtruderApplicativeError.apply.M">M</span>, <span class="extype" name="extruder.core.ExtruderApplicativeError.apply.E">E</span>]</span>
+      </span>
+      
+      
+    </li><li name="scala.Any#asInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="asInstanceOf[T0]:T0"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#asInstanceOf[T0]:T0" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Any.asInstanceOf.T0">T0</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="scala.AnyRef#clone" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="clone():Object"></a><a id="clone():AnyRef"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#clone():Object" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.CloneNotSupportedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#eq" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="eq(x$1:AnyRef):Boolean"></a><a id="eq(AnyRef):Boolean"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#eq(x$1:AnyRef):Boolean" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#equals" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="equals(x$1:Any):Boolean"></a><a id="equals(Any):Boolean"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#equals(x$1:Any):Boolean" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="extruder.instances.FutureInstances#extruderApplicativeErrorForFuture" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="extruderApplicativeErrorForFuture(implicitec:scala.concurrent.ExecutionContext,implicitIOC:extruder.core.IOConvert[scala.concurrent.Future]):extruder.core.ExtruderApplicativeError[scala.concurrent.Future,Throwable]"></a><a id="extruderApplicativeErrorForFuture(ExecutionContext,IOConvert[Future]):ExtruderApplicativeError[Future,Throwable]"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#extruderApplicativeErrorForFuture(implicitec:scala.concurrent.ExecutionContext,implicitIOC:extruder.core.IOConvert[scala.concurrent.Future]):extruder.core.ExtruderApplicativeError[scala.concurrent.Future,Throwable]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">extruderApplicativeErrorForFuture</span><span class="params">(<span class="implicit">implicit </span><span name="ec">ec: <span class="extype" name="scala.concurrent.ExecutionContext">ExecutionContext</span></span>, <span name="IOC">IOC: <a href="IOConvert.html" class="extype" name="extruder.core.IOConvert">IOConvert</a>[<span class="extype" name="scala.concurrent.Future">Future</span>]</span>)</span><span class="result">: <a href="ExtruderApplicativeError.html" class="extype" name="extruder.core.ExtruderApplicativeError">ExtruderApplicativeError</a>[<span class="extype" name="scala.concurrent.Future">Future</span>, <span class="extype" name="scala.Throwable">Throwable</span>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../instances/FutureInstances.html" class="extype" name="extruder.instances.FutureInstances">FutureInstances</a></dd></dl></div>
+    </li><li name="extruder.instances.IOInstances#extruderApplicativeErrorForIo" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="extruderApplicativeErrorForIo(implicitec:scala.concurrent.ExecutionContext):extruder.core.ExtruderApplicativeError[cats.effect.IO,Throwable]"></a><a id="extruderApplicativeErrorForIo(ExecutionContext):ExtruderApplicativeError[IO,Throwable]"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#extruderApplicativeErrorForIo(implicitec:scala.concurrent.ExecutionContext):extruder.core.ExtruderApplicativeError[cats.effect.IO,Throwable]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">extruderApplicativeErrorForIo</span><span class="params">(<span class="implicit">implicit </span><span name="ec">ec: <span class="extype" name="scala.concurrent.ExecutionContext">ExecutionContext</span></span>)</span><span class="result">: <a href="ExtruderApplicativeError.html" class="extype" name="extruder.core.ExtruderApplicativeError">ExtruderApplicativeError</a>[<span class="extype" name="cats.effect.IO">IO</span>, <span class="extype" name="scala.Throwable">Throwable</span>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../instances/IOInstances.html" class="extype" name="extruder.instances.IOInstances">IOInstances</a></dd></dl></div>
+    </li><li name="extruder.instances.ValidationInstances#extruderApplicativeErrorForValidation" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="extruderApplicativeErrorForValidation:extruder.core.ExtruderApplicativeError[extruder.core.Validation,extruder.core.ValidationErrors]"></a><a id="extruderApplicativeErrorForValidation:ExtruderApplicativeError[Validation,ValidationErrors]"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#extruderApplicativeErrorForValidation:extruder.core.ExtruderApplicativeError[extruder.core.Validation,extruder.core.ValidationErrors]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">extruderApplicativeErrorForValidation</span><span class="result">: <a href="ExtruderApplicativeError.html" class="extype" name="extruder.core.ExtruderApplicativeError">ExtruderApplicativeError</a>[<a href="index.html#Validation[T]=cats.data.ValidatedNel[extruder.core.ValidationError,T]" class="extmbr" name="extruder.core.Validation">Validation</a>, <a href="index.html#ValidationErrors=cats.data.NonEmptyList[extruder.core.ValidationError]" class="extmbr" name="extruder.core.ValidationErrors">ValidationErrors</a>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../instances/ValidationInstances.html" class="extype" name="extruder.instances.ValidationInstances">ValidationInstances</a></dd></dl></div>
+    </li><li name="scala.AnyRef#finalize" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="finalize():Unit"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#finalize():Unit" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="symbol">classOf[java.lang.Throwable]</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#getClass" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getClass():Class[_]"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#getClass():Class[_]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getClass</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.Class">Class</span>[_]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#hashCode" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="hashCode():Int"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#hashCode():Int" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="extruder.instances.FutureInstances#ioConvertForFuture" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ioConvertForFuture(implicitec:scala.concurrent.ExecutionContext):extruder.core.IOConvert[scala.concurrent.Future]"></a><a id="ioConvertForFuture(ExecutionContext):IOConvert[Future]"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#ioConvertForFuture(implicitec:scala.concurrent.ExecutionContext):extruder.core.IOConvert[scala.concurrent.Future]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ioConvertForFuture</span><span class="params">(<span class="implicit">implicit </span><span name="ec">ec: <span class="extype" name="scala.concurrent.ExecutionContext">ExecutionContext</span></span>)</span><span class="result">: <a href="IOConvert.html" class="extype" name="extruder.core.IOConvert">IOConvert</a>[<span class="extype" name="scala.concurrent.Future">Future</span>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../instances/FutureInstances.html" class="extype" name="extruder.instances.FutureInstances">FutureInstances</a></dd></dl></div>
+    </li><li name="extruder.instances.IOInstances#ioConvertForIo" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ioConvertForIo:extruder.core.IOConvert[cats.effect.IO]"></a><a id="ioConvertForIo:IOConvert[IO]"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#ioConvertForIo:extruder.core.IOConvert[cats.effect.IO]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ioConvertForIo</span><span class="result">: <a href="IOConvert.html" class="extype" name="extruder.core.IOConvert">IOConvert</a>[<span class="extype" name="cats.effect.IO">IO</span>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../instances/IOInstances.html" class="extype" name="extruder.instances.IOInstances">IOInstances</a></dd></dl></div>
+    </li><li name="extruder.instances.EitherInstances#ioFlatMapForEither" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ioFlatMapForEither[T]:extruder.core.IOFlatMap[[β$0$]scala.util.Either[T,β$0$]]"></a><a id="ioFlatMapForEither[T]:IOFlatMap[[β$0$]Either[T,β$0$]]"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#ioFlatMapForEither[T]:extruder.core.IOFlatMap[[β$0$]scala.util.Either[T,β$0$]]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ioFlatMapForEither</span><span class="tparams">[<span name="T">T</span>]</span><span class="result">: <a href="IOFlatMap.html" class="extype" name="extruder.core.IOFlatMap">IOFlatMap</a>[[β$0$]<span class="extype" name="scala.util.Either">Either</span>[<span class="extype" name="extruder.instances.EitherInstances.ioFlatMapForEither.T">T</span>, <span class="extype" name="extruder.instances.EitherInstances.&lt;refinement&gt;.Λ$.β$0$">β$0$</span>]]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../instances/EitherInstances.html" class="extype" name="extruder.instances.EitherInstances">EitherInstances</a></dd></dl></div>
+    </li><li name="extruder.instances.FutureInstances#ioFlatMapForFuture" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ioFlatMapForFuture(implicitec:scala.concurrent.ExecutionContext,implicitIOC:extruder.core.IOConvert[scala.concurrent.Future]):extruder.core.IOFlatMap[scala.concurrent.Future]"></a><a id="ioFlatMapForFuture(ExecutionContext,IOConvert[Future]):IOFlatMap[Future]"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#ioFlatMapForFuture(implicitec:scala.concurrent.ExecutionContext,implicitIOC:extruder.core.IOConvert[scala.concurrent.Future]):extruder.core.IOFlatMap[scala.concurrent.Future]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ioFlatMapForFuture</span><span class="params">(<span class="implicit">implicit </span><span name="ec">ec: <span class="extype" name="scala.concurrent.ExecutionContext">ExecutionContext</span></span>, <span name="IOC">IOC: <a href="IOConvert.html" class="extype" name="extruder.core.IOConvert">IOConvert</a>[<span class="extype" name="scala.concurrent.Future">Future</span>]</span>)</span><span class="result">: <a href="IOFlatMap.html" class="extype" name="extruder.core.IOFlatMap">IOFlatMap</a>[<span class="extype" name="scala.concurrent.Future">Future</span>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../instances/FutureInstances.html" class="extype" name="extruder.instances.FutureInstances">FutureInstances</a></dd></dl></div>
+    </li><li name="extruder.instances.IOInstances#ioFlatMapForIo" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ioFlatMapForIo:extruder.core.IOFlatMap[cats.effect.IO]"></a><a id="ioFlatMapForIo:IOFlatMap[IO]"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#ioFlatMapForIo:extruder.core.IOFlatMap[cats.effect.IO]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ioFlatMapForIo</span><span class="result">: <a href="IOFlatMap.html" class="extype" name="extruder.core.IOFlatMap">IOFlatMap</a>[<span class="extype" name="cats.effect.IO">IO</span>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../instances/IOInstances.html" class="extype" name="extruder.instances.IOInstances">IOInstances</a></dd></dl></div>
+    </li><li name="extruder.instances.ValidationInstances#ioFlatMapForValidation" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ioFlatMapForValidation:extruder.core.IOFlatMap[extruder.core.Validation]"></a><a id="ioFlatMapForValidation:IOFlatMap[Validation]"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#ioFlatMapForValidation:extruder.core.IOFlatMap[extruder.core.Validation]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ioFlatMapForValidation</span><span class="result">: <a href="IOFlatMap.html" class="extype" name="extruder.core.IOFlatMap">IOFlatMap</a>[<a href="index.html#Validation[T]=cats.data.ValidatedNel[extruder.core.ValidationError,T]" class="extmbr" name="extruder.core.Validation">Validation</a>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../instances/ValidationInstances.html" class="extype" name="extruder.instances.ValidationInstances">ValidationInstances</a></dd></dl></div>
+    </li><li name="scala.Any#isInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="isInstanceOf[T0]:Boolean"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#isInstanceOf[T0]:Boolean" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="scala.AnyRef#ne" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ne(x$1:AnyRef):Boolean"></a><a id="ne(AnyRef):Boolean"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#ne(x$1:AnyRef):Boolean" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#notify" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="notify():Unit"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#notify():Unit" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#notifyAll" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="notifyAll():Unit"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#notifyAll():Unit" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#synchronized" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="synchronized[T0](x$1:=&gt;T0):T0"></a><a id="synchronized[T0](⇒T0):T0"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#synchronized[T0](x$1:=&gt;T0):T0" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">synchronized</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">(<span name="arg0">arg0: ⇒ <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>)</span><span class="result">: <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="extruder.instances.EitherInstances#throwableExtruderApplicativeError" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="throwableExtruderApplicativeError:extruder.core.ExtruderApplicativeError[extruder.core.EitherThrowable,Throwable]"></a><a id="throwableExtruderApplicativeError:ExtruderApplicativeError[EitherThrowable,Throwable]"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#throwableExtruderApplicativeError:extruder.core.ExtruderApplicativeError[extruder.core.EitherThrowable,Throwable]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">throwableExtruderApplicativeError</span><span class="result">: <a href="ExtruderApplicativeError.html" class="extype" name="extruder.core.ExtruderApplicativeError">ExtruderApplicativeError</a>[<a href="index.html#EitherThrowable[T]=Either[Throwable,T]" class="extmbr" name="extruder.core.EitherThrowable">EitherThrowable</a>, <span class="extype" name="scala.Throwable">Throwable</span>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../instances/EitherInstances.html" class="extype" name="extruder.instances.EitherInstances">EitherInstances</a></dd></dl></div>
+    </li><li name="scala.AnyRef#toString" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="toString():String"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#toString():String" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="extruder.instances.EitherInstances#validationErrorsExtruderApplicativeError" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="validationErrorsExtruderApplicativeError:extruder.core.ExtruderApplicativeError[extruder.core.EitherErrors,extruder.core.ValidationErrors]"></a><a id="validationErrorsExtruderApplicativeError:ExtruderApplicativeError[EitherErrors,ValidationErrors]"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#validationErrorsExtruderApplicativeError:extruder.core.ExtruderApplicativeError[extruder.core.EitherErrors,extruder.core.ValidationErrors]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">validationErrorsExtruderApplicativeError</span><span class="result">: <a href="ExtruderApplicativeError.html" class="extype" name="extruder.core.ExtruderApplicativeError">ExtruderApplicativeError</a>[<a href="index.html#EitherErrors[T]=Either[extruder.core.package.ValidationErrors,T]" class="extmbr" name="extruder.core.EitherErrors">EitherErrors</a>, <a href="index.html#ValidationErrors=cats.data.NonEmptyList[extruder.core.ValidationError]" class="extmbr" name="extruder.core.ValidationErrors">ValidationErrors</a>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../instances/EitherInstances.html" class="extype" name="extruder.instances.EitherInstances">EitherInstances</a></dd></dl></div>
+    </li><li name="extruder.instances.ValidationInstances#validationFlatMap" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="validationFlatMap:cats.FlatMap[extruder.core.Validation]"></a><a id="validationFlatMap:FlatMap[Validation]"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#validationFlatMap:cats.FlatMap[extruder.core.Validation]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">validationFlatMap</span><span class="result">: <span class="extype" name="cats.FlatMap">FlatMap</span>[<a href="index.html#Validation[T]=cats.data.ValidatedNel[extruder.core.ValidationError,T]" class="extmbr" name="extruder.core.Validation">Validation</a>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd><a href="../instances/ValidationInstances.html" class="extype" name="extruder.instances.ValidationInstances">ValidationInstances</a></dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait():Unit"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#wait():Unit" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait(x$1:Long,x$2:Int):Unit"></a><a id="wait(Long,Int):Unit"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#wait(x$1:Long,x$2:Int):Unit" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>, <span name="arg1">arg1: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait(x$1:Long):Unit"></a><a id="wait(Long):Unit"></a>
+      <span class="permalink">
+      <a href="../../extruder/core/ExtruderApplicativeError$.html#wait(x$1:Long):Unit" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li>
+              </ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        <div class="parent" name="scala.Serializable">
+              <h3>Inherited from <span class="extype" name="scala.Serializable">Serializable</span></h3>
+            </div><div class="parent" name="java.io.Serializable">
+              <h3>Inherited from <span class="extype" name="java.io.Serializable">Serializable</span></h3>
+            </div><div class="parent" name="extruder.instances.IOInstances">
+              <h3>Inherited from <a href="../instances/IOInstances.html" class="extype" name="extruder.instances.IOInstances">IOInstances</a></h3>
+            </div><div class="parent" name="extruder.instances.EitherInstances">
+              <h3>Inherited from <a href="../instances/EitherInstances.html" class="extype" name="extruder.instances.EitherInstances">EitherInstances</a></h3>
+            </div><div class="parent" name="extruder.instances.FutureInstances">
+              <h3>Inherited from <a href="../instances/FutureInstances.html" class="extype" name="extruder.instances.FutureInstances">FutureInstances</a></h3>
+            </div><div class="parent" name="extruder.instances.ValidationInstances">
+              <h3>Inherited from <a href="../instances/ValidationInstances.html" class="extype" name="extruder.instances.ValidationInstances">ValidationInstances</a></h3>
+            </div><div class="parent" name="scala.AnyRef">
+              <h3>Inherited from <span class="extype" name="scala.AnyRef">AnyRef</span></h3>
+            </div><div class="parent" name="scala.Any">
+              <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>
+            </div>
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+    </body>
+          </div>
+        </div>
+      </div>
+    </body>
+      </html>
