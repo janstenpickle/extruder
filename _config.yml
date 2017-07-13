@@ -1,11 +1,11 @@
 name: extruder
 baseurl: /extruder
-description: Populate Scala case classes from any any configuration source
+description: Populate Scala case classes from any data source
 highlighter: rouge
 docs: true
 collections:
   tut:
     output: true
-version: 0.5.1-SNAPSHOT
+version: 0.5.2-SNAPSHOT
 org: extruder
 markdown: kramdown

@@ -1,0 +1,185 @@
+<html><head><title>extruder</title><meta charset="utf-8" /><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="author" content="Chris Jansen" /><meta name="description" content="Populate Scala case classes from any data source" /><meta name="og:image" content="/extruder/img/poster.png" /><meta name="og:title" content="extruder" /><meta name="og:site_name" content="extruder" /><meta name="og:url" content="https://janstenpickle.github.io/extruder/" /><meta name="og:type" content="website" /><meta name="og:description" content="Populate Scala case classes from any data source" /><link rel="icon" type="image/png" href="/extruder/img/favicon.png" /><meta name="twitter:title" content="extruder" /><meta name="twitter:image" content="https://janstenpickle.github.io/extruder/img/poster.png" /><meta name="twitter:description" content="Populate Scala case classes from any data source" /><meta name="twitter:card" content="summary_large_image" /><link rel="icon" type="image/png" sizes="16x16" href="/extruder/img/favicon16x16.png" /><link rel="icon" type="image/png" sizes="24x24" href="/extruder/img/favicon24x24.png" /><link rel="icon" type="image/png" sizes="32x32" href="/extruder/img/favicon32x32.png" /><link rel="icon" type="image/png" sizes="48x48" href="/extruder/img/favicon48x48.png" /><link rel="icon" type="image/png" sizes="57x57" href="/extruder/img/favicon57x57.png" /><link rel="icon" type="image/png" sizes="60x60" href="/extruder/img/favicon60x60.png" /><link rel="icon" type="image/png" sizes="64x64" href="/extruder/img/favicon64x64.png" /><link rel="icon" type="image/png" sizes="70x70" href="/extruder/img/favicon70x70.png" /><link rel="icon" type="image/png" sizes="72x72" href="/extruder/img/favicon72x72.png" /><link rel="icon" type="image/png" sizes="76x76" href="/extruder/img/favicon76x76.png" /><link rel="icon" type="image/png" sizes="96x96" href="/extruder/img/favicon96x96.png" /><link rel="icon" type="image/png" sizes="114x114" href="/extruder/img/favicon114x114.png" /><link rel="icon" type="image/png" sizes="120x120" href="/extruder/img/favicon120x120.png" /><link rel="icon" type="image/png" sizes="128x128" href="/extruder/img/favicon128x128.png" /><link rel="icon" type="image/png" sizes="144x144" href="/extruder/img/favicon144x144.png" /><link rel="icon" type="image/png" sizes="150x150" href="/extruder/img/favicon150x150.png" /><link rel="icon" type="image/png" sizes="152x152" href="/extruder/img/favicon152x152.png" /><link rel="icon" type="image/png" sizes="196x196" href="/extruder/img/favicon196x196.png" /><link rel="icon" type="image/png" sizes="310x310" href="/extruder/img/favicon310x310.png" /><link rel="icon" type="image/png" sizes="310x150" href="/extruder/img/favicon310x150.png" /><link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" /><link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" /><link rel="stylesheet" href="/extruder/highlight/styles/atom-one-light.css" /><link rel="stylesheet" href="/extruder/css/style.css" /><link rel="stylesheet" href="/extruder/css/palette.css" /><link rel="stylesheet" href="/extruder/css/codemirror.css" /><link rel="stylesheet" href="/extruder/css/kazari-style.css" /><link rel="stylesheet" href="/extruder/css/monokai.css" /><link rel="stylesheet" href="/extruder/css/override.css" /><link rel="stylesheet" href="https://cdn.rawgit.com/knsv/mermaid/6.0.0/dist/mermaid.css" /></head><body class="docs"><div id="wrapper"><div id="sidebar-wrapper"><ul id="sidebar" class="sidebar-nav"><li class="sidebar-brand"><a href="/extruder/" class="brand"><div class="brand-wrapper"><span>extruder</span></div></a></li> <li><a href="/extruder/concepts.html" class="">Concepts</a></li> <li><a href="/extruder/usage.html" class=" active ">Usage</a></li> <li><a href="/extruder/decode_encode.html" class="">Decoding and encoding</a></li> <li><a href="/extruder/extending.html" class="">Extending a Data Source</a></li> <li><a href="/extruder/config.html" class="">Implementing a Data Source</a></li></ul></div><div id="page-content-wrapper"><div class="nav"><div class="container-fluid"><div class="row"><div class="col-lg-12"><div class="action-menu pull-left clearfix"><a href="#menu-toggle" id="menu-toggle"><i class="fa fa-bars" aria-hidden="true"></i></a></div><ul class="pull-right"><li id="gh-eyes-item" class="hidden-xs"><a href="https://github.com/janstenpickle/extruder"><i class="fa fa-eye"></i><span>WATCH<span id="eyes" class="label label-default">--</span></span></a></li><li id="gh-stars-item" class="hidden-xs"><a href="https://github.com/janstenpickle/extruder"><i class="fa fa-star-o"></i><span>STARS<span id="stars" class="label label-default">--</span></span></a></li><li><a href="#" onclick="shareSiteTwitter('extruder Populate Scala case classes from any data source');"><i class="fa fa-twitter"></i></a></li><li><a href="#" onclick="shareSiteFacebook('extruder Populate Scala case classes from any data source');"><i class="fa fa-facebook"></i></a></li><li><a href="#" onclick="shareSiteGoogle();"><i class="fa fa-google-plus"></i></a></li></ul></div></div></div></div><div id="content" data-github-owner="janstenpickle" data-github-repo="extruder"><div class="content-wrapper"><section><ul id="markdown-toc">
+  <li><a href="#supported-functionality" id="markdown-toc-supported-functionality">Supported Functionality</a>    <ul>
+      <li><a href="#primitive-types" id="markdown-toc-primitive-types">Primitive Types</a></li>
+      <li><a href="#simple-case-class" id="markdown-toc-simple-case-class">Simple Case Class</a></li>
+      <li><a href="#nested-case-classes" id="markdown-toc-nested-case-classes">Nested Case Classes</a></li>
+      <li><a href="#sealed-type-families" id="markdown-toc-sealed-type-families">Sealed Type Families</a></li>
+      <li><a href="#changing-key-format" id="markdown-toc-changing-key-format">Changing Key Format</a></li>
+    </ul>
+  </li>
+  <li><a href="#unsupported-functionality" id="markdown-toc-unsupported-functionality">Unsupported Functionality</a></li>
+</ul>
+<h1 id="supported-functionality">Supported Functionality</h1>
+
+<p>Below are examples of encoding and decoding case classes using the map data source.</p>
+
+<p>Each implementation of a data source may provide differing implementations of <code class="highlighter-rouge">encode</code> and <code class="highlighter-rouge">decode</code> methods. However all must implement the most basic methods for decoding and encoding:</p>
+
+<ul>
+  <li>
+    <p><strong>Decode</strong> which takes a type parameter of the expected type to be decoded, an optional namespace argument and the data source, returning the validated type.</p>
+  </li>
+  <li>
+    <p><strong>Encode</strong> which takes an optional namespace argument and the value to be encoded, returning the value encoded as the data type.</p>
+  </li>
+</ul>
+
+<p>In this section the default return type of <code class="highlighter-rouge">Validation</code> which is a type alias for the <a href="https://github.com/typelevel/cats">cats</a> <code class="highlighter-rouge">ValidatedNel</code> applicative functor. See the <a href="decode_encode.html">section on decoding and encoding</a> for information of how to specify different monads.</p>
+
+<h2 id="primitive-types">Primitive Types</h2>
+<p>Provided there is a <a href="concepts.html#Terms"><code class="highlighter-rouge">Decoder</code></a> instance for the type you wish to decode, or an <a href="concepts.html#Terms"><code class="highlighter-rouge">Encoder</code></a> instance you wish to encode compilation will work. <a href="extending.html">It is possible to extend existing data sources if you wish to add support for more types</a>.</p>
+
+<p>The following primitive types are provided by the <a href="https://github.com/janstenpickle/extruder/blob/master/core/src/main/scala/extruder/core/PrimitiveDecoders.scala"><code class="highlighter-rouge">PrimitiveDecoders</code></a> and <a href="https://github.com/janstenpickle/extruder/blob/master/core/src/main/scala/extruder/core/PrimitiveEncoders.scala"><code class="highlighter-rouge">PrimitiveEncoders</code></a> classes.</p>
+
+<ul>
+  <li>Char</li>
+  <li>String</li>
+  <li>Int</li>
+  <li>Long</li>
+  <li>Double</li>
+  <li>Float</li>
+  <li>Short</li>
+  <li>Byte</li>
+  <li>Boolean</li>
+  <li>URL</li>
+  <li>Duration</li>
+  <li>Finite Duration</li>
+</ul>
+
+<p>The following code shows how an integer value may be decoded and encoded from the <a href="https://github.com/janstenpickle/extruder/blob/master/core/src/main/scala/extruder/core/Map.scala">map data source</a>.</p>
+
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">import</span> <span class="nn">extruder.core.MapSource._</span>
+
+<span class="n">decode</span><span class="o">[</span><span class="kt">Int</span><span class="o">](</span><span class="nc">List</span><span class="o">(</span><span class="s">"some"</span><span class="o">,</span> <span class="s">"int"</span><span class="o">),</span> <span class="nc">Map</span><span class="o">(</span><span class="s">"some.int"</span> <span class="o">-&gt;</span> <span class="s">"23"</span><span class="o">))</span>
+
+<span class="n">encode</span><span class="o">[</span><span class="kt">Int</span><span class="o">](</span><span class="nc">List</span><span class="o">(</span><span class="s">"some"</span><span class="o">,</span> <span class="s">"int"</span><span class="o">),</span> <span class="mi">23</span><span class="o">)</span>
+</code></pre>
+</div>
+
+<h2 id="simple-case-class">Simple Case Class</h2>
+<p>When encoding or decoding a case class the name of the case class is automatically included in the namespace, so there is not always a need to provide one:</p>
+
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">import</span> <span class="nn">extruder.core.MapSource._</span>
+
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Example</span><span class="o">(</span><span class="n">defaultedString</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">"default"</span><span class="o">,</span> <span class="n">configuredString</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">optionalString</span><span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">String</span><span class="o">])</span>
+
+<span class="c1">// Fails to decode
+</span><span class="n">decode</span><span class="o">[</span><span class="kt">Example</span><span class="o">](</span><span class="nc">Map</span><span class="o">.</span><span class="n">empty</span><span class="o">[</span><span class="kt">String</span>, <span class="kt">String</span><span class="o">])</span>
+
+<span class="c1">// Decodes with empty option
+</span><span class="n">decode</span><span class="o">[</span><span class="kt">Example</span><span class="o">](</span><span class="nc">Map</span><span class="o">(</span><span class="s">"example.configuredstring"</span> <span class="o">-&gt;</span> <span class="s">"configured"</span><span class="o">))</span>
+
+<span class="c1">// Decodes with provided option
+</span><span class="n">decode</span><span class="o">[</span><span class="kt">Example</span><span class="o">](</span><span class="nc">Map</span><span class="o">(</span><span class="s">"example.configuredstring"</span> <span class="o">-&gt;</span> <span class="s">"configured"</span><span class="o">,</span> <span class="s">"example.optionalsting"</span> <span class="o">-&gt;</span> <span class="s">"optional"</span><span class="o">))</span>
+
+<span class="c1">// Decodes with a namespace
+</span><span class="n">decode</span><span class="o">[</span><span class="kt">Example</span><span class="o">](</span><span class="nc">List</span><span class="o">(</span><span class="s">"name"</span><span class="o">,</span> <span class="s">"space"</span><span class="o">),</span> <span class="nc">Map</span><span class="o">(</span><span class="s">"name.space.example.configuredstring"</span> <span class="o">-&gt;</span> <span class="s">"configured"</span><span class="o">))</span>
+
+<span class="c1">// Encodes case class to Map
+</span><span class="n">encode</span><span class="o">[</span><span class="kt">Example</span><span class="o">](</span><span class="nc">Example</span><span class="o">(</span><span class="n">configuredString</span> <span class="k">=</span> <span class="s">"configured"</span><span class="o">,</span> <span class="n">optionalString</span> <span class="k">=</span> <span class="nc">None</span><span class="o">))</span>
+
+<span class="c1">// Encodes case class to Map with namespace
+</span><span class="n">encode</span><span class="o">[</span><span class="kt">Example</span><span class="o">](</span><span class="nc">List</span><span class="o">(</span><span class="s">"name"</span><span class="o">,</span> <span class="s">"space"</span><span class="o">),</span> <span class="nc">Example</span><span class="o">(</span><span class="n">configuredString</span> <span class="k">=</span> <span class="s">"configured"</span><span class="o">,</span> <span class="n">optionalString</span> <span class="k">=</span> <span class="nc">None</span><span class="o">))</span>
+</code></pre>
+</div>
+
+<h2 id="nested-case-classes">Nested Case Classes</h2>
+
+<p>Case classes may be nested within on another. The key in the data must contain the complete path to the final primitive value:</p>
+
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">import</span> <span class="nn">extruder.core.MapSource._</span>
+
+<span class="k">case</span> <span class="k">class</span> <span class="nc">NestedTwo</span><span class="o">(</span><span class="n">value</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">NestedOne</span><span class="o">(</span><span class="n">value</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">nested</span><span class="k">:</span> <span class="kt">NestedTwo</span><span class="o">)</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Example</span><span class="o">(</span><span class="n">a</span><span class="k">:</span> <span class="kt">NestedOne</span><span class="o">,</span> <span class="n">b</span><span class="k">:</span> <span class="kt">NestedTwo</span><span class="o">,</span> <span class="n">c</span><span class="k">:</span> <span class="kt">Int</span><span class="o">)</span>
+
+<span class="k">val</span> <span class="n">config</span> <span class="k">=</span> <span class="nc">Map</span><span class="o">(</span>
+  <span class="s">"example.a.nestedone.value"</span> <span class="o">-&gt;</span> <span class="s">"nested-one"</span><span class="o">,</span>
+  <span class="s">"example.a.nestedone.nested.nestedtwo.value"</span> <span class="o">-&gt;</span> <span class="s">"nested-one-nested-two"</span><span class="o">,</span>
+  <span class="s">"example.b.nestedtwo.value"</span> <span class="o">-&gt;</span> <span class="s">"nested-two"</span><span class="o">,</span>
+  <span class="s">"example.c"</span> <span class="o">-&gt;</span> <span class="s">"23"</span>
+<span class="o">)</span>
+
+<span class="n">decode</span><span class="o">[</span><span class="kt">Example</span><span class="o">](</span><span class="n">config</span><span class="o">)</span>
+</code></pre>
+</div>
+<h2 id="sealed-type-families">Sealed Type Families</h2>
+<p>Extruder also supports resolution of sealed type members. In order to pick the implementation of the specified trait to decode a <code class="highlighter-rouge">type</code> value must be provided:</p>
+
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">import</span> <span class="nn">extruder.core.MapSource._</span>
+
+<span class="k">sealed</span> <span class="k">trait</span> <span class="nc">Sealed</span>
+<span class="k">case</span> <span class="k">object</span> <span class="nc">ExampleObj</span> <span class="k">extends</span> <span class="nc">Sealed</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">ExampleCC</span><span class="o">(</span><span class="n">a</span><span class="k">:</span> <span class="kt">Int</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">Sealed</span>
+
+<span class="n">decode</span><span class="o">[</span><span class="kt">Sealed</span><span class="o">](</span><span class="nc">Map</span><span class="o">(</span><span class="s">"type"</span> <span class="o">-&gt;</span> <span class="s">"ExampleObj"</span><span class="o">))</span>
+<span class="n">encode</span><span class="o">[</span><span class="kt">Sealed</span><span class="o">](</span><span class="nc">ExampleObj</span><span class="o">)</span>
+
+<span class="n">decode</span><span class="o">[</span><span class="kt">Sealed</span><span class="o">](</span><span class="nc">Map</span><span class="o">(</span><span class="s">"type"</span> <span class="o">-&gt;</span> <span class="s">"ExampleObj"</span><span class="o">,</span> <span class="s">"examplecc.a"</span> <span class="o">-&gt;</span> <span class="s">"1"</span><span class="o">))</span>
+<span class="n">encode</span><span class="o">[</span><span class="kt">Sealed</span><span class="o">](</span><span class="nc">ExampleCC</span><span class="o">(</span><span class="mi">1</span><span class="o">))</span>
+
+<span class="c1">// Sealed families may also be nested
+</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Example</span><span class="o">(</span><span class="n">a</span><span class="k">:</span> <span class="kt">Sealed</span><span class="o">)</span>
+
+<span class="n">decode</span><span class="o">[</span><span class="kt">Example</span><span class="o">](</span><span class="nc">Map</span><span class="o">(</span><span class="s">"example.a.type"</span> <span class="o">-&gt;</span> <span class="s">"ExampleObj"</span><span class="o">))</span>
+<span class="n">encode</span><span class="o">[</span><span class="kt">Example</span><span class="o">](</span><span class="nc">Example</span><span class="o">(</span><span class="nc">ExampleObj</span><span class="o">))</span>
+
+<span class="n">decode</span><span class="o">[</span><span class="kt">Example</span><span class="o">](</span><span class="nc">Map</span><span class="o">(</span><span class="s">"example.a.type"</span> <span class="o">-&gt;</span> <span class="s">"ExampleObj"</span><span class="o">,</span> <span class="s">"example.a.examplecc.a"</span> <span class="o">-&gt;</span> <span class="s">"1"</span><span class="o">))</span>
+<span class="n">encode</span><span class="o">[</span><span class="kt">Example</span><span class="o">](</span><span class="nc">Example</span><span class="o">(</span><span class="nc">ExampleCC</span><span class="o">(</span><span class="mi">1</span><span class="o">)))</span>
+</code></pre>
+</div>
+
+<h2 id="changing-key-format">Changing Key Format</h2>
+<p>As implied in the above examples the configuration keys are dot (<code class="highlighter-rouge">.</code>) separated and all lowercase. This is configurable by creating a new implicit instance of <code class="highlighter-rouge">Hints</code> for the configuration source.</p>
+
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">import</span> <span class="nn">extruder.core.MapSource._</span>
+<span class="k">import</span> <span class="nn">extruder.core.MapHints</span>
+
+<span class="k">implicit</span> <span class="k">val</span> <span class="n">hints</span><span class="k">:</span> <span class="kt">MapHints</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">MapHints</span> <span class="o">{</span>
+  <span class="k">override</span> <span class="k">def</span> <span class="n">pathToString</span><span class="o">(</span><span class="n">path</span><span class="k">:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">String</span><span class="o">])</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">mkString</span><span class="o">(</span><span class="s">"_"</span><span class="o">).</span><span class="n">toUpperCase</span>
+<span class="o">}</span>
+
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Example</span><span class="o">(</span><span class="n">defaultedString</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">"default"</span><span class="o">,</span> <span class="n">configuredString</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">optionalString</span><span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">String</span><span class="o">])</span>
+
+<span class="n">println</span><span class="o">(</span><span class="n">parameters</span><span class="o">[</span><span class="kt">Example</span><span class="o">])</span>
+</code></pre>
+</div>
+<p>Changing the <code class="highlighter-rouge">pathToString</code> implementation will change the expected configuration keys:</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>+--------------------------+----------+--------+---------+------------------+
+| Key                      | Required | Type   | Default | Permitted Values |
++--------------------------+----------+--------+---------+------------------+
+| EXAMPLE_DEFAULTEDSTRING  | N        | String | default |                  |
+| EXAMPLE_CONFIGUREDSTRING | Y        | String |         |                  |
+| EXAMPLE_OPTIONALSTRING   | N        | String |         |                  |
++--------------------------+----------+--------+---------+------------------+
+</code></pre>
+</div>
+
+<p>The <a href="https://github.com/janstenpickle/extruder/blob/master/core/src/main/scala/extruder/core/Utils.scala">Utils</a> code shows what else may be overridden.</p>
+
+<h1 id="unsupported-functionality">Unsupported Functionality</h1>
+
+<p><strong>Cyclical references</strong></p>
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">import</span> <span class="nn">extruder.system.SystemPropertiesSource._</span>
+
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Example</span><span class="o">(</span><span class="n">e</span><span class="k">:</span> <span class="kt">Example</span><span class="o">)</span>
+
+<span class="n">decode</span><span class="o">[</span><span class="kt">Example</span><span class="o">]</span> <span class="c1">// won't compile
+</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">NestedOne</span><span class="o">(</span><span class="n">n</span><span class="k">:</span> <span class="kt">NestedTwo</span><span class="o">)</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">NestedTwo</span><span class="o">(</span><span class="n">n</span><span class="k">:</span> <span class="kt">NestedOne</span><span class="o">)</span>
+
+<span class="n">decode</span><span class="o">[</span><span class="kt">NestedOne</span><span class="o">]</span> <span class="c1">// won't compile
+</span></code></pre>
+</div>
+
+</section></div></div></div></div><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script><script src="/extruder/highlight/highlight.pack.js"></script><script>hljs.configure({
+languages:['scala','java','bash']
+});
+hljs.initHighlighting();
+             </script><script src="https://cdn.rawgit.com/knsv/mermaid/6.0.0/dist/mermaid.min.js"></script><script src="/extruder/js/main.js"></script><script src="/extruder/js/kazari.js"></script><script>
+$(document).ready(function() {
+	kazari.KazariPlugin().decorateCode('https://scala-evaluator-212.herokuapp.com/eval', 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.S2F6YXJp.Jl2eqMfw8IakJF93PjxTbrf-8YUJgX5OoOfy5JHE8Yw', '', 'monokai')
+})
+    </script></body></html>
