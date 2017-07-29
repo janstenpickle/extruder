@@ -1,12 +1,11 @@
 import microsites._
 
-val specs2Ver = "3.9.1"
-val latestScalafmt = "1.0.0-RC4"
+val specs2Ver = "3.9.4"
 
 val commonSettings = Seq(
   organization := "extruder",
-  scalaVersion := "2.12.2",
-  crossScalaVersions := Seq("2.11.11", "2.12.2"),
+  scalaVersion := "2.12.3",
+  crossScalaVersions := Seq("2.11.11", "2.12.3"),
   addCompilerPlugin(("org.scalamacros" % "paradise"       % "2.1.1").cross(CrossVersion.full)),
   addCompilerPlugin(("org.spire-math"  % "kind-projector" % "0.9.4").cross(CrossVersion.binary)),
   scalacOptions ++= Seq(
@@ -56,8 +55,8 @@ lazy val core = (project in file("core")).settings(
         ("com.chuusai"             %% "shapeless"   % "2.3.2").exclude("org.scalacheck", "scalacheck"),
         "org.specs2" %% "specs2-core"       % specs2Ver % "test",
         "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test",
-        ("org.typelevel"              %% "discipline"                % "0.7.3" % "test").exclude("org.scalacheck", "scalacheck"),
-        ("com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % "1.1.5" % "test")
+        ("org.typelevel"              %% "discipline"                % "0.8"   % "test").exclude("org.scalacheck", "scalacheck"),
+        ("com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % "1.1.6" % "test")
           .exclude("org.scalacheck", "scalacheck")
       ),
       publishArtifact in Test := true,

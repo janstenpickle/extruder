@@ -87,7 +87,7 @@ trait PrimitiveDecoders { self: Decoders with DecodeTypes =>
         v =>
           (v, default) match {
             case (None, None) =>
-              AE.missing(s"Could not find datauration at '${hints.pathToString(path)}' and no default available")
+              AE.missing(s"Could not find value at '${hints.pathToString(path)}' and no default available")
             case (None, Some(value)) => AE.pure(value)
             case (Some(value), _) => parser(value)
         }
