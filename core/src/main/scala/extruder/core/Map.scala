@@ -56,7 +56,7 @@ trait MapDecoders extends BaseMapDecoders with Decode with MapDataSource {
     namespace: List[String],
     data: Map[String, String]
   )(implicit AE: ExtruderApplicativeError[F, E], util: Hint): IO[F[Map[String, String]]] =
-    IO(AE.pure(data.map { case (k, v) => (k.toLowerCase, v) }))
+    IO(AE.pure(data))
 }
 
 object MapDecoder extends MapDecoders
