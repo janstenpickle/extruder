@@ -31,10 +31,10 @@ libraryDependencies += "extruder" %% "extruder-typesafe" % "0.6.2"
 libraryDependencies += "extruder" %% "extruder-refined" % "0.6.2"
 
 // only if you require support for wrapping result in monix's task
-libraryDependencies += "extruder" %% "extruder-monix" % "0.6.1"
+libraryDependencies += "extruder" %% "extruder-monix" % "0.6.2"
 
 // only if you require support for wrapping result in fs2's task
-libraryDependencies += "extruder" %% "extruder-fs2" % "0.6.1"
+libraryDependencies += "extruder" %% "extruder-fs2" % "0.6.2"
 ```
 
 # Participation
