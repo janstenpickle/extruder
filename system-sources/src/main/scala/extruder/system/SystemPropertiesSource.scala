@@ -16,7 +16,7 @@ trait SystemPropertiesDecoders extends BaseMapDecoders with Decode with DecodeFr
     namespace: List[String],
     data: java.util.Properties
   )(implicit AE: ExtruderApplicativeError[F, E], util: Hint): IO[F[Map[String, String]]] =
-    IO(AE.pure(data.asScala.toMap.map { case (k, v) => k.toLowerCase -> v }))
+    IO(AE.pure(data.asScala.toMap))
 
   override def loadInput: IO[Properties] = IO(System.getProperties)
 }
