@@ -12,6 +12,8 @@ trait Hints {
 
   def pathToString(path: List[String]): String
 
+  def prependtoPath(prepend: String, path: String): String
+
   def ioTimeout: Duration = 3.seconds
 }
 

@@ -194,5 +194,7 @@ object TypesafeConfigHints extends HintsCompanion[TypesafeConfigHints] {
       _.replaceAll("([A-Z]+)([A-Z][a-z])", "$1-$2").replaceAll("([a-z\\d])([A-Z])", "$1-$2").toLowerCase
 
     override def pathToString(path: List[String]): String = path.map(dashTransformation).mkString(".")
+
+    override def prependtoPath(prepend: String, path: String) = s"${dashTransformation(prepend)}.$path"
   }
 }

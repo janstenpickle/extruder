@@ -57,5 +57,7 @@ trait EnvironmentHints extends Hints
 object EnvironmentHints extends HintsCompanion[EnvironmentHints] {
   override implicit val default: EnvironmentHints = new EnvironmentHints {
     override def pathToString(path: List[String]): String = path.mkString("_").toUpperCase
+
+    override def prependtoPath(prepend: String, path: String) = s"${prepend.toLowerCase}_$path"
   }
 }

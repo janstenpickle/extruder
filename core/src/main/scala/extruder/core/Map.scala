@@ -82,6 +82,8 @@ trait MapHints extends Hints
 object MapHints extends HintsCompanion[MapHints] {
   override implicit val default: MapHints = new MapHints {
     override def pathToString(path: List[String]): String = path.mkString(".").toLowerCase
+
+    override def prependtoPath(prepend: String, path: String) = s"${prepend.toLowerCase}.$path"
   }
 }
 
