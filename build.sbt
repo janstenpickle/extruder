@@ -1,11 +1,11 @@
 import microsites._
 
-val specs2Ver = "3.9.5"
+val specs2Ver = "4.0.1"
 
 val commonSettings = Seq(
   organization := "extruder",
-  scalaVersion := "2.12.3",
-  crossScalaVersions := Seq("2.11.11", "2.12.3"),
+  scalaVersion := "2.12.4",
+  crossScalaVersions := Seq("2.11.11", "2.12.4"),
   addCompilerPlugin(("org.scalamacros" % "paradise"       % "2.1.1").cross(CrossVersion.full)),
   addCompilerPlugin(("org.spire-math"  % "kind-projector" % "0.9.4").cross(CrossVersion.binary)),
   scalacOptions ++= Seq(
@@ -85,7 +85,7 @@ lazy val typesafe = (project in file("typesafe"))
       Seq(
         name := "extruder-typesafe",
         libraryDependencies ++= Seq(
-          "com.typesafe" % "config"             % "1.3.1",
+          "com.typesafe" % "config"             % "1.3.2",
           "org.specs2"   %% "specs2-core"       % specs2Ver % "test",
           "org.specs2"   %% "specs2-scalacheck" % specs2Ver % "test"
         ),
