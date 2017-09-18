@@ -1,6 +1,6 @@
 import microsites._
 
-val specs2Ver = "3.9.4"
+val specs2Ver = "3.9.5"
 
 val commonSettings = Seq(
   organization := "extruder",
@@ -56,7 +56,7 @@ lazy val core = (project in file("core")).settings(
         "org.specs2" %% "specs2-core"       % specs2Ver % "test",
         "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test",
         ("org.typelevel"              %% "discipline"                % "0.8"   % "test").exclude("org.scalacheck", "scalacheck"),
-        ("com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % "1.1.6" % "test")
+        ("com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % "1.1.7" % "test")
           .exclude("org.scalacheck", "scalacheck")
       ),
       publishArtifact in Test := true,
