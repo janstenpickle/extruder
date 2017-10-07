@@ -100,8 +100,8 @@ lazy val refined = (project in file("refined"))
       Seq(
         name := "extruder-refined",
         libraryDependencies ++= Seq(
-          "eu.timepit" %% "refined"            % "0.8.2",
-          "eu.timepit" %% "refined-scalacheck" % "0.8.2",
+          "eu.timepit" %% "refined"            % "0.8.4",
+          "eu.timepit" %% "refined-scalacheck" % "0.8.4",
           "org.specs2" %% "specs2-core"        % specs2Ver % "test",
           "org.specs2" %% "specs2-scalacheck"  % specs2Ver % "test"
         ),
