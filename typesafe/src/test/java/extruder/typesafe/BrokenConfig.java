@@ -10,6 +10,8 @@ import com.typesafe.config.ConfigResolveOptions;
 import com.typesafe.config.ConfigValue;
 
 import java.time.Duration;
+import java.time.Period;
+import java.time.temporal.TemporalAmount;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -174,6 +176,16 @@ public class BrokenConfig implements Config {
 
   @Override
   public Duration getDuration(final String path) {
+    return null;
+  }
+
+  @Override
+  public Period getPeriod(String path) {
+    return null;
+  }
+
+  @Override
+  public TemporalAmount getTemporal(String path) {
     return null;
   }
 
