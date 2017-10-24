@@ -3,13 +3,13 @@ package extruder.core
 import cats.effect.IO
 
 trait Decoders { self: DecodeTypes =>
-  protected def mkDecoder[F[_], T](f: (List[String], Option[T], DecodeData) => IO[F[T]]): Dec[F, T]
+  protected def mkDecoder[F[_], E, T](f: (List[String], Option[T], DecodeData) => IO[F[T]]): Dec[F, T]
 
   def apply[F[_], T](implicit decoder: Dec[F, T]): Dec[F, T] = decoder
 }
 
 trait Decode { self: DecodeTypes =>
-  protected def prepareInput[F[_], E](namespace: List[String], input: InputData)(
+  def prepareInput[F[_], E](namespace: List[String], input: InputData)(
     implicit AE: ExtruderApplicativeError[F, E],
     hints: Hint
   ): IO[F[DecodeData]]
@@ -588,13 +588,17 @@ trait DecodeFromDefaultSource { self: Decode with DecodeTypes =>
 }
 
 trait Decoder[F[_], T] {
-  type InputData
-  def read(path: List[String], default: Option[T], input: InputData): IO[F[T]]
+  type DecodeData
+  def read(path: List[String], default: Option[T], input: DecodeData): IO[F[T]]
+}
+
+object Decoder {
+  type Aux[F[_], T, C] = Decoder[F, T] {
+    type DecodeData = C
+  }
 }
 
 trait DecodeTypes extends DataSource {
   type DecodeData
-  type Dec[F[_], T] <: Decoder[F, T] {
-    type InputData = DecodeData
-  }
+  type Dec[F[_], T] <: Decoder.Aux[F, T, DecodeData]
 }

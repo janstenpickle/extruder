@@ -6,7 +6,7 @@ import extruder.core._
 import scala.collection.JavaConverters._
 
 trait EnvironmentDecoder[F[_], T] extends Decoder[F, T] {
-  override type InputData = Map[String, String]
+  override type DecodeData = Map[String, String]
 }
 
 trait EnvironmentDecoders
@@ -33,7 +33,7 @@ trait EnvironmentDecoders
   )(implicit hints: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[Option[String]]] =
     IO(AE.pure(data.get(hints.pathToString(path))))
 
-  override protected def mkDecoder[F[_], T](
+  override protected def mkDecoder[F[_], E, T](
     f: (List[String], Option[T], Map[String, String]) => IO[F[T]]
   ): EnvironmentDecoder[F, T] =
     new EnvironmentDecoder[F, T] {
@@ -41,7 +41,7 @@ trait EnvironmentDecoders
         f(path, default, data)
     }
 
-  override protected def prepareInput[F[_], E](
+  override def prepareInput[F[_], E](
     namespace: List[String],
     data: java.util.Map[String, String]
   )(implicit AE: ExtruderApplicativeError[F, E], util: Hint): IO[F[Map[String, String]]] =

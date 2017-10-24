@@ -41,7 +41,7 @@ trait TypesafeConfigDecoders
       )
   }
 
-  override protected def prepareInput[F[_], E](
+  override def prepareInput[F[_], E](
     namespace: List[String],
     data: TConfig
   )(implicit AE: ExtruderApplicativeError[F, E], hints: Hint): IO[F[TConfig]] =
@@ -88,7 +88,7 @@ trait TypesafeConfigDecoders
   ): TypesafeConfigDecoder[F, ConfigObject] =
     mkDecoder(resolve[F, E, ConfigObject]((path, data) => lookup(_.getObject(hints.pathToString(path)), path, data)))
 
-  override def mkDecoder[F[_], T](f: (List[String], Option[T], TConfig) => IO[F[T]]): TypesafeConfigDecoder[F, T] =
+  override def mkDecoder[F[_], E, T](f: (List[String], Option[T], TConfig) => IO[F[T]]): TypesafeConfigDecoder[F, T] =
     new TypesafeConfigDecoder[F, T] {
       override def read(path: List[String], default: Option[T], data: TConfig): IO[F[T]] = f(path, default, data)
     }
@@ -97,7 +97,7 @@ trait TypesafeConfigDecoders
 }
 
 trait TypesafeConfigDecoder[F[_], T] extends Decoder[F, T] {
-  override type InputData = TConfig
+  override type DecodeData = TConfig
 }
 
 object TypesafeConfigDecoder extends TypesafeConfigDecoders

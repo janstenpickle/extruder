@@ -9,7 +9,7 @@ import scala.reflect.runtime.universe.TypeTag
 
 trait DerivedDecoders { self: Decoders with DecodeTypes =>
   implicit def cnilDecoder[F[_], E](implicit hints: Hint, AE: ExtruderApplicativeError[F, E]): Dec[F, CNil] =
-    mkDecoder[F, CNil] { (path, _, _) =>
+    mkDecoder[F, E, CNil] { (path, _, _) =>
       IO.pure(
         AE.validationFailure(
           s"Could not find specified implementation of sealed type at path '${hints.pathToStringWithType(path)}'"

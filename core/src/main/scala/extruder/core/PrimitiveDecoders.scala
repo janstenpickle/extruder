@@ -32,7 +32,9 @@ trait PrimitiveDecoders { self: Decoders with DecodeTypes =>
     hints: Hint,
     AE: ExtruderApplicativeError[F, E]
   ): Dec[F, T] =
-    mkDecoder[F, T]((path, default, data) => resolveValue(formatParserError(parser, path)).apply(path, default, data))
+    mkDecoder[F, E, T](
+      (path, default, data) => resolveValue(formatParserError(parser, path)).apply(path, default, data)
+    )
 
   implicit def traversableDecoder[F[_], E, T, FF[T] <: TraversableOnce[T]](
     implicit parser: Parser[T],
@@ -53,7 +55,7 @@ trait PrimitiveDecoders { self: Decoders with DecodeTypes =>
     hints: Hint,
     AE: ExtruderApplicativeError[F, E]
   ): Dec[F, Option[T]] =
-    mkDecoder[F, Option[T]] { (path, _, data) =>
+    mkDecoder[F, E, Option[T]] { (path, _, data) =>
       val evaluateOptional: (Either[E, T], Boolean) => F[Option[T]] = {
         case (Right(v), _) => AE.pure(Some(v))
         case (Left(e), true) => AE.raiseError(e)

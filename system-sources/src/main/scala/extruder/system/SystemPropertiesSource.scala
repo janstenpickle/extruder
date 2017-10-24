@@ -12,7 +12,7 @@ trait SystemPropertiesDecoders extends BaseMapDecoders with Decode with DecodeFr
   override type InputData = java.util.Properties
   override type OutputData = Unit
 
-  override protected def prepareInput[F[_], E](
+  override def prepareInput[F[_], E](
     namespace: List[String],
     data: java.util.Properties
   )(implicit AE: ExtruderApplicativeError[F, E], util: Hint): IO[F[Map[String, String]]] =

@@ -40,7 +40,7 @@ trait BaseMapDecoders extends Decoders with PrimitiveDecoders with DerivedDecode
   )(implicit hints: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[Option[String]]] =
     IO(AE.pure(data.get(hints.pathToString(path))))
 
-  override protected def mkDecoder[F[_], T](
+  override protected def mkDecoder[F[_], E, T](
     f: (List[String], Option[T], Map[String, String]) => IO[F[T]]
   ): MapDecoder[F, T] =
     new MapDecoder[F, T] {
@@ -50,11 +50,11 @@ trait BaseMapDecoders extends Decoders with PrimitiveDecoders with DerivedDecode
 }
 
 trait MapDecoder[F[_], T] extends Decoder[F, T] {
-  override type InputData = Map[String, String]
+  override type DecodeData = Map[String, String]
 }
 
 trait MapDecoders extends BaseMapDecoders with Decode with MapDataSource {
-  override protected def prepareInput[F[_], E](
+  override def prepareInput[F[_], E](
     namespace: List[String],
     data: Map[String, String]
   )(implicit AE: ExtruderApplicativeError[F, E], util: Hint): IO[F[Map[String, String]]] =
