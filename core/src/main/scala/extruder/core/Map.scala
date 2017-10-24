@@ -49,7 +49,9 @@ trait BaseMapDecoders extends Decoders with PrimitiveDecoders with DerivedDecode
     }
 }
 
-trait MapDecoder[F[_], T] extends Decoder[F, T, Map[String, String]]
+trait MapDecoder[F[_], T] extends Decoder[F, T] {
+  override type InputData = Map[String, String]
+}
 
 trait MapDecoders extends BaseMapDecoders with Decode with MapDataSource {
   override protected def prepareInput[F[_], E](

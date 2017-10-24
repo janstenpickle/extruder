@@ -96,7 +96,9 @@ trait TypesafeConfigDecoders
   override def loadInput: IO[TConfig] = IO(ConfigFactory.load())
 }
 
-trait TypesafeConfigDecoder[F[_], T] extends Decoder[F, T, TConfig]
+trait TypesafeConfigDecoder[F[_], T] extends Decoder[F, T] {
+  override type InputData = TConfig
+}
 
 object TypesafeConfigDecoder extends TypesafeConfigDecoders
 

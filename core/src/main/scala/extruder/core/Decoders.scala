@@ -587,11 +587,14 @@ trait DecodeFromDefaultSource { self: Decode with DecodeTypes =>
     IOC.fromIO(decodeIO[T, F, E](namespace))
 }
 
-trait Decoder[F[_], T, C] {
-  def read(path: List[String], default: Option[T], input: C): IO[F[T]]
+trait Decoder[F[_], T] {
+  type InputData
+  def read(path: List[String], default: Option[T], input: InputData): IO[F[T]]
 }
 
 trait DecodeTypes extends DataSource {
   type DecodeData
-  type Dec[F[_], T] <: Decoder[F, T, DecodeData]
+  type Dec[F[_], T] <: Decoder[F, T] {
+    type InputData = DecodeData
+  }
 }

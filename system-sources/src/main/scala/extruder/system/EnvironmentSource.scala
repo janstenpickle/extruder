@@ -5,7 +5,9 @@ import extruder.core._
 
 import scala.collection.JavaConverters._
 
-trait EnvironmentDecoder[F[_], T] extends Decoder[F, T, Map[String, String]]
+trait EnvironmentDecoder[F[_], T] extends Decoder[F, T] {
+  override type InputData = Map[String, String]
+}
 
 trait EnvironmentDecoders
     extends Decoders
