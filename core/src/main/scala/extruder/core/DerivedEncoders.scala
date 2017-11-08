@@ -29,7 +29,7 @@ trait DerivedEncoders { self: Encoders with EncodeTypes =>
       for {
         tpe <- typeEncode.value.write(hints.pathWithType(path), key.value.name)
         v <- chooseEncoder
-      } yield (tpe |@| v).map(monoid.combine)
+      } yield AE.ap2(AE.pure[(EncodeData, EncodeData) => EncodeData](monoid.combine))(tpe, v)
     }
 
   implicit def unionEncoder[F[_], E, T, O <: Coproduct](
@@ -64,7 +64,7 @@ trait DerivedEncoders { self: Encoders with EncodeTypes =>
         for {
           head <- encoder.value.write(path :+ fieldName, value.head)
           tail <- tailEncoder.value.write(path, value.tail)
-        } yield (head |@| tail).map(monoid.combine)
+        } yield AE.ap2(AE.pure[(EncodeData, EncodeData) => EncodeData](monoid.combine))(head, tail)
       }
     }
 

@@ -76,7 +76,7 @@ trait DerivedDecoders { self: Decoders with DecodeTypes =>
         for {
           head <- decoder.value.read(path :+ fieldName, default.head, data)
           tail <- tailDecoder.value.read(path, default.tail, data)
-        } yield (head |@| tail).map((h, t) => field[K](h) :: t)
+        } yield AE.ap2(AE.pure((h: V, t: TailRepr) => field[K](h) :: t))(head, tail)
       }
     }
 

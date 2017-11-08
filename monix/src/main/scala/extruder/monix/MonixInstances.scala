@@ -9,14 +9,14 @@ import monix.execution.{Cancelable, Scheduler}
 import scala.util.{Failure, Success}
 
 trait MonixInstances {
-  implicit def taskApplicativeError(
-    implicit scheduler: Scheduler,
-    IOC: IOConvert[Task]
-  ): ExtruderApplicativeError[Task, Throwable] =
-    new ExtruderApplicativeError.FromMonadError[Task]() {
-      override def attemptIO[A](a: IO[Task[A]])(implicit hints: Hints): Task[A] =
-        IOC.fromIO(a).flatten
-    }
+//  implicit def taskApplicativeError(
+//    implicit scheduler: Scheduler,
+//    IOC: IOConvert[Task]
+//  ): ExtruderApplicativeError[Task, Throwable] =
+//    new ExtruderApplicativeError.FromMonadError[Task]() {
+//      override def attemptIO[A](a: IO[Task[A]])(implicit hints: Hints): Task[A] =
+//        IOC.fromIO(a).flatten
+//    }
 
   implicit def taskIOConvert(implicit scheduler: Scheduler): IOConvert[Task] = new IOConvert[Task] {
     override def toIO[A](a: Task[A]): IO[A] = IO.async[A] { cb =>

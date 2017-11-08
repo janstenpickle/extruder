@@ -25,7 +25,7 @@ trait PrimitiveDecoders { self: Decoders with DecodeTypes =>
     path: List[String],
     data: DecodeData
   )(implicit hints: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[Option[List[String]]]] =
-    lookupValue[F, E](path, data).map(_.map(_.map(_.split(hints.ListSeparator).toList.map(_.trim))))
+    lookupValue[F, E](path, data).map(AE.map(_)(_.map(_.split(hints.ListSeparator).toList.map(_.trim))))
 
   implicit def primitiveDecoder[F[_], E, T](
     implicit parser: Parser[T],

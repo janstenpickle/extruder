@@ -32,7 +32,7 @@ trait SystemPropertiesEncoders extends BaseMapEncoders with Encode {
   )(implicit AE: ExtruderApplicativeError[F, E], util: Hint): IO[F[Unit]] = IO.pure {
     inter
       .map { case (k, v) => AE.catchNonFatal(System.setProperty(k, v)) }
-      .foldLeft(AE.pure(()))((acc, v) => (acc |@| v).map((_, _) => ()))
+      .foldLeft(AE.pure(()))((acc, v) => AE.ap2(AE.pure((_: Unit, _: String) => ()))(acc, v)) //(acc |@| v).map((_, _) => ()))
   }
 }
 
