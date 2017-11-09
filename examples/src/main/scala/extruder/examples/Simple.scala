@@ -11,6 +11,7 @@ import extruder.core.{
   EitherErrors,
   EitherThrowable,
   ExtruderApplicativeError,
+  ExtruderEffect,
   Missing,
   Validation,
   ValidationError,
@@ -158,19 +159,21 @@ object Simple extends App {
 
   println(
     Await.result(
-      derp
-        .ap2[Unit, Unit, Unit](
-          ValidationT[Future, (Unit, Unit) => Unit](Future.successful(((a: Unit, b: Unit) => ()).validNel))
-        )(
-          ValidationT[Future, Unit](Future.successful(Missing("34").invalidNel[Unit])),
-          ValidationT[Future, Unit](Future.successful(Missing("dsfdsf").invalidNel[Unit]))
+      implicitly[ExtruderEffect[ValidationT[IO, ?]]]
+        .ap2[Unit, Unit, Unit](ValidationT[IO, (Unit, Unit) => Unit](IO.pure(((a: Unit, b: Unit) => ()).validNel)))(
+          ValidationT[IO, Unit](IO.pure(Missing("34").invalidNel[Unit])),
+          ValidationT[IO, Unit](IO.pure(Missing("dsfdsf").invalidNel[Unit]))
         )
-        .value,
+        .value
+        .unsafeToFuture(),
       Duration.Inf
     )
   )
 
   implicitly[Effect[EitherT[Future, Throwable, ?]]]
+  implicitly[ExtruderEffect[Future]]
+  implicitly[ExtruderEffect[IO]]
+  implicitly[ExtruderEffect[ValidationT[IO, ?]]]
   //println(decode[CC, EitherT[Future, Throwable, ?], Throwable](config))
 //  println(decodeIO[CC](config))
 //  println(decodeIO[CC, EitherThrowable, Throwable](config))
