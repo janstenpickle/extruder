@@ -2,7 +2,6 @@ package extruder.core
 
 import java.net.URL
 
-import cats.effect.IO
 import cats.instances.all._
 import cats.{Show => CatsShow}
 import shapeless._
@@ -10,33 +9,29 @@ import shapeless._
 import scala.concurrent.duration.Duration
 
 trait PrimitiveEncoders { self: Encoders with EncodeTypes =>
-  protected def writeValue[F[_], E](path: List[String], value: String)(
+  protected def writeValue[F[_]](path: List[String], value: String)(
     implicit hints: Hint,
-    AE: ExtruderApplicativeError[F, E]
-  ): IO[F[EncodeData]]
+    F: ExtruderEffect[F]
+  ): F[EncodeData]
 
-  implicit def primitiveEncoder[F[_], E, T](
-    implicit shows: Show[T],
-    hints: Hint,
-    AE: ExtruderApplicativeError[F, E]
-  ): Enc[F, T] =
+  implicit def primitiveEncoder[F[_], T](implicit shows: Show[T], hints: Hint, F: ExtruderEffect[F]): Enc[F, T] =
     mkEncoder[F, T] { (path, value) =>
       writeValue(path, shows.show(value))
     }
 
-  implicit def optionalEncoder[F[_], E, T](
+  implicit def optionalEncoder[F[_], T](
     implicit encoder: Lazy[Enc[F, T]],
     hints: Hint,
-    AE: ExtruderApplicativeError[F, E]
+    F: ExtruderEffect[F]
   ): Enc[F, Option[T]] =
     mkEncoder[F, Option[T]] { (path, value) =>
-      value.fold[IO[F[EncodeData]]](IO(AE.pure(monoid.empty)))(encoder.value.write(path, _))
+      value.fold[F[EncodeData]](F.pure(monoid.empty))(encoder.value.write(path, _))
     }
 
-  implicit def traversableEncoder[F[_], E, T, FF[T] <: TraversableOnce[T]](
+  implicit def traversableEncoder[F[_], T, FF[T] <: TraversableOnce[T]](
     implicit shows: Show[T],
     hints: Hint,
-    AE: ExtruderApplicativeError[F, E]
+    F: ExtruderEffect[F]
   ): Enc[F, FF[T]] =
     mkEncoder { (path, value) =>
       writeValue(path, value.map(shows.show).filter(_.trim.nonEmpty).mkString(hints.ListSeparator))

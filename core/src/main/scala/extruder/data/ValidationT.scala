@@ -1,4 +1,4 @@
-package extruder.instances
+package extruder.data
 
 import extruder.core.Validation
 

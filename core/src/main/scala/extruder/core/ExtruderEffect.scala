@@ -1,12 +1,13 @@
 package extruder.core
 
-import cats.Apply
 import cats.data.Validated.{Invalid, Valid}
 import cats.effect.{Effect, IO}
-import extruder.instances.ValidationT
 import cats.syntax.validated._
+import cats.{Applicative, Apply, Monad, MonadError}
+import extruder.data.ValidationT
+import extruder.instances.{EitherInstances, ValidationInstances}
 
-import scala.util.Either
+import scala.util.{Either, Failure, Success, Try}
 
 trait ExtruderEffect[F[_]] extends Effect[F] {
   def missing[A](message: String): F[A]
@@ -39,7 +40,7 @@ trait LowPriorityEffectInstances {
         F.runAsync(fa.value) {
           case Left(th) => cb(Left(th))
           case Right(Valid(a)) => cb(Right(a))
-          case Right(Invalid(nel)) => cb(Left(new RuntimeException("oops"))) // TODO stack exceptions
+          case Right(Invalid(e)) => cb(Left(errorsToThrowable(e)))
         }
 
       override def suspend[A](thunk: => ValidationT[F, A]): ValidationT[F, A] = ValidationT(F.suspend(thunk.value))
@@ -60,11 +61,9 @@ trait LowPriorityEffectInstances {
           }
         )
       )
+
       override def handleErrorWith[A](fa: ValidationT[F, A])(f: Throwable => ValidationT[F, A]) =
-        ValidationT(F.flatMap(fa.value) {
-          case Invalid(e) => f(new RuntimeException("oops")).value // TODO stack exceptions
-          case a @ Valid(_) => F.pure(a)
-        })
+        ValidationT(F.handleErrorWith(fa.value)(f.andThen(_.value)))
 
       override def ap2[A, B, Z](
         ff: ValidationT[F, (A, B) => Z]
@@ -78,32 +77,46 @@ trait LowPriorityEffectInstances {
 }
 
 trait EffectInstances {
+  abstract class FromApplicative[F[_]](implicit F: Applicative[F]) extends ExtruderEffect[F] {
+    override def async[A](k: (Either[Throwable, A] => Unit) => Unit): F[A] =
+      Try(IO.async(k).unsafeRunSync()) match {
+        case Failure(ex) => raiseError(ex)
+        case Success(a) => F.pure(a)
+      }
+
+    override def runAsync[A](fa: F[A])(cb: Either[Throwable, A] => IO[Unit]): IO[Unit] =
+      IO(())
+
+    def suspend[A](thunk: => F[A]): F[A] = thunk
+    def pure[A](x: A): F[A] = F.pure(x)
+  }
+
+  abstract class FromMonad[F[_]](implicit F: Monad[F]) extends FromApplicative[F] {
+    override def flatMap[A, B](fa: F[A])(f: A => F[B]): F[B] = F.flatMap(fa)(f)
+    override def tailRecM[A, B](a: A)(f: A => F[Either[A, B]]): F[B] = F.tailRecM(a)(f)
+  }
+
+  class FromMonadError[F[_]](implicit F: MonadError[F, Throwable]) extends FromMonad[F] {
+    override def missing[A](message: String): F[A] = raiseError(new NoSuchElementException(message))
+    override def validationFailure[A](message: String): F[A] = raiseError(new RuntimeException(message))
+    override def validationException[A](message: String, ex: Throwable): F[A] = raiseError(ex)
+    override def raiseError[A](e: Throwable): F[A] = F.raiseError(e)
+    override def handleErrorWith[A](fa: F[A])(f: Throwable => F[A]): F[A] = F.handleErrorWith(fa)(f)
+  }
+
   implicit def fromEffect[F[_]: Effect](implicit F: Effect[F]): ExtruderEffect[F] =
-    new ExtruderEffect[F] {
-      override def missing[A](message: String): F[A] = raiseError(new NoSuchElementException(message))
-
-      override def validationFailure[A](message: String): F[A] = raiseError(new RuntimeException(message))
-
-      override def validationException[A](message: String, ex: Throwable): F[A] = raiseError(ex)
-
+    new FromMonadError[F]()(F) {
       override def runAsync[A](fa: F[A])(cb: Either[Throwable, A] => IO[Unit]): IO[Unit] = F.runAsync(fa)(cb)
-
       override def async[A](k: (Either[Throwable, A] => Unit) => Unit): F[A] = F.async(k)
-
       override def suspend[A](thunk: => F[A]): F[A] = F.suspend(thunk)
-
-      override def flatMap[A, B](fa: F[A])(f: A => F[B]): F[B] = F.flatMap(fa)(f)
-
-      override def tailRecM[A, B](a: A)(f: A => F[Either[A, B]]): F[B] = F.tailRecM(a)(f)
-
-      override def raiseError[A](e: Throwable): F[A] = raiseError(e)
-
-      override def handleErrorWith[A](fa: F[A])(f: Throwable => F[A]): F[A] = handleErrorWith(fa)(f)
-
-      override def pure[A](x: A): F[A] = F.pure(x)
+      override def delay[A](thunk: => A): F[A] = F.delay(thunk)
     }
 }
 
-object ExtruderEffect extends EffectInstances with LowPriorityEffectInstances {
-  def apply[F[_]](effect: ExtruderEffect[F]): ExtruderEffect[F] = effect
+object ExtruderEffect
+    extends EffectInstances
+    with ValidationInstances
+    with EitherInstances
+    with LowPriorityEffectInstances {
+  def apply[F[_]](implicit effect: ExtruderEffect[F]): ExtruderEffect[F] = effect
 }

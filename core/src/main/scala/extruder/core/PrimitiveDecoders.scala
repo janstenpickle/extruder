@@ -2,7 +2,6 @@ package extruder.core
 
 import java.net.URL
 
-import cats.effect.IO
 import cats.implicits._
 import mouse.string._
 import shapeless.syntax.typeable._
@@ -13,98 +12,90 @@ import scala.concurrent.duration.Duration
 import scala.reflect.ClassTag
 
 trait PrimitiveDecoders { self: Decoders with DecodeTypes =>
-  protected def hasValue[F[_], E](path: List[String], data: DecodeData)(
+  protected def hasValue[F[_]](path: List[String], data: DecodeData)(
     implicit hints: Hint,
-    AE: ExtruderApplicativeError[F, E]
-  ): IO[F[Boolean]]
-  protected def lookupValue[F[_], E](path: List[String], data: DecodeData)(
+    F: ExtruderEffect[F]
+  ): F[Boolean]
+
+  protected def lookupValue[F[_]](path: List[String], data: DecodeData)(
     implicit hints: Hint,
-    AE: ExtruderApplicativeError[F, E]
-  ): IO[F[Option[String]]]
-  protected def lookupList[F[_], E](
+    F: ExtruderEffect[F]
+  ): F[Option[String]]
+
+  protected def lookupList[F[_]](
     path: List[String],
     data: DecodeData
-  )(implicit hints: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[Option[List[String]]]] =
-    lookupValue[F, E](path, data).map(AE.map(_)(_.map(_.split(hints.ListSeparator).toList.map(_.trim))))
+  )(implicit hints: Hint, F: ExtruderEffect[F]): F[Option[List[String]]] =
+    lookupValue[F](path, data).map(_.map(_.split(hints.ListSeparator).toList.map(_.trim)))
 
-  implicit def primitiveDecoder[F[_], E, T](
-    implicit parser: Parser[T],
-    hints: Hint,
-    AE: ExtruderApplicativeError[F, E]
-  ): Dec[F, T] =
+  implicit def primitiveDecoder[F[_], T](implicit parser: Parser[T], hints: Hint, F: ExtruderEffect[F]): Dec[F, T] =
     mkDecoder[F, T]((path, default, data) => resolveValue(formatParserError(parser, path)).apply(path, default, data))
 
-  implicit def traversableDecoder[F[_], E, T, FF[T] <: TraversableOnce[T]](
+  implicit def traversableDecoder[F[_], T, FF[T] <: TraversableOnce[T]](
     implicit parser: Parser[T],
     cbf: CanBuildFrom[FF[T], T, FF[T]],
     hints: Hint,
-    AE: ExtruderApplicativeError[F, E]
+    F: ExtruderEffect[F]
   ): Dec[F, FF[T]] =
     mkDecoder { (path, default, data) =>
       resolveList { x =>
-        val seq: F[List[T]] = AE.sequence(x.filterNot(_.isEmpty).map(formatParserError(parser, path)))
+        val seq: F[List[T]] = F.sequence(x.filterNot(_.isEmpty).map(formatParserError(parser, path)))
 
-        AE.map(seq)(_.foldLeft(cbf())(_ += _).result())
+        F.map(seq)(_.foldLeft(cbf())(_ += _).result())
       }.apply(path, default, data)
     }
 
-  implicit def optionalDecoder[F[_], E, T](
+  implicit def optionalDecoder[F[_], T](
     implicit decoder: Lazy[Dec[F, T]],
     hints: Hint,
-    AE: ExtruderApplicativeError[F, E]
+    F: ExtruderEffect[F]
   ): Dec[F, Option[T]] =
     mkDecoder[F, Option[T]] { (path, _, data) =>
-      val evaluateOptional: (Either[E, T], Boolean) => F[Option[T]] = {
-        case (Right(v), _) => AE.pure(Some(v))
-        case (Left(e), true) => AE.raiseError(e)
-        case (_, false) => AE.pure(None)
+      val decoded = decoder.value.read(path, None, data)
+      val lookedUp = hasValue[F](path, data)
+
+      val evaluateOptional: (Either[Throwable, T], Boolean) => F[Option[T]] = {
+        case (Right(v), _) => F.pure(Some(v))
+        case (Left(_), true) => F.map(decoded)(Some(_))
+        case (_, false) => F.pure(None)
       }
 
-      for {
-        attempted <- decoder.value.read(path, None, data).map(AE.attempt)
-        lookedUp <- hasValue[F, E](path, data)
-      } yield AE.flatMap(attempted)(att => AE.flatMap(lookedUp)(lu => evaluateOptional(att, lu)))
+      F.flatMap(F.attempt(decoded))(att => F.flatMap(lookedUp)(lu => evaluateOptional(att, lu)))
     }
 
   protected def resolveValue[F[_], E, T](
     parser: String => F[T]
-  )(implicit hints: Hint, AE: ExtruderApplicativeError[F, E]): (List[String], Option[T], DecodeData) => IO[F[T]] =
-    resolve[F, E, T, String](parser, lookupValue[F, E])
+  )(implicit hints: Hint, AE: ExtruderEffect[F]): (List[String], Option[T], DecodeData) => F[T] =
+    resolve[F, T, String](parser, lookupValue[F])
 
-  protected def resolveList[F[_], E, T](
+  protected def resolveList[F[_], T](
     parser: List[String] => F[T]
-  )(implicit hints: Hint, AE: ExtruderApplicativeError[F, E]): (List[String], Option[T], DecodeData) => IO[F[T]] =
-    resolve[F, E, T, List[String]](parser, lookupList[F, E])
+  )(implicit hints: Hint, F: ExtruderEffect[F]): (List[String], Option[T], DecodeData) => F[T] =
+    resolve[F, T, List[String]](parser, lookupList[F])
 
-  protected def resolve[F[_], E, T, V](parser: V => F[T], lookup: (List[String], DecodeData) => IO[F[Option[V]]])(
-    path: List[String],
-    default: Option[T],
-    data: DecodeData
-  )(implicit hints: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[T]] = {
+  protected def resolve[F[_], T, V](
+    parser: V => F[T],
+    lookup: (List[String], DecodeData) => F[Option[V]]
+  )(path: List[String], default: Option[T], data: DecodeData)(implicit hints: Hint, F: ExtruderEffect[F]): F[T] =
+    F.flatMap(lookup(path, data)) { v =>
+      (v, default) match {
+        case (None, None) =>
+          F.missing(s"Could not find value at '${hints.pathToString(path)}' and no default available")
+        case (None, Some(value)) => F.pure(value)
+        case (Some(value), _) => parser(value)
+      }
+    }
 
-    lookup(path, data).map(
-      AE.flatMap[Option[V], T](_)(
-        v =>
-          (v, default) match {
-            case (None, None) =>
-              AE.missing(s"Could not find value at '${hints.pathToString(path)}' and no default available")
-            case (None, Some(value)) => AE.pure(value)
-            case (Some(value), _) => parser(value)
-        }
-      )
-    )
-  }
-
-  protected def formatParserError[F[_], E, T](
+  protected def formatParserError[F[_], T](
     parser: Parser[T],
     path: List[String]
-  )(implicit hints: Hint, AE: ExtruderApplicativeError[F, E]): String => F[T] =
+  )(implicit hints: Hint, F: ExtruderEffect[F]): String => F[T] =
     value =>
       parser
         .parse(value)
         .fold[F[T]](
-          err => AE.validationFailure(s"Could not parse value '$value' at '${hints.pathToString(path)}': $err"),
-          AE.pure
+          err => F.validationFailure(s"Could not parse value '$value' at '${hints.pathToString(path)}': $err"),
+          F.pure
       )
 }
 
