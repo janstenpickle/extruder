@@ -1,18 +1,17 @@
 package extruder.typesafe
 
 import cats.Eq
-import cats.effect.IO
-import cats.kernel.laws.GroupLaws
 import cats.instances.all._
+import cats.kernel.laws.GroupLaws
 import com.typesafe.config._
-import extruder.core.{SourceSpec, ValidationException}
+import extruder.core.ValidationCatsInstances._
+import extruder.core.{ExtruderEffect, SourceSpec, ValidationException}
 import org.scalacheck.{Arbitrary, Gen}
 import org.specs2.matcher.MatchResult
 import org.specs2.specification.core.SpecStructure
 import shapeless._
 
 import scala.collection.JavaConverters._
-import extruder.core.ValidationCatsInstances._
 
 class TypesafeConfigSourceSpec extends SourceSpec with TypesafeConfigDecoders with TypesafeConfigEncoders {
   import TypesafeConfigSourceSpec._
@@ -28,7 +27,7 @@ class TypesafeConfigSourceSpec extends SourceSpec with TypesafeConfigDecoders wi
     ConfigFactory.parseMap(config)
   }
 
-  override def loadInput: IO[InputData] = IO(convertData(caseClassData))
+  override def loadInput[F[_]](implicit F: ExtruderEffect[F]): F[InputData] = F.delay(convertData(caseClassData))
 
   override def ext: SpecStructure =
     s2"""

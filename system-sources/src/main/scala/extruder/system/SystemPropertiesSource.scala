@@ -3,7 +3,6 @@ package extruder.system
 import java.util.Properties
 
 import cats.effect.IO
-import cats.syntax.cartesian._
 import extruder.core._
 
 import scala.collection.JavaConverters._
@@ -12,13 +11,13 @@ trait SystemPropertiesDecoders extends BaseMapDecoders with Decode with DecodeFr
   override type InputData = java.util.Properties
   override type OutputData = Unit
 
-  override protected def prepareInput[F[_], E](
+  override protected def prepareInput[F[_]](
     namespace: List[String],
     data: java.util.Properties
-  )(implicit AE: ExtruderApplicativeError[F, E], util: Hint): IO[F[Map[String, String]]] =
-    IO(AE.pure(data.asScala.toMap))
+  )(implicit F: ExtruderEffect[F], util: Hint): F[Map[String, String]] =
+    F.pure(data.asScala.toMap)
 
-  override def loadInput: IO[Properties] = IO(System.getProperties)
+  override def loadInput[F[_]](implicit F: ExtruderEffect[F]): F[Properties] = F.delay(System.getProperties)
 }
 
 object SystemPropertiesDecoder extends SystemPropertiesDecoders
@@ -26,14 +25,13 @@ object SystemPropertiesDecoder extends SystemPropertiesDecoders
 trait SystemPropertiesEncoders extends BaseMapEncoders with Encode {
   override type OutputData = Unit
 
-  override protected def finalizeOutput[F[_], E](
+  override protected def finalizeOutput[F[_]](
     namespace: List[String],
     inter: Map[String, String]
-  )(implicit AE: ExtruderApplicativeError[F, E], util: Hint): IO[F[Unit]] = IO.pure {
+  )(implicit F: ExtruderEffect[F], util: Hint): F[Unit] =
     inter
-      .map { case (k, v) => AE.catchNonFatal(System.setProperty(k, v)) }
-      .foldLeft(AE.pure(()))((acc, v) => AE.ap2(AE.pure((_: Unit, _: String) => ()))(acc, v)) //(acc |@| v).map((_, _) => ()))
-  }
+      .map { case (k, v) => F.catchNonFatal(System.setProperty(k, v)) }
+      .foldLeft(F.pure(()))((acc, v) => F.ap2(F.pure((_: Unit, _: String) => ()))(acc, v))
 }
 
 object SystemPropertiesEncoder extends SystemPropertiesEncoders

@@ -31,7 +31,7 @@ object TestCommon {
 
   implicit def futureEq[A](implicit e: Eq[A]): Eq[Future[A]] = ioEq[A].on(fut => IO.fromFuture(Eval.later(fut)))
 
-  implicit def tryEq[A](implicit e: Eq[A]) = catsStdEqForTry[A, Throwable](e, Eq[String].on(_.toString))
+  implicit def tryEq[A](implicit e: Eq[A]): Eq[Try[A]] = catsStdEqForTry[A, Throwable](e, Eq[String].on(_.toString))
 
   implicit def ioEq[A](implicit e: Eq[A]): Eq[IO[A]] = new Eq[IO[A]] {
 

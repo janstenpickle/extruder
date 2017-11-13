@@ -1,47 +1,43 @@
 package extruder.monix
 
-import cats.effect.IO
-import extruder.core.{ExtruderApplicativeError, Hints, IOConvert, IOF, IOFlatMap}
-import monix.cats._
-import monix.eval.Task
-import monix.execution.{Cancelable, Scheduler}
+import cats.effect.{Async, Effect, IO}
+import monix.eval.{Callback, Task}
+import monix.execution.Scheduler
 
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 trait MonixInstances {
-//  implicit def taskApplicativeError(
-//    implicit scheduler: Scheduler,
-//    IOC: IOConvert[Task]
-//  ): ExtruderApplicativeError[Task, Throwable] =
-//    new ExtruderApplicativeError.FromMonadError[Task]() {
-//      override def attemptIO[A](a: IO[Task[A]])(implicit hints: Hints): Task[A] =
-//        IOC.fromIO(a).flatten
-//    }
+  implicit def taskEffect(implicit scheduler: Scheduler): Effect[Task] = new Effect[Task] {
+    private val noop = (_: Either[Throwable, Any]) => ()
 
-  implicit def taskIOConvert(implicit scheduler: Scheduler): IOConvert[Task] = new IOConvert[Task] {
-    override def toIO[A](a: Task[A]): IO[A] = IO.async[A] { cb =>
-      a.runOnComplete { t =>
-        cb(t match {
-          case Success(a1) => Right(a1)
-          case Failure(th) => Left(th)
-        })
-      }
-    }
+    override def tailRecM[A, B](a: A)(f: A => Task[Either[A, B]]): Task[B] = Task.tailRecM(a)(f)
 
-    override def fromIO[A](a: IO[A]): Task[A] = Task.async[A] { (_, cb) =>
-      a.unsafeRunAsync { x =>
-        cb.apply(x match {
-          case Right(a1) => Success(a1)
-          case Left(th) => Failure(th)
-        })
+    override def flatMap[A, B](fa: Task[A])(f: A => Task[B]): Task[B] = fa.flatMap(f)
+
+    override def raiseError[A](e: Throwable): Task[A] = Task.raiseError(e)
+
+    override def handleErrorWith[A](fa: Task[A])(f: Throwable => Task[A]): Task[A] = fa.onErrorHandleWith(f)
+
+    override def pure[A](x: A): Task[A] = Task.now(x)
+
+    override def delay[A](thunk: => A): Task[A] =
+      Task.eval(thunk)
+    override def suspend[A](fa: => Task[A]): Task[A] =
+      Task.defer(fa)
+    override def async[A](k: ((Either[Throwable, A]) => Unit) => Unit): Task[A] =
+      Task.unsafeCreate { (_, cb) =>
+        k { r =>
+          val r0 = r.fold[Try[A]](Failure(_), Success(_))
+          cb(r0)
+        }
       }
-      Cancelable.empty
-    }
+
+    override def runAsync[A](fa: Task[A])(cb: Either[Throwable, A] => IO[Unit]) =
+      IO(fa.runAsync(new Callback[A] {
+        def onSuccess(value: A): Unit =
+          cb(Right(value)).unsafeRunAsync(noop)
+        def onError(ex: Throwable): Unit =
+          cb(Left(ex)).unsafeRunAsync(noop)
+      }))
   }
-
-  implicit def taskIOFFlatMap(implicit scheduler: Scheduler, IOC: IOConvert[Task]): IOFlatMap[Task] =
-    new IOFlatMap[Task]() {
-      override def flatMap[A, B](fa: IOF[Task, A])(f: (A) => IOF[Task, B]): IOF[Task, B] =
-        fa.flatMap(tsk => IOC.toIO(tsk).map(f).flatMap(identity))
-    }
 }
