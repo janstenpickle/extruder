@@ -4,27 +4,19 @@ import java.net.URL
 
 import cats.instances.all._
 import cats.{Show => CatsShow}
-import extruder.effect.ExtruderAsync
 import shapeless._
 
 import scala.concurrent.duration.Duration
 
 trait PrimitiveEncoders { self: Encoders with EncodeTypes =>
-  protected def writeValue[F[_]](path: List[String], value: String)(
-    implicit hints: Hint,
-    F: ExtruderAsync[F]
-  ): F[EncodeData]
+  protected def writeValue[F[_]](path: List[String], value: String)(implicit hints: Hint, F: Eff[F]): F[EncodeData]
 
-  implicit def primitiveEncoder[F[_], T](implicit shows: Show[T], hints: Hint, F: ExtruderAsync[F]): Enc[F, T] =
+  implicit def primitiveEncoder[F[_], T](implicit shows: Show[T], hints: Hint, F: Eff[F]): Enc[F, T] =
     mkEncoder[F, T] { (path, value) =>
       writeValue(path, shows.show(value))
     }
 
-  implicit def optionalEncoder[F[_], T](
-    implicit encoder: Lazy[Enc[F, T]],
-    hints: Hint,
-    F: ExtruderAsync[F]
-  ): Enc[F, Option[T]] =
+  implicit def optionalEncoder[F[_], T](implicit encoder: Lazy[Enc[F, T]], hints: Hint, F: Eff[F]): Enc[F, Option[T]] =
     mkEncoder[F, Option[T]] { (path, value) =>
       value.fold[F[EncodeData]](F.pure(monoid.empty))(encoder.value.write(path, _))
     }
@@ -32,7 +24,7 @@ trait PrimitiveEncoders { self: Encoders with EncodeTypes =>
   implicit def traversableEncoder[F[_], T, FF[T] <: TraversableOnce[T]](
     implicit shows: Show[T],
     hints: Hint,
-    F: ExtruderAsync[F]
+    F: Eff[F]
   ): Enc[F, FF[T]] =
     mkEncoder { (path, value) =>
       writeValue(path, value.map(shows.show).filter(_.trim.nonEmpty).mkString(hints.ListSeparator))

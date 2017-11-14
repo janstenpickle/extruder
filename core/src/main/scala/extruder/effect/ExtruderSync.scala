@@ -17,52 +17,14 @@ trait LowPrioritySyncInstances {
     override protected def FF: Sync[F] = Sync[F]
   }
 
-  trait ValidationTSync[F[_]] extends ExtruderSync[ValidationT[F, ?]] {
+  trait ValidationTSync[F[_]]
+      extends ExtruderMonadError.ValidationTMonadError[F]
+      with ExtruderSync[ValidationT[F, ?]] {
     protected def FF: Sync[F]
 
-    override def missing[A](message: String): ValidationT[F, A] =
-      ValidationT(FF.pure(Missing(message).invalidNel))
-
-    override def validationFailure[A](message: String): ValidationT[F, A] =
-      ValidationT(FF.pure(ValidationFailure(message).invalidNel))
-
-    override def validationException[A](message: String, ex: Throwable): ValidationT[F, A] =
-      ValidationT(FF.pure(ValidationException(message, ex).invalidNel))
-
-    override def raiseError[A](e: Throwable): ValidationT[F, A] = ValidationT(FF.raiseError(e))
-
-    override def pure[A](x: A): ValidationT[F, A] = ValidationT(FF.pure(x.validNel))
+    override protected def FFF: MonadError[F, Throwable] = FF
 
     override def suspend[A](thunk: => ValidationT[F, A]): ValidationT[F, A] = ValidationT(FF.suspend(thunk.value))
-
-    override def flatMap[A, B](fa: ValidationT[F, A])(f: A => ValidationT[F, B]): ValidationT[F, B] =
-      ValidationT[F, B](FF.flatMap(fa.value) {
-        case inv @ Invalid(_) => FF.pure(inv)
-        case Valid(a) => f(a).value
-      })
-
-    override def tailRecM[A, B](a: A)(f: A => ValidationT[F, Either[A, B]]): ValidationT[F, B] = ValidationT[F, B](
-      FF.tailRecM(a)(
-        a0 =>
-          FF.map(f(a0).value) {
-            case Invalid(e) => Right(Invalid(e))
-            case Valid(Left(a1)) => Left(a1)
-            case Valid(Right(b)) => Right(Valid(b))
-        }
-      )
-    )
-
-    override def handleErrorWith[A](fa: ValidationT[F, A])(f: Throwable => ValidationT[F, A]) =
-      ValidationT(FF.handleErrorWith(fa.value)(f.andThen(_.value)))
-
-    override def ap2[A, B, Z](
-      ff: ValidationT[F, (A, B) => Z]
-    )(fa: ValidationT[F, A], fb: ValidationT[F, B]): ValidationT[F, Z] =
-      ValidationT(
-        FF.flatMap(fa.value)(
-          fa0 => FF.flatMap(fb.value)(fb0 => FF.map(ff.value)(ff0 => Apply[Validation].ap2(ff0)(fa0, fb0)))
-        )
-      )
   }
 }
 

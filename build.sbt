@@ -15,7 +15,7 @@ val commonSettings = Seq(
     "-feature",
     "-deprecation:false",
     "-Xcheckinit",
-    "-Xlog-implicits",
+    //  "-Xlog-implicits",
     "-Xlint:-nullary-unit",
     "-Ywarn-numeric-widen",
     "-Ywarn-dead-code",

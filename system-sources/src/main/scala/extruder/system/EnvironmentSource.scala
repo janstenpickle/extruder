@@ -1,7 +1,7 @@
 package extruder.system
 
 import extruder.core._
-import extruder.effect.ExtruderAsync
+import extruder.effect.{ExtruderMonadError, ExtruderSync}
 
 import scala.collection.JavaConverters._
 
@@ -14,6 +14,7 @@ trait EnvironmentDecoders
     with Decode
     with DecodeFromDefaultSource
     with DecodeTypes {
+  override type Eff[F[_]] = ExtruderMonadError[F]
   override type InputData = java.util.Map[String, String]
   override type DecodeData = Map[String, String]
   override type Dec[F[_], T] = EnvironmentDecoder[F, T]
@@ -22,13 +23,13 @@ trait EnvironmentDecoders
   override protected def hasValue[F[_]](
     path: List[String],
     data: Map[String, String]
-  )(implicit hints: EnvironmentHints, F: ExtruderAsync[F]): F[Boolean] =
+  )(implicit hints: Hint, F: Eff[F]): F[Boolean] =
     F.map(lookupValue(path, data))(_.isDefined)
 
   override protected def lookupValue[F[_]](
     path: List[String],
     data: Map[String, String]
-  )(implicit hints: Hint, F: ExtruderAsync[F]): F[Option[String]] =
+  )(implicit hints: Hint, F: Eff[F]): F[Option[String]] =
     F.pure(data.get(hints.pathToString(path)))
 
   override protected def mkDecoder[F[_], T](
@@ -42,10 +43,10 @@ trait EnvironmentDecoders
   override protected def prepareInput[F[_]](
     namespace: List[String],
     data: java.util.Map[String, String]
-  )(implicit F: ExtruderAsync[F], util: Hint): F[Map[String, String]] =
+  )(implicit F: Eff[F], util: Hint): F[Map[String, String]] =
     F.pure(data.asScala.toMap)
 
-  override def loadInput[F[_]](implicit F: ExtruderAsync[F]): F[java.util.Map[String, String]] =
+  override def loadInput[F[_]](implicit F: Eff[F]): F[java.util.Map[String, String]] =
     F.catchNonFatal(System.getenv())
 }
 

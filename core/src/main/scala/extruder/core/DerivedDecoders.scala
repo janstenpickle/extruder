@@ -1,14 +1,13 @@
 package extruder.core
 
 import cats.implicits._
-import extruder.effect.ExtruderAsync
 import shapeless._
 import shapeless.labelled.{field, FieldType}
 
 import scala.reflect.runtime.universe.TypeTag
 
 trait DerivedDecoders { self: Decoders with DecodeTypes =>
-  implicit def cnilDecoder[F[_]](implicit hints: Hint, F: ExtruderAsync[F]): Dec[F, CNil] =
+  implicit def cnilDecoder[F[_]](implicit hints: Hint, F: Eff[F]): Dec[F, CNil] =
     mkDecoder[F, CNil] { (path, _, _) =>
       F.validationFailure(
         s"Could not find specified implementation of sealed type at path '${hints.pathToStringWithType(path)}'"
@@ -21,7 +20,7 @@ trait DerivedDecoders { self: Decoders with DecodeTypes =>
     tailResolve: Lazy[Dec[F, T]],
     typeResolver: Lazy[Dec[F, Option[String]]],
     hints: Hint,
-    F: ExtruderAsync[F]
+    F: Eff[F]
   ): Dec[F, FieldType[K, H] :+: T] =
     mkDecoder { (path, _, data) =>
       val onValidType: Option[String] => F[FieldType[K, H] :+: T] = {
@@ -37,7 +36,7 @@ trait DerivedDecoders { self: Decoders with DecodeTypes =>
   implicit def unionDecoder[F[_], T, V <: Coproduct](
     implicit gen: LabelledGeneric.Aux[T, V],
     underlying: Lazy[Dec[F, V]],
-    F: ExtruderAsync[F],
+    F: Eff[F],
     lp: LowPriority
   ): Dec[F, T] =
     mkDecoder { (path, _, data) =>
@@ -48,14 +47,14 @@ trait DerivedDecoders { self: Decoders with DecodeTypes =>
     def read(path: List[String], default: DefaultRepr, data: DecodeData): F[Repr]
   }
 
-  implicit def hNilDerivedDecoder[T, F[_]](implicit F: ExtruderAsync[F]): DerivedDecoderWithDefault[T, F, HNil, HNil] =
+  implicit def hNilDerivedDecoder[T, F[_]](implicit F: Eff[F]): DerivedDecoderWithDefault[T, F, HNil, HNil] =
     new DerivedDecoderWithDefault[T, F, HNil, HNil] {
       override def read(path: List[String], default: HNil, data: DecodeData): F[HNil] = F.pure(HNil)
     }
 
   implicit def hConsDerivedDecoder[T, F[_], K <: Symbol, V, TailRepr <: HList, DefaultsTailRepr <: HList](
     implicit key: Witness.Aux[K],
-    F: ExtruderAsync[F],
+    F: Eff[F],
     decoder: Lazy[Dec[F, V]],
     tailDecoder: Lazy[DerivedDecoderWithDefault[T, F, TailRepr, DefaultsTailRepr]]
   ): DerivedDecoderWithDefault[T, F, FieldType[K, V] :: TailRepr, Option[V] :: DefaultsTailRepr] =
@@ -78,7 +77,7 @@ trait DerivedDecoders { self: Decoders with DecodeTypes =>
     implicit gen: LabelledGeneric.Aux[T, GenRepr],
     defaults: Default.AsOptions.Aux[T, DefaultOptsRepr],
     tag: TypeTag[T],
-    F: ExtruderAsync[F],
+    F: Eff[F],
     decoder: Lazy[DerivedDecoderWithDefault[T, F, GenRepr, DefaultOptsRepr]]
   ): Dec[F, T] = {
     lazy val className: String = tag.tpe.typeSymbol.name.toString
