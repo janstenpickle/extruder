@@ -4,28 +4,22 @@ import java.net.URL
 
 import cats.data.Validated.Valid
 import cats.data.{EitherT, NonEmptyList, Validated}
-import cats.effect.{Effect, IO}
+import cats.effect.{Async, Effect, IO}
 import cats.syntax.validated._
 import cats.{Applicative, Apply}
 import extruder.core.{ExtruderEffect, Missing, Validation, ValidationError, ValidationException, ValidationFailure}
 import extruder.data.ValidationT
 import monix.eval.Task
-
-//import monix.execution.Scheduler.Implicits.global
+import monix.execution.Scheduler.Implicits.global
 
 import scala.concurrent.Await
 import scala.util.{Failure, Success}
-import extruder.monix._
 
 //import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.Future
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.util.Try
-
-import fs2.interop.cats._
-
-
 
 case class CC(
   a: String = "test",
@@ -71,14 +65,13 @@ object Simple extends App {
 
 //  ExtruderApplicativeError.fromMonadError[EitherT[Future, Throwable, ?]]
 
-
-//  implicitly[Effect[EitherT[Future, Throwable, ?]]]
-//  implicitly[ExtruderEffect[Future]]
-//  implicitly[ExtruderEffect[IO]]
-//  implicitly[ExtruderEffect[ValidationT[IO, ?]]]
-  //implicitly[ExtruderEffect[Task]]
+  //implicitly[Effect[EitherT[Future, Throwable, ?]]]
+  //implicitly[ExtruderEffect[Future]]
+  implicitly[ExtruderEffect[IO]]
+  implicitly[ExtruderEffect[ValidationT[IO, ?]]]
+  implicitly[ExtruderEffect[Task]]
   implicitly[ExtruderEffect[Validation]]
-  implicitly[Effect[fs2.Task]]
+  implicitly[Async[EitherT[IO, NonEmptyList[String], ?]]]
   //println(decode[CC, EitherT[Future, Throwable, ?], Throwable](config))
 //  println(decodeIO[CC](config))
 //  println(decodeIO[CC, EitherThrowable, Throwable](config))
