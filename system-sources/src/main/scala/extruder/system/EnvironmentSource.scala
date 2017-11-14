@@ -1,6 +1,7 @@
 package extruder.system
 
 import extruder.core._
+import extruder.effect.ExtruderAsync
 
 import scala.collection.JavaConverters._
 
@@ -21,13 +22,13 @@ trait EnvironmentDecoders
   override protected def hasValue[F[_]](
     path: List[String],
     data: Map[String, String]
-  )(implicit hints: EnvironmentHints, F: ExtruderEffect[F]): F[Boolean] =
+  )(implicit hints: EnvironmentHints, F: ExtruderAsync[F]): F[Boolean] =
     F.map(lookupValue(path, data))(_.isDefined)
 
   override protected def lookupValue[F[_]](
     path: List[String],
     data: Map[String, String]
-  )(implicit hints: Hint, F: ExtruderEffect[F]): F[Option[String]] =
+  )(implicit hints: Hint, F: ExtruderAsync[F]): F[Option[String]] =
     F.pure(data.get(hints.pathToString(path)))
 
   override protected def mkDecoder[F[_], T](
@@ -41,11 +42,11 @@ trait EnvironmentDecoders
   override protected def prepareInput[F[_]](
     namespace: List[String],
     data: java.util.Map[String, String]
-  )(implicit F: ExtruderEffect[F], util: Hint): F[Map[String, String]] =
+  )(implicit F: ExtruderAsync[F], util: Hint): F[Map[String, String]] =
     F.pure(data.asScala.toMap)
 
-  override def loadInput[F[_]](implicit F: ExtruderEffect[F]): F[java.util.Map[String, String]] =
-    F.delay(System.getenv())
+  override def loadInput[F[_]](implicit F: ExtruderAsync[F]): F[java.util.Map[String, String]] =
+    F.catchNonFatal(System.getenv())
 }
 
 object EnvironmentDecoder extends EnvironmentDecoders

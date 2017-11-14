@@ -1,6 +1,7 @@
 package extruder.core
 
 import cats.data.NonEmptyList
+import extruder.effect.ExtruderAsync
 import org.scalacheck.{Gen, Prop}
 import org.specs2.matcher.{EitherMatchers, MatchResult}
 import org.specs2.specification.core.SpecStructure
@@ -28,28 +29,28 @@ class FailingSourceSpec extends Specification with ScalaCheck with EitherMatcher
   override protected def finalizeOutput[F[_]](
     namespace: List[String],
     data: Map[String, String]
-  )(implicit F: ExtruderEffect[F], util: Hint): F[Map[String, String]] =
+  )(implicit F: ExtruderAsync[F], util: Hint): F[Map[String, String]] =
     if (data.keys.forall(_.contains(finalizeFailKey))) F.validationFailure(finalizeFailMessage)
     else F.pure(data)
 
   override protected def prepareInput[F[_]](
     namespace: List[String],
     data: Map[String, String]
-  )(implicit F: ExtruderEffect[F], util: Hint): F[Map[String, String]] =
+  )(implicit F: ExtruderAsync[F], util: Hint): F[Map[String, String]] =
     if (data.keys.forall(_.contains(prepareFailKey))) F.validationFailure(prepareFailMessage)
     else F.pure(data)
 
   override protected def lookupValue[F[_]](
     path: List[String],
     data: Map[String, String]
-  )(implicit hints: MapHints, F: ExtruderEffect[F]): F[Option[String]] =
+  )(implicit hints: MapHints, F: ExtruderAsync[F]): F[Option[String]] =
     if (path.contains(okNamespace)) F.pure(data.get(hints.pathToString(path)))
     else F.validationFailure(lookupFailMessage)
 
   override protected def writeValue[F[_]](
     path: List[String],
     value: String
-  )(implicit hints: MapHints, F: ExtruderEffect[F]): F[Map[String, String]] =
+  )(implicit hints: MapHints, F: ExtruderAsync[F]): F[Map[String, String]] =
     if (path.contains(okNamespace)) F.validationFailure(writeFailMessage)
     else F.pure(Map(hints.pathToString(path) -> value))
 
@@ -63,7 +64,7 @@ class FailingSourceSpec extends Specification with ScalaCheck with EitherMatcher
   )(implicit encoder: MapEncoder[Validation, T], decoder: MapDecoder[Validation, T]): Prop =
     test[T](gen, _ mustEqual NonEmptyList.of(ValidationFailure(writeFailMessage)), Some(okNamespace))
 
-  def testCnilDecoder(implicit hints: MapHints, F: ExtruderEffect[Validation]): MatchResult[Any] =
+  def testCnilDecoder(implicit hints: MapHints, F: ExtruderAsync[Validation]): MatchResult[Any] =
     cnilDecoder.read(List.empty, None, Map.empty) mustEqual
       F.validationFailure(
         s"Could not find specified implementation of sealed type at path '${hints.pathToStringWithType(List.empty)}'"

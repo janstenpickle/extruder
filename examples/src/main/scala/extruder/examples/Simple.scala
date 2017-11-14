@@ -2,24 +2,17 @@ package extruder.examples
 
 import java.net.URL
 
-import cats.data.Validated.Valid
-import cats.data.{EitherT, NonEmptyList, Validated}
-import cats.effect.{Async, Effect, IO}
-import cats.syntax.validated._
-import cats.{Applicative, Apply}
-import extruder.core.{ExtruderEffect, Missing, Validation, ValidationError, ValidationException, ValidationFailure}
+import cats.data.EitherT
+import cats.effect.IO
+import extruder.core.{MapDecoder, Validation}
 import extruder.data.ValidationT
-import monix.eval.Task
-import monix.execution.Scheduler.Implicits.global
-
-import scala.concurrent.Await
-import scala.util.{Failure, Success}
+import extruder.effect.{ExtruderAsync, ExtruderMonadError, ExtruderSync}
 
 //import scala.concurrent.ExecutionContext.Implicits.global
 
-import scala.concurrent.Future
 import scala.concurrent.duration.{Duration, FiniteDuration}
-import scala.util.Try
+
+import cats.instances.all._
 
 case class CC(
   a: String = "test",
@@ -55,8 +48,21 @@ object Simple extends App {
     "thingimpl.t" -> "sadfsf"
   )
 
-  //println(decode[CC](config))
+  //implicitly[ExtruderSync[ValidationT[IO, ?]]]
 
+  //println(ExtruderSync.validationTSync[IO])
+
+  //implicit val derp = ExtruderAsync.validationTAsync[IO]
+
+  type Val[A] = ValidationT[IO, A]
+  type Eit[A] = EitherT[IO, Throwable, A]
+
+  implicitly[ExtruderAsync[Eit]]
+  implicitly[ExtruderSync[Eit]]
+  implicitly[ExtruderMonadError[Eit]]
+
+  println(MapDecoder.decode[Int, Eit](config))
+  println(MapDecoder.decode[Int, Val](config))
 //  implicit val fut = ExtruderApplicativeError.fromMonadError[Future]
 
   //println(decode[CC, Future, Throwable](config))
@@ -67,11 +73,10 @@ object Simple extends App {
 
   //implicitly[Effect[EitherT[Future, Throwable, ?]]]
   //implicitly[ExtruderEffect[Future]]
-  implicitly[ExtruderEffect[IO]]
-  implicitly[ExtruderEffect[ValidationT[IO, ?]]]
-  implicitly[ExtruderEffect[Task]]
-  implicitly[ExtruderEffect[Validation]]
-  implicitly[Async[EitherT[IO, NonEmptyList[String], ?]]]
+  // implicitly[ExtruderAsync[IO]]
+  // implicitly[ExtruderAsync[ValidationT[IO, ?]]]
+//  implicitly[ExtruderAsync[Task]]
+  // implicitly[Async[EitherT[IO, NonEmptyList[String], ?]]]
   //println(decode[CC, EitherT[Future, Throwable, ?], Throwable](config))
 //  println(decodeIO[CC](config))
 //  println(decodeIO[CC, EitherThrowable, Throwable](config))

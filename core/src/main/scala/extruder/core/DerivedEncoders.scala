@@ -1,12 +1,13 @@
 package extruder.core
 
+import extruder.effect.ExtruderAsync
 import shapeless._
 import shapeless.labelled.FieldType
 
 import scala.reflect.runtime.universe.TypeTag
 
 trait DerivedEncoders { self: Encoders with EncodeTypes =>
-  implicit def cnilEncoder[F[_]](implicit F: ExtruderEffect[F]): Enc[F, CNil] = mkEncoder { (_, _) =>
+  implicit def cnilEncoder[F[_]](implicit F: ExtruderAsync[F]): Enc[F, CNil] = mkEncoder { (_, _) =>
     F.validationFailure(s"Impossible!")
   }
 
@@ -16,7 +17,7 @@ trait DerivedEncoders { self: Encoders with EncodeTypes =>
     tailEncode: Lazy[Enc[F, T]],
     typeEncode: Lazy[Enc[F, String]],
     hints: Hint,
-    F: ExtruderEffect[F]
+    F: ExtruderAsync[F]
   ): Enc[F, FieldType[K, H] :+: T] =
     mkEncoder { (path, value) =>
       val chooseEncoder: F[EncodeData] = value match {
@@ -33,7 +34,7 @@ trait DerivedEncoders { self: Encoders with EncodeTypes =>
   implicit def unionEncoder[F[_], T, O <: Coproduct](
     implicit gen: LabelledGeneric.Aux[T, O],
     underlying: Lazy[Enc[F, O]],
-    F: ExtruderEffect[F],
+    F: ExtruderAsync[F],
     lp: LowPriority
   ): Enc[F, T] =
     mkEncoder((path, value) => underlying.value.write(path, gen.to(value)))
@@ -42,14 +43,14 @@ trait DerivedEncoders { self: Encoders with EncodeTypes =>
     def write(path: List[String], value: Repr): F[EncodeData]
   }
 
-  implicit def hNilDerivedEncoder[T, F[_]](implicit F: ExtruderEffect[F]): DerivedEncoder[T, F, HNil] =
+  implicit def hNilDerivedEncoder[T, F[_]](implicit F: ExtruderAsync[F]): DerivedEncoder[T, F, HNil] =
     new DerivedEncoder[T, F, HNil] {
       override def write(path: List[String], value: HNil): F[EncodeData] = F.pure(monoid.empty)
     }
 
   implicit def hConsDerivedEncoder[T, F[_], K <: Symbol, V, TailRepr <: HList](
     implicit key: Witness.Aux[K],
-    F: ExtruderEffect[F],
+    F: ExtruderAsync[F],
     encoder: Lazy[Enc[F, V]],
     tailEncoder: Lazy[DerivedEncoder[T, F, TailRepr]]
   ): DerivedEncoder[T, F, FieldType[K, V] :: TailRepr] =
@@ -67,7 +68,7 @@ trait DerivedEncoders { self: Encoders with EncodeTypes =>
   implicit def productEncoder[F[_], T, GenRepr <: HList](
     implicit gen: LabelledGeneric.Aux[T, GenRepr],
     tag: TypeTag[T],
-    F: ExtruderEffect[F],
+    F: ExtruderAsync[F],
     encoder: Lazy[DerivedEncoder[T, F, GenRepr]]
   ): Enc[F, T] = {
     lazy val className: String = tag.tpe.typeSymbol.name.toString

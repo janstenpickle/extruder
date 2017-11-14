@@ -3,6 +3,7 @@ package extruder.core
 import java.net.URL
 
 import cats.implicits._
+import extruder.effect.ExtruderAsync
 import mouse.string._
 import shapeless.syntax.typeable._
 import shapeless.{Lazy, Typeable}
@@ -11,31 +12,31 @@ import scala.collection.generic.CanBuildFrom
 import scala.concurrent.duration.Duration
 import scala.reflect.ClassTag
 
-trait PrimitiveDecoders { self: Decoders with DecodeTypes =>
+trait PrimitiveDecoders extends { self: Decoders with DecodeTypes =>
   protected def hasValue[F[_]](path: List[String], data: DecodeData)(
     implicit hints: Hint,
-    F: ExtruderEffect[F]
+    F: ExtruderAsync[F]
   ): F[Boolean]
 
   protected def lookupValue[F[_]](path: List[String], data: DecodeData)(
     implicit hints: Hint,
-    F: ExtruderEffect[F]
+    F: ExtruderAsync[F]
   ): F[Option[String]]
 
   protected def lookupList[F[_]](
     path: List[String],
     data: DecodeData
-  )(implicit hints: Hint, F: ExtruderEffect[F]): F[Option[List[String]]] =
+  )(implicit hints: Hint, F: ExtruderAsync[F]): F[Option[List[String]]] =
     lookupValue[F](path, data).map(_.map(_.split(hints.ListSeparator).toList.map(_.trim)))
 
-  implicit def primitiveDecoder[F[_], T](implicit parser: Parser[T], hints: Hint, F: ExtruderEffect[F]): Dec[F, T] =
+  implicit def primitiveDecoder[F[_], T](implicit parser: Parser[T], hints: Hint, F: ExtruderAsync[F]): Dec[F, T] =
     mkDecoder[F, T]((path, default, data) => resolveValue(formatParserError(parser, path)).apply(path, default, data))
 
   implicit def traversableDecoder[F[_], T, FF[T] <: TraversableOnce[T]](
     implicit parser: Parser[T],
     cbf: CanBuildFrom[FF[T], T, FF[T]],
     hints: Hint,
-    F: ExtruderEffect[F]
+    F: ExtruderAsync[F]
   ): Dec[F, FF[T]] =
     mkDecoder { (path, default, data) =>
       resolveList { x =>
@@ -48,7 +49,7 @@ trait PrimitiveDecoders { self: Decoders with DecodeTypes =>
   implicit def optionalDecoder[F[_], T](
     implicit decoder: Lazy[Dec[F, T]],
     hints: Hint,
-    F: ExtruderEffect[F]
+    F: ExtruderAsync[F]
   ): Dec[F, Option[T]] =
     mkDecoder[F, Option[T]] { (path, _, data) =>
       val decoded = decoder.value.read(path, None, data)
@@ -65,18 +66,18 @@ trait PrimitiveDecoders { self: Decoders with DecodeTypes =>
 
   protected def resolveValue[F[_], E, T](
     parser: String => F[T]
-  )(implicit hints: Hint, AE: ExtruderEffect[F]): (List[String], Option[T], DecodeData) => F[T] =
+  )(implicit hints: Hint, AE: ExtruderAsync[F]): (List[String], Option[T], DecodeData) => F[T] =
     resolve[F, T, String](parser, lookupValue[F])
 
   protected def resolveList[F[_], T](
     parser: List[String] => F[T]
-  )(implicit hints: Hint, F: ExtruderEffect[F]): (List[String], Option[T], DecodeData) => F[T] =
+  )(implicit hints: Hint, F: ExtruderAsync[F]): (List[String], Option[T], DecodeData) => F[T] =
     resolve[F, T, List[String]](parser, lookupList[F])
 
   protected def resolve[F[_], T, V](
     parser: V => F[T],
     lookup: (List[String], DecodeData) => F[Option[V]]
-  )(path: List[String], default: Option[T], data: DecodeData)(implicit hints: Hint, F: ExtruderEffect[F]): F[T] =
+  )(path: List[String], default: Option[T], data: DecodeData)(implicit hints: Hint, F: ExtruderAsync[F]): F[T] =
     F.flatMap(lookup(path, data)) { v =>
       (v, default) match {
         case (None, None) =>
@@ -89,7 +90,7 @@ trait PrimitiveDecoders { self: Decoders with DecodeTypes =>
   protected def formatParserError[F[_], T](
     parser: Parser[T],
     path: List[String]
-  )(implicit hints: Hint, F: ExtruderEffect[F]): String => F[T] =
+  )(implicit hints: Hint, F: ExtruderAsync[F]): String => F[T] =
     value =>
       parser
         .parse(value)

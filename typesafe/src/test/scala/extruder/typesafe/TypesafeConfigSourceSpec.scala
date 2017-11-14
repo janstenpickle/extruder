@@ -5,7 +5,8 @@ import cats.instances.all._
 import cats.kernel.laws.GroupLaws
 import com.typesafe.config._
 import extruder.core.ValidationCatsInstances._
-import extruder.core.{ExtruderEffect, SourceSpec, ValidationException}
+import extruder.core.{SourceSpec, ValidationException}
+import extruder.effect.ExtruderAsync
 import org.scalacheck.{Arbitrary, Gen}
 import org.specs2.matcher.MatchResult
 import org.specs2.specification.core.SpecStructure
@@ -27,7 +28,7 @@ class TypesafeConfigSourceSpec extends SourceSpec with TypesafeConfigDecoders wi
     ConfigFactory.parseMap(config)
   }
 
-  override def loadInput[F[_]](implicit F: ExtruderEffect[F]): F[InputData] = F.delay(convertData(caseClassData))
+  override def loadInput[F[_]](implicit F: ExtruderAsync[F]): F[InputData] = F.delay(convertData(caseClassData))
 
   override def ext: SpecStructure =
     s2"""

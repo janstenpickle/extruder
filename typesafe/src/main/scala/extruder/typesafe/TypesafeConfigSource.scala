@@ -4,6 +4,7 @@ import cats.Monoid
 import com.typesafe.config.ConfigException.Missing
 import com.typesafe.config.{ConfigFactory, ConfigList, ConfigObject, ConfigValue, Config => TConfig}
 import extruder.core._
+import extruder.effect.ExtruderAsync
 import shapeless.Coproduct
 
 import scala.collection.JavaConverters._
@@ -22,7 +23,7 @@ trait TypesafeConfigDecoders
 
   private def lookup[T, F[_]](f: TConfig => T, path: List[String], data: TConfig)(
     implicit hints: Hint,
-    F: ExtruderEffect[F]
+    F: ExtruderAsync[F]
   ): F[Option[T]] =
     F.recoverWith(F.map[T, Option[T]](F.catchNonFatal(f(data)))(Some(_))) {
       case _: Missing => F.pure(None)
@@ -31,47 +32,44 @@ trait TypesafeConfigDecoders
   override protected def prepareInput[F[_]](
     namespace: List[String],
     data: TConfig
-  )(implicit F: ExtruderEffect[F], hints: Hint): F[TConfig] =
+  )(implicit F: ExtruderAsync[F], hints: Hint): F[TConfig] =
     F.pure(data)
 
   override protected def hasValue[F[_]](
     path: List[String],
     data: TConfig
-  )(implicit hints: TypesafeConfigHints, F: ExtruderEffect[F]): F[Boolean] =
+  )(implicit hints: TypesafeConfigHints, F: ExtruderAsync[F]): F[Boolean] =
     F.map(lookup[ConfigValue, F](_.getValue(hints.pathToString(path)), path, data))(_.isDefined)
 
   override protected def lookupValue[F[_]](
     path: List[String],
     data: TConfig
-  )(implicit hints: Hint, F: ExtruderEffect[F]): F[Option[String]] =
+  )(implicit hints: Hint, F: ExtruderAsync[F]): F[Option[String]] =
     lookup(_.getString(hints.pathToString(path)), path, data)
 
   override protected def lookupList[F[_]](
     path: List[String],
     data: TConfig
-  )(implicit hints: Hint, F: ExtruderEffect[F]): F[Option[List[String]]] =
+  )(implicit hints: Hint, F: ExtruderAsync[F]): F[Option[List[String]]] =
     lookup(_.getStringList(hints.pathToString(path)).asScala.toList, path, data)
 
   private def resolve[F[_], T](
     lookup: (List[String], TConfig) => F[Option[T]]
-  )(implicit F: ExtruderEffect[F]): (List[String], Option[T], TConfig) => F[T] =
+  )(implicit F: ExtruderAsync[F]): (List[String], Option[T], TConfig) => F[T] =
     resolve[F, T, T](F.pure, lookup)
 
   implicit def dataValueDecoder[F[_]](
     implicit hints: Hint,
-    F: ExtruderEffect[F]
+    F: ExtruderAsync[F]
   ): TypesafeConfigDecoder[F, ConfigValue] =
     mkDecoder(resolve[F, ConfigValue]((path, data) => lookup(_.getValue(hints.pathToString(path)), path, data)))
 
-  implicit def dataListDecoder[F[_]](
-    implicit hints: Hint,
-    F: ExtruderEffect[F]
-  ): TypesafeConfigDecoder[F, ConfigList] =
+  implicit def dataListDecoder[F[_]](implicit hints: Hint, F: ExtruderAsync[F]): TypesafeConfigDecoder[F, ConfigList] =
     mkDecoder(resolve[F, ConfigList]((path, data) => lookup(_.getList(hints.pathToString(path)), path, data)))
 
   implicit def dataObjectDecoder[F[_]](
     implicit hints: Hint,
-    F: ExtruderEffect[F]
+    F: ExtruderAsync[F]
   ): TypesafeConfigDecoder[F, ConfigObject] =
     mkDecoder(resolve[F, ConfigObject]((path, data) => lookup(_.getObject(hints.pathToString(path)), path, data)))
 
@@ -80,7 +78,7 @@ trait TypesafeConfigDecoders
       override def read(path: List[String], default: Option[T], data: TConfig): F[T] = f(path, default, data)
     }
 
-  override def loadInput[F[_]](implicit F: ExtruderEffect[F]): F[TConfig] = F.delay(ConfigFactory.load())
+  override def loadInput[F[_]](implicit F: ExtruderAsync[F]): F[TConfig] = F.delay(ConfigFactory.load())
 }
 
 trait TypesafeConfigDecoder[F[_], T] extends Decoder[F, T, TConfig]
@@ -106,19 +104,19 @@ trait TypesafeConfigEncoders
   private def valueToConfig[F[_]](
     path: List[String],
     value: ConfigTypes
-  )(implicit hints: Hint, F: ExtruderEffect[F]): F[ConfigMap] =
+  )(implicit hints: Hint, F: ExtruderAsync[F]): F[ConfigMap] =
     F.pure(Map(hints.pathToString(path) -> value))
 
   override protected def writeValue[F[_]](
     path: List[String],
     value: String
-  )(implicit hints: Hint, F: ExtruderEffect[F]): F[ConfigMap] =
+  )(implicit hints: Hint, F: ExtruderAsync[F]): F[ConfigMap] =
     valueToConfig(path, Coproduct[ConfigTypes](value))
 
   override protected def finalizeOutput[F[_]](
     namespace: List[String],
     inter: ConfigMap
-  )(implicit F: ExtruderEffect[F], hints: Hint): F[TConfig] =
+  )(implicit F: ExtruderAsync[F], hints: Hint): F[TConfig] =
     F.catchNonFatal(ConfigFactory.parseMap(inter.flatMap {
       case (k, v) =>
         (v.select[String].toList ++
@@ -131,7 +129,7 @@ trait TypesafeConfigEncoders
   override implicit def traversableEncoder[F[_], T, FF[T] <: TraversableOnce[T]](
     implicit shows: Show[T],
     hints: Hint,
-    F: ExtruderEffect[F]
+    F: ExtruderAsync[F]
   ): TypesafeConfigEncoder[F, FF[T]] =
     mkEncoder { (path, value) =>
       F.pure(Map(hints.pathToString(path) -> Coproduct[ConfigTypes](value.map(shows.show).toList)))
@@ -139,23 +137,20 @@ trait TypesafeConfigEncoders
 
   implicit def dataValueEncoder[F[_]](
     implicit hints: Hint,
-    F: ExtruderEffect[F]
+    F: ExtruderAsync[F]
   ): TypesafeConfigEncoder[F, ConfigValue] =
     mkEncoder { (path, value) =>
       F.pure(Map(hints.pathToString(path) -> Coproduct[ConfigTypes](value)))
     }
 
-  implicit def dataListEncoder[F[_]](
-    implicit hints: Hint,
-    F: ExtruderEffect[F]
-  ): TypesafeConfigEncoder[F, ConfigList] =
+  implicit def dataListEncoder[F[_]](implicit hints: Hint, F: ExtruderAsync[F]): TypesafeConfigEncoder[F, ConfigList] =
     mkEncoder { (path, value) =>
       F.pure(Map(hints.pathToString(path) -> Coproduct[ConfigTypes](value)))
     }
 
   implicit def dataObjectEncoder[F[_]](
     implicit hints: Hint,
-    F: ExtruderEffect[F]
+    F: ExtruderAsync[F]
   ): TypesafeConfigEncoder[F, ConfigObject] =
     mkEncoder { (path, value) =>
       F.pure(Map(hints.pathToString(path) -> Coproduct[ConfigTypes](value)))
