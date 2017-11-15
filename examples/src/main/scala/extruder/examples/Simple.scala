@@ -6,7 +6,7 @@ import cats.data.EitherT
 import cats.effect.IO
 import extruder.data.ValidationT
 import extruder.effect.{ExtruderAsync, ExtruderMonadError, ExtruderSync}
-import extruder.system.{EnvironmentSource, SafeSystemPropertiesSource, SystemPropertiesSource}
+import extruder.system.{EnvironmentSource, SafeEnvironmentSource, SafeSystemPropertiesSource, SystemPropertiesSource}
 import extruder.typesafe.{SafeTypesafeConfigSource, TypesafeConfigSource}
 
 //import scala.concurrent.ExecutionContext.Implicits.global
@@ -61,7 +61,7 @@ object Simple extends App {
   implicitly[ExtruderMonadError[Eit]]
   implicitly[ExtruderMonadError[Val]]
 
-  println(SafeTypesafeConfigSource.decode[CC, Val].value.unsafeRunSync())
+  println(SafeEnvironmentSource.decode[CC, Val].value.unsafeRunSync())
   //println(MapDecoder.decode[Int, Val](config))
 //  implicit val fut = ExtruderApplicativeError.fromMonadError[Future]
 

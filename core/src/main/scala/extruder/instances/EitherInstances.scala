@@ -7,9 +7,9 @@ import cats.syntax.either._
 import cats.instances.all._
 
 trait EitherInstances {
-  val eitherMonadError: ExtruderMonadError[Either[ValidationError, ?]] =
+  implicit val eitherMonadError: ExtruderMonadError[Either[ValidationError, ?]] =
     new ExtruderMonadError[Either[ValidationError, ?]] {
-      private def F: Monad[Either[ValidationError, ?]] = Monad[Either[ValidationError, ?]]
+      private def F: Monad[Either[ValidationError, ?]] = catsStdInstancesForEither
 
       override def validationException[A](message: String, ex: Throwable): Either[ValidationError, A] =
         Left(ValidationException(message, ex))

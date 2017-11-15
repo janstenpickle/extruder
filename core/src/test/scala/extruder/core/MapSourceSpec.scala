@@ -1,12 +1,12 @@
 package extruder.core
 import cats.instances.all._
-import cats.kernel.laws.GroupLaws
+import cats.kernel.laws.discipline.MonoidTests
 
 class MapSourceSpec extends SourceSpec with MapEncoders with MapDecoders with DecodeFromDefaultSource {
   override def convertData(map: Map[List[String], String])(implicit hints: Hint): Map[String, String] =
     map.map { case (k, v) => hints.pathToString(k) -> v }
 
-  //override def monoidGroupLaws: GroupLaws[Map[String, String]] = GroupLaws[Map[String, String]]
+  override def monoidTests: MonoidTests[Map[String, String]]#RuleSet = MonoidTests[Map[String, String]].monoid
 
   override implicit def hints: MapHints = MapHints.default
 

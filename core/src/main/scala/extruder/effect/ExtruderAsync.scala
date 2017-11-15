@@ -1,5 +1,6 @@
 package extruder.effect
 
+import cats.{Applicative, Monad, MonadError}
 import cats.effect._
 import cats.syntax.validated._
 import extruder.data.ValidationT
@@ -28,12 +29,16 @@ trait LowPriorityAsyncInstances {
 }
 
 trait AsyncInstances {
-  abstract class FromSync[F[_]](implicit F: Sync[F]) extends ExtruderAsync[F] {
+  abstract class FromApplicative[F[_]](implicit F: Applicative[F]) extends ExtruderAsync[F] {
     override def pure[A](x: A): F[A] = F.pure(x)
-    override def suspend[A](thunk: => F[A]): F[A] = F.suspend(thunk)
-    override def delay[A](thunk: => A): F[A] = F.delay(thunk)
+  }
+
+  abstract class FromMonad[F[_]](implicit F: Monad[F]) extends FromApplicative[F] {
     override def flatMap[A, B](fa: F[A])(f: A => F[B]): F[B] = F.flatMap(fa)(f)
     override def tailRecM[A, B](a: A)(f: A => F[Either[A, B]]): F[B] = F.tailRecM(a)(f)
+  }
+
+  abstract class FromMonadError[F[_]](implicit F: MonadError[F, Throwable]) extends FromMonad[F] {
     override def missing[A](message: String): F[A] = raiseError(new NoSuchElementException(message))
     override def validationFailure[A](message: String): F[A] = raiseError(new RuntimeException(message))
     override def validationException[A](message: String, ex: Throwable): F[A] = raiseError(ex)
@@ -41,11 +46,14 @@ trait AsyncInstances {
     override def handleErrorWith[A](fa: F[A])(f: Throwable => F[A]): F[A] = F.handleErrorWith(fa)(f)
   }
 
+  abstract class FromSync[F[_]](implicit F: Sync[F]) extends FromMonadError[F] {
+    override def suspend[A](thunk: => F[A]): F[A] = F.suspend(thunk)
+    override def delay[A](thunk: => A): F[A] = F.delay(thunk)
+  }
+
   implicit def fromAsync[F[_]](implicit F: Async[F]): ExtruderAsync[F] =
     new FromSync[F]()(F) {
       override def async[A](k: (Either[Throwable, A] => Unit) => Unit): F[A] = F.async(k)
-      override def suspend[A](thunk: => F[A]): F[A] = F.suspend(thunk)
-      override def delay[A](thunk: => A): F[A] = F.delay(thunk)
       override def liftIO[A](ioa: IO[A]): F[A] = F.liftIO(ioa)
     }
 }

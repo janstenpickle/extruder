@@ -79,38 +79,6 @@ trait Encode { self: EncodeTypes =>
     value: T
   )(implicit encoder: Enc[F, T], F: Eff[F], hints: Hint): F[OutputData] =
     F.flatMap(encoder.write(namespace, value))(finalizeOutput[F](namespace, _))
-
-  /** Encode the given value as data
-    * If the data source is asynchronous by nature this method will wait for the duration specified in `hints` for decoding to timeout
-    *
-    * @param value   the value to be encoded
-    * @param encoder implicit [[Encoder]] instance
-    * @param F       implicit [[Eff]] instance
-    * @param hints   implicit [[Hints]] instance
-    * @tparam T type to be encoded
-    * @throws Throwable any error encountered during encoding
-    * @return The value encoded as [[OutputData]]
-    */
-  def encodeUnsafe[T](value: T)(implicit encoder: Enc[Validation, T], F: Eff[Validation], hints: Hint): OutputData =
-    encodeUnsafe[T](List.empty, value)
-
-  /** Encode the given value as data in a given namespace
-    * If the data source is asynchronous by nature this method will wait for the duration specified in `hints` for decoding to timeout
-    *
-    * @param value     the value to be encoded
-    * @param namespace namespace within the data source to place encoded values
-    * @param encoder   implicit [[Encoder]] instance
-    * @param F         implicit [[Eff]] instance
-    * @param hints     implicit [[Hints]] instance
-    * @tparam T type to be encoded
-    * @throws Throwable any error encountered during encoding
-    * @return The value encoded as [[OutputData]]
-    */
-  def encodeUnsafe[T](
-    namespace: List[String],
-    value: T
-  )(implicit encoder: Enc[Validation, T], F: Eff[Validation], hints: Hint): OutputData =
-    encode[T](namespace, value).fold(errs => throw errorsToThrowable(errs), identity)
 }
 
 trait Encoder[F[_], T, O] {
