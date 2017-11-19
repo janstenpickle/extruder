@@ -5,8 +5,8 @@ import org.scalacheck.{Arbitrary, Gen, Prop}
 import org.specs2.specification.core.SpecStructure
 import org.specs2.{ScalaCheck, Specification}
 
-class DataSourceSpec extends Specification with ScalaCheck with DataSource {
-  import DataSourceSpec._
+class CoreSpec extends Specification with ScalaCheck with DataSource {
+  import CoreSpec._
 
   override def is: SpecStructure =
     s2"""
@@ -19,7 +19,7 @@ class DataSourceSpec extends Specification with ScalaCheck with DataSource {
   }
 }
 
-object DataSourceSpec {
+object CoreSpec {
   implicit val validationErrorsArb: Arbitrary[ValidationErrors] = Arbitrary(
     Gen
       .nonEmptyListOf(Gen.alphaNumStr)
