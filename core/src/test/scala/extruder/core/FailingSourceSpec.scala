@@ -1,6 +1,7 @@
 package extruder.core
 
 import cats.data.NonEmptyList
+import cats.syntax.either._
 import org.scalacheck.{Gen, Prop}
 import org.specs2.matcher.{EitherMatchers, MatchResult}
 import org.specs2.specification.core.SpecStructure

@@ -1,6 +1,5 @@
 package extruder.refined
 
-import cats.data.NonEmptyList
 import cats.syntax.either._
 import eu.timepit.refined._
 import eu.timepit.refined.api.Refined
@@ -40,6 +39,7 @@ class RefinedInstancesSpec
         String Refined RegexMatch ${encodeDecode[String Refined RegexMatch]}
         Char Refined Letter ${encodeDecode[Char Refined Letter]}
         Char Refined Digit ${encodeDecode[Char Refined Digit]}
+        List Refined NonEmpty ${encodeDecode[List[Int] Refined NonEmpty]}
 
        Fails to decode a value which does not conform to refined predicate
         Int Refined Positive ${failEncodeDecode[Int Refined Positive, Int](Gen.negNum[Int])}
@@ -48,6 +48,7 @@ class RefinedInstancesSpec
         String Refined NonEmpty ${failEncodeDecode[String Refined NonEmpty, String](Gen.const(""))}
         Char Refined Letter ${failEncodeDecode[Char Refined Letter, Short](Gen.choose(0, 9))}
         Char Refined Digit ${failEncodeDecode[Char Refined Digit, Char](Gen.alphaChar)}
+        List Refined NonEmpty ${failEncodeDecode[List[Int] Refined NonEmpty, String](Gen.const(""))}
       """
 
   def encodeDecode[T](
