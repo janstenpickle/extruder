@@ -68,8 +68,7 @@ trait BaseTypesafeConfigDecoders
     parser: Parser[T],
     cbf: CanBuildFrom[List[T], T, FF[T]],
     F: Eff[F]
-  ): TypesafeConfigDecoder[F, FF[T]] = {
-    println("hell")
+  ): TypesafeConfigDecoder[F, FF[T]] =
     mkDecoder[F, FF[T]](
       (path, default, data) =>
         F.flatMap(lookup[List[String], F](_.getStringList(hints.pathToString(path)).asScala.toList, data))(
@@ -92,7 +91,6 @@ trait BaseTypesafeConfigDecoders
           }
       )
     )
-  }
 
   implicit def dataValueDecoder[F[_]](implicit hints: Hint, F: Eff[F]): TypesafeConfigDecoder[F, ConfigValue] =
     mkDecoder(resolve[F, ConfigValue]((path, data) => lookup(_.getValue(hints.pathToString(path)), data)))
