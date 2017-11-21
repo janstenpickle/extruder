@@ -66,7 +66,7 @@ trait BaseTypesafeConfigDecoders
   implicit def traversableDecoder[T, F[_], FF[T] <: TraversableOnce[T]](
     implicit hints: Hint,
     parser: Parser[T],
-    cbf: CanBuildFrom[List[T], T, FF[T]],
+    cbf: CanBuildFrom[FF[T], T, FF[T]],
     F: Eff[F]
   ): TypesafeConfigDecoder[F, FF[T]] =
     mkDecoder[F, FF[T]](
@@ -80,11 +80,11 @@ trait BaseTypesafeConfigDecoders
               case (Some(li), _) =>
                 Applicative[Either[String, ?]]
                   .sequence(li.map(parser.parse))
-                  .map(_.map[T, FF[T]](identity))
+                  .map(Parser.convertTraversable(_))
                   .fold(
                     err =>
                       F.validationFailure(
-                        s"Could not parse value '${li.toString()}' at '${hints.pathToString(path)}': $err"
+                        s"Could not parse value '${li.mkString(", ")}' at '${hints.pathToString(path)}': $err"
                     ),
                     F.pure
                   )

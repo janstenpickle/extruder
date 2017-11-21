@@ -102,19 +102,24 @@ trait Parsers {
         )
     )
 
+  def convertTraversable[T, F[T] <: TraversableOnce[T]](
+    li: TraversableOnce[T]
+  )(implicit cbf: CanBuildFrom[F[T], T, F[T]]): F[T] =
+    li.foldLeft(cbf())(_ += _).result()
+
   def traversableBuilder[T, F[T] <: TraversableOnce[T]](
     split: String => List[String]
-  )(implicit parser: Parser[T], cbf: CanBuildFrom[List[T], T, F[T]]): Parser[F[T]] =
+  )(implicit parser: Parser[T], cbf: CanBuildFrom[F[T], T, F[T]]): Parser[F[T]] =
     Parser(
       input =>
         Applicative[Either[String, ?]]
           .sequence(split(input).filterNot(_.isEmpty).map(parser.parse))
-          .map(_.map[T, F[T]](identity))
+          .map(convertTraversable(_))
     )
 
   implicit def traversable[T, F[T] <: TraversableOnce[T]](
     implicit parser: Parser[T],
-    cbf: CanBuildFrom[List[T], T, F[T]]
+    cbf: CanBuildFrom[F[T], T, F[T]]
   ): Parser[F[T]] =
     traversableBuilder[T, F](_.split(',').toList)
 }

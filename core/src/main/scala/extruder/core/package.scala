@@ -1,12 +1,13 @@
 package extruder
 
-import cats.data.{NonEmptyList, ValidatedNel}
+import cats.data.{EitherT, NonEmptyList, ValidatedNel}
 
 package object core {
   type EitherThrowable[T] = Either[Throwable, T]
   type EitherErrors[T] = Either[ValidationErrors, T]
   type ValidationErrors = NonEmptyList[ValidationError]
-  type Validation[T] = ValidatedNel[ValidationError, T]
+  type Validation[T] = Either[ValidationErrors, T]
+  type ValidationT[F[_], T] = EitherT[F, ValidationErrors, T]
 
   val TypeKey: String = "type"
 

@@ -2,26 +2,30 @@ package extruder.effect
 
 import cats.data.EitherT
 import cats.effect.Sync
-import cats.{Applicative, MonadError}
-import extruder.data.ValidationT
-import extruder.instances.ValidationInstances
+import cats.{Applicative, Monad, MonadError}
+import extruder.core.ValidationErrors
+import extruder.instances.EitherInstances
 import shapeless.LowPriority
 
 trait ExtruderSync[F[_]] extends Sync[F] with ExtruderMonadError[F]
 
 trait LowPrioritySyncInstances {
-  implicit def validationTSync[F[_]: Sync]: ExtruderSync[ValidationT[F, ?]] = new ValidationTSync[F] {
-    override protected def FF: Sync[F] = Sync[F]
+  implicit def eitherTSync[F[_]: Sync]: ExtruderSync[EitherT[F, ValidationErrors, ?]] = new EitherTSync[F] {
+    override protected def F: Monad[F] = Monad[F]
+
+    override protected def FFE: Sync[EitherT[F, ValidationErrors, ?]] = Sync.catsEitherTSync
   }
 
-  trait ValidationTSync[F[_]]
-      extends ExtruderMonadError.ValidationTMonadError[F]
-      with ExtruderSync[ValidationT[F, ?]] {
-    protected def FF: Sync[F]
+  trait EitherTSync[F[_]]
+      extends ExtruderMonadError.EitherTMonadError[F]
+      with ExtruderSync[EitherT[F, ValidationErrors, ?]] {
+    protected def FFE: Sync[EitherT[F, ValidationErrors, ?]]
 
-    override protected def FFF: MonadError[F, Throwable] = FF
+    override protected def FFFE: MonadError[EitherT[F, ValidationErrors, ?], Throwable] =
+      FFE
 
-    override def suspend[A](thunk: => ValidationT[F, A]): ValidationT[F, A] = ValidationT(FF.suspend(thunk.value))
+    override def suspend[A](thunk: => EitherT[F, ValidationErrors, A]): EitherT[F, ValidationErrors, A] =
+      FFE.suspend(thunk)
   }
 }
 
@@ -47,6 +51,6 @@ trait SyncInstances {
   }
 }
 
-object ExtruderSync extends ValidationInstances with SyncInstances with LowPrioritySyncInstances {
+object ExtruderSync extends EitherInstances with SyncInstances with LowPrioritySyncInstances {
   def apply[F[_]](implicit sync: ExtruderSync[F]): ExtruderSync[F] = sync
 }

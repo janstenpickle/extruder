@@ -106,8 +106,8 @@ trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with 
   )(implicit encoder: Enc[Validation, F[T]], decoder: Dec[Validation, F[T]]): Prop =
     Prop.forAll(gen, namespaceGen) { (value, namespace) =>
       (for {
-        encoded <- encode[F[T]](namespace, value).toEither
-        decoded <- decode[F[T]](namespace, encoded).toEither
+        encoded <- encode[F[T]](namespace, value)
+        decoded <- decode[F[T]](namespace, encoded)
       } yield decoded) must beRight.which(_.toList === value.filter(_.toString.trim.nonEmpty).toList)
     }
 
@@ -117,7 +117,7 @@ trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with 
     val F: Eff[Validation] = ExtruderMonadError[Validation]
     Prop.forAll(gen, namespaceGen) { (value, namespace) =>
       def eqv(encoded: Validation[OutputData], decoded: InputData => Validation[T]): Boolean =
-        equals.eqv(F.flatMap(encoded)(decoded), value.validNel)
+        equals.eqv(F.flatMap(encoded)(decoded), Right(value))
 
       eqv(encode[T](namespace, value), decode[T](namespace, _)) &&
       (if (supportsEmptyNamespace) eqv(encode[T](value), decode[T]) else true)
@@ -135,12 +135,12 @@ trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with 
               List("CaseClass", "l") -> l.toString
             )
           )
-        ).toEither must beRight(CaseClass(s, i, l, None))
+        ) must beRight(CaseClass(s, i, l, None))
     )
 
   def testDefaultDecode(implicit cvEq: Eq[Validation[CaseClass]]): Boolean =
-    cvEq.eqv(decode[CaseClass], expectedCaseClass.validNel) &&
-      cvEq.eqv(decode[CaseClass](List.empty), expectedCaseClass.validNel)
+    cvEq.eqv(decode[CaseClass], Right(expectedCaseClass)) &&
+      cvEq.eqv(decode[CaseClass](List.empty), Right(expectedCaseClass))
 
   def testCaseClassParams(implicit hints: Hint): MatchResult[String] = parameters[CaseClass] !== ""
 }

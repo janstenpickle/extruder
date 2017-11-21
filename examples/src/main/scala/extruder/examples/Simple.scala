@@ -2,14 +2,16 @@ package extruder.examples
 
 import java.net.URL
 
-import cats.data.EitherT
+import cats.{Apply, Eval}
+import cats.data.{EitherT, NonEmptyList}
 import cats.effect.IO
 import com.typesafe.config.ConfigFactory
-import extruder.core.{MapHints, MapSource, Parser}
-import extruder.data.ValidationT
+import extruder.core._
 import extruder.effect.{ExtruderAsync, ExtruderMonadError, ExtruderSync}
 import extruder.system.{EnvironmentSource, SafeEnvironmentSource, SafeSystemPropertiesSource, SystemPropertiesSource}
 import extruder.typesafe.{SafeTypesafeConfigSource, TypesafeConfigDecoder, TypesafeConfigEncoder, TypesafeConfigSource}
+
+import scala.util.Either
 
 //import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -24,8 +26,8 @@ case class CC(
   d: CC2,
   e: CC3,
   f: Set[Int],
-  dur: Duration,
-  finDur: FiniteDuration
+//  dur: Duration,
+//  finDur: FiniteDuration
 )
 case class CC2(x: String = "test4", y: Option[Int] = Some(232), z: CC3, dfs: Long)
 case class CC3(a: Option[String])
@@ -57,16 +59,49 @@ object Simple extends App {
 
   //implicit val derp = ExtruderAsync.validationTAsync[IO]
 
-  type Val[A] = ValidationT[IO, A]
+  //type Val[A] = ValidationT[IO, A]
   type Eit[A] = EitherT[IO, Throwable, A]
+  type EitV[A] = EitherT[IO, ValidationErrors, A]
 
   implicitly[ExtruderAsync[Eit]]
   implicitly[ExtruderSync[Eit]]
   implicitly[ExtruderMonadError[Eit]]
-  implicitly[ExtruderMonadError[Val]]
+  implicitly[ExtruderAsync[EitV]]
 
-  println(TypesafeConfigSource.traversableEncoder[Val, Int, Seq])
+//  println(TypesafeConfigSource.traversableEncoder[Val, Int, Seq])
   println(TypesafeConfigSource.encode[Seq[Int]](List("232"), Seq(1, 3)))
+  println(MapSource.decode[CC](List("232"), Map.empty[String, String]))
+  implicitly[MapDecoder[Validation, Set[Int]]]
+
+  implicitly[Parser[Set[Int]]]
+
+  implicitly[ExtruderAsync[IO]]
+
+  Parser.traversable[Int, Set]
+
+  val f: (Unit, Unit) => Unit = (_, _) => ()
+
+  implicitly[ExtruderMonadError[Either[ValidationErrors, ?]]]
+
+//  println(
+//    implicitly[ExtruderAsync[EitV]]
+//      .ap2[Unit, Unit, Unit](EitherT[IO, ValidationErrors, (Unit, Unit) => Unit](IO.pure(Right(f))))(
+//        EitherT[IO, ValidationErrors, Unit](IO.pure(Left(NonEmptyList.of(Missing("fdsfw"))))),
+//        EitherT[IO, ValidationErrors, Unit](IO.pure(Left(NonEmptyList.of(Missing("fder3sfw")))))
+//      )
+//      .value
+//      .unsafeRunSync()
+//  )
+
+  println(
+    implicitly[ExtruderMonadError[Validation]]
+      .ap2[Unit, Unit, Unit](Right(f))(
+        Left[ValidationErrors, Unit](NonEmptyList.of(Missing("fdsfw"))),
+        Left[ValidationErrors, Unit](NonEmptyList.of(Missing("fder3sfw")))
+      )
+  )
+
+  // println(Apply[Either[ValidationErrors, ?]].ap2()(fa0, fb0))
 
 //  println(
 //    EnvironmentSource

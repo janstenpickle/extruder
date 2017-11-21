@@ -19,13 +19,13 @@ object ValidationCatsInstances {
       .map(l => NonEmptyList.of(l.head, l.tail: _*))
   )
 
-  implicit def validationErrorsEq[A](implicit aEq: Eq[A]): Eq[Validation[A]] = new Eq[Validation[A]] {
-    override def eqv(x: Validation[A], y: Validation[A]): Boolean = (x, y) match {
-      case (Valid(xx), Valid(yy)) => aEq.eqv(xx, yy)
-      case (Invalid(xx), Invalid(yy)) => Eq.by[ValidationErrors, String](_.toString).eqv(xx, yy)
-      case _ => false
-    }
-  }
+//  implicit def validationErrorsEq[A](implicit aEq: Eq[A]): Eq[Validation[A]] = new Eq[Validation[A]] {
+//    override def eqv(x: Validation[A], y: Validation[A]): Boolean = (x, y) match {
+//      case (Right(xx), Right(yy)) => aEq.eqv(xx, yy)
+//      case (Left(xx), Left(yy)) => Eq.by[ValidationErrors, String](_.toString).eqv(xx, yy)
+//      case _ => false
+//    }
+//  }
   implicit def eitherErrorsEq[A]: Eq[EitherErrors[A]] = Eq.by[EitherErrors[A], String](_.toString)
 
   implicit val vCogen: Cogen[ValidationErrors] = Cogen[String].contramap(_.toString)
