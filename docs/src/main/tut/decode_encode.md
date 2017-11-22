@@ -33,9 +33,7 @@ decode[String, EitherTIO](List("a"), Map("a" -> "b")) // returns EitherT[IO, Val
 
 # Implementing Your Own Target Monads
 
-As mentioned in [Concepts](concepts.html), Extruder allows you to specify target monads for your desired return types. Internally the side effects are modelled with the [cats effect] `IO` monad and validation failures are handled by a user specified monad. Values retrieved from asynchronous data sources may be lifted into the `IO` monad using an `IOConvert` instance.
-
-## `Try` Example
+As mentioned in [Concepts](concepts.html), Extruder allows you to specify target monads for your desired return types. Type classes can be created implicitly 
 
 
 {% include references.md %}

@@ -20,12 +20,7 @@ import org.specs2.matcher.{EitherMatchers, MatchResult}
 import org.specs2.specification.core.SpecStructure
 import org.specs2.{ScalaCheck, Specification}
 
-class RefinedInstancesSpec
-    extends Specification
-    with ScalaCheck
-    with EitherMatchers
-    with MapEncoders
-    with MapDecoders {
+class RefinedInstancesSpec extends Specification with ScalaCheck with EitherMatchers with MapEncoders with MapDecoders {
   type ZeroToOne = Not[Less[W.`0.0`.T]] And Not[Greater[W.`1.0`.T]]
   type RegexMatch = MatchesRegex[W.`"[^0-9]+"`.T]
 

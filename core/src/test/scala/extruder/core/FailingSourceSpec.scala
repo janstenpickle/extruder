@@ -90,9 +90,7 @@ class FailingSourceSpec extends Specification with ScalaCheck with EitherMatcher
   def testPrepareFail: Prop =
     Prop.forAll(Gen.alphaNumStr)(
       value =>
-        decode[String](Map(prepareFailKey -> value)) must beLeft(
-          NonEmptyList.of(ValidationFailure(prepareFailMessage))
-      )
+        decode[String](Map(prepareFailKey -> value)) must beLeft(NonEmptyList.of(ValidationFailure(prepareFailMessage)))
     )
 
   def testFinalizeFail: Prop =
