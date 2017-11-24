@@ -5,7 +5,9 @@ import extruder.effect.{ExtruderMonadError, ExtruderSync}
 
 import scala.collection.JavaConverters._
 
-trait EnvironmentDecoder[F[_], T] extends Decoder[F, T, Map[String, String]]
+trait EnvironmentDecoder[F[_], T] extends Decoder[F, T] {
+  override type Config = Map[String, String]
+}
 
 trait EnvironmentDecoders extends BaseEnvironmentDecoders {
   override type Eff[F[_]] = ExtruderMonadError[F]

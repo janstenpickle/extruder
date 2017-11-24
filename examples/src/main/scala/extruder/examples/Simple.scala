@@ -5,13 +5,13 @@ import java.net.URL
 import cats.{Apply, Eval}
 import cats.data.{EitherT, NonEmptyList}
 import cats.effect.IO
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import extruder.core._
 import extruder.effect.{ExtruderAsync, ExtruderMonadError, ExtruderSync}
 import extruder.system.{EnvironmentSource, SafeEnvironmentSource, SafeSystemPropertiesSource, SystemPropertiesSource}
 import extruder.typesafe.{SafeTypesafeConfigSource, TypesafeConfigDecoder, TypesafeConfigEncoder, TypesafeConfigSource}
 
-import scala.util.Either
+import scala.util.{Either, Try}
 
 //import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -26,8 +26,8 @@ case class CC(
   d: CC2,
   e: CC3,
   f: Set[Int],
-//  dur: Duration,
-//  finDur: FiniteDuration
+  dur: Duration,
+  finDur: FiniteDuration
 )
 case class CC2(x: String = "test4", y: Option[Int] = Some(232), z: CC3, dfs: Long)
 case class CC3(a: Option[String])
@@ -74,6 +74,15 @@ object Simple extends App {
   implicitly[MapDecoder[Validation, Set[Int]]]
 
   implicitly[Parser[Set[Int]]]
+
+// CombinedDecoder.anyDecoder[Validation, String, MapDecoder, TypesafeConfigDecoder]
+//
+  println(
+    implicitly[CombinedDecoder.Aux[Validation, Int, MapDecoder, MapDecoder]]
+      .read(List.empty[String], None, (Map.empty[String, String], Map.empty[String, String]))
+  )
+
+  new Combined[MapDecoder, MapDecoder].derp((Map.empty[String, String], Map.empty[String, String]))
 
   implicitly[ExtruderAsync[IO]]
 

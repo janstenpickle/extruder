@@ -155,11 +155,18 @@ trait DecodeFromDefaultSource { self: Decode with DecodeTypes =>
     F.flatMap(loadInput)(decode[T, F](namespace, _))
 }
 
-trait Decoder[F[_], T, C] {
-  def read(path: List[String], default: Option[T], input: C): F[T]
+trait Decoder[F[_], T] {
+  type Config
+  def read(path: List[String], default: Option[T], input: Config): F[T]
+}
+
+object Decoder {
+  type Aux[F[_], T, C] = Decoder[F, T] {
+    type Config = C
+  }
 }
 
 trait DecodeTypes extends DataSource {
   type DecodeData
-  type Dec[F[_], T] <: Decoder[F, T, DecodeData]
+  type Dec[F[_], T] <: Decoder.Aux[F, T, DecodeData]
 }

@@ -10,9 +10,9 @@ position: 1
 
 Extruder provides some default methods for decoding and encoding case classes from differing data sources which returns the value wrapped in a `Either` where left hand side of errors is  [cats] `NonEmptyList` instance. However this is just the default implementation, extruder allows you to specify your own target monads.
 
-## Effects?
+## Effects
 
-Extruder use [cats][cats] and [cats effect][cats effect] to define target monads.
+Extruder use (and extends) [cats][cats] and [cats effect][cats effect] to define target monads. In order to model potential side effects and validation errors a [data source](data_source.html) can specify one of `ExtruderMonadError`, `ExtruderSync` or `ExtruderAsync`.
 
 # Terms
 

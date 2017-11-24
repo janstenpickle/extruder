@@ -109,7 +109,9 @@ trait BaseTypesafeConfigDecoders
   override def loadInput[F[_]](implicit F: Eff[F]): F[TConfig] = F.catchNonFatal(ConfigFactory.load())
 }
 
-trait TypesafeConfigDecoder[F[_], T] extends Decoder[F, T, TConfig]
+trait TypesafeConfigDecoder[F[_], T] extends Decoder[F, T] {
+  override type Config = TConfig
+}
 
 object TypesafeConfigDecoder extends TypesafeConfigDecoders
 
