@@ -2,30 +2,30 @@ package extruder.examples
 
 import java.net.URL
 
-import cats.{Applicative, Apply, Monad, MonadError}
+import cats.data.Validated.Valid
 import cats.data.{EitherT, NonEmptyList, Validated}
-import cats.data.Validated.{Invalid, Valid}
-import cats.effect.{Async, Effect, IO}
-import extruder.core.MapSource._
-import extruder.core.{EitherErrors, EitherThrowable, ExtruderApplicativeError, ExtruderEffect, Missing, Validation, ValidationError, ValidationErrors, ValidationException, ValidationFailure}
-import extruder.monix._
-import monix.eval.Task
-import monix.execution.Scheduler.Implicits.global
+import cats.effect.{Effect, IO}
 import cats.syntax.validated._
+import cats.{Applicative, Apply}
+import extruder.core.{ExtruderEffect, Missing, Validation, ValidationError, ValidationException, ValidationFailure}
 import extruder.data.ValidationT
+import monix.eval.Task
+
+//import monix.execution.Scheduler.Implicits.global
 
 import scala.concurrent.Await
 import scala.util.{Failure, Success}
+import extruder.monix._
 
 //import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.Future
 import scala.concurrent.duration.{Duration, FiniteDuration}
-import cats.instances.all._
-
-import cats.effect.Effect._
-
 import scala.util.Try
+
+import fs2.interop.cats._
+
+
 
 case class CC(
   a: String = "test",
@@ -71,119 +71,14 @@ object Simple extends App {
 
 //  ExtruderApplicativeError.fromMonadError[EitherT[Future, Throwable, ?]]
 
-  implicit val futEffect: Effect[Future] = new Effect[Future] {
-    override def runAsync[A](fa: Future[A])(cb: (Either[Throwable, A]) => IO[Unit]): IO[Unit] = ???
 
-    override def async[A](k: ((Either[Throwable, A]) => Unit) => Unit): Future[A] = ???
-
-    override def suspend[A](thunk: => Future[A]): Future[A] = ???
-
-    override def tailRecM[A, B](a: A)(f: (A) => Future[Either[A, B]]): Future[B] = ???
-
-    override def flatMap[A, B](fa: Future[A])(f: (A) => Future[B]): Future[B] = ???
-
-    override def raiseError[A](e: Throwable): Future[A] = ???
-
-    override def handleErrorWith[A](fa: Future[A])(f: (Throwable) => Future[A]): Future[A] = ???
-
-    override def pure[A](x: A): Future[A] = ???
-  }
-
-  implicit val validationEffect: Effect[Validation] = new ExtruderEffect[Validation] {
-    protected def F: Applicative[Validation] = Applicative[Validation]
-
-    override def runAsync[A](fa: Validation[A])(cb: (Either[Throwable, A]) => IO[Unit]): IO[Unit] =
-      IO.pure(())
-
-    override def async[A](k: ((Either[Throwable, A]) => Unit) => Unit): Validation[A] =
-      Try(IO.async(k).unsafeRunSync()) match {
-        case Failure(ex) => raiseError(ex)
-        case Success(a) => a.valid
-      }
-
-    override def suspend[A](thunk: => Validation[A]): Validation[A] = thunk
-
-    override def tailRecM[A, B](a: A)(f: (A) => Validation[Either[A, B]]): Validation[B] =
-      flatMap(f(a)) {
-        case Left(aa) => tailRecM(aa)(f)
-        case Right(b) => Valid(b)
-      }
-
-    override def flatMap[A, B](fa: Validation[A])(f: (A) => Validation[B]): Validation[B] = fa.fold(_.invalid, f)
-
-    override def raiseError[A](e: Throwable): Validation[A] = ValidationException(e.getMessage, e).invalidNel
-
-    override def ap[A, B](ff: Validation[(A) => B])(fa: Validation[A]): Validated[NonEmptyList[ValidationError], B] =
-      fa.ap(ff)
-
-    override def handleErrorWith[A](fa: Validation[A])(f: (Throwable) => Validation[A]): Validation[A] =
-      fa // FIXME
-
-    override def product[A, B](fa: Validation[A], fb: Validation[B]): Validation[(A, B)] = fa.product(fb)
-
-    override def pure[A](x: A): Validation[A] = Valid(x)
-
-    override def missing[A](message: String) = Missing(message).invalidNel
-
-    override def validationFailure[A](message: String) = ValidationFailure(message).invalidNel
-
-    override def validationException[A](message: String, ex: Throwable) = ValidationException(message, ex).invalidNel
-  }
-
-  val derp = new Effect[ValidationT[Future, ?]] {
-    override def runAsync[A](fa: ValidationT[Future, A])(cb: (Either[Throwable, A]) => IO[Unit]) = ???
-
-    override def async[A](k: ((Either[Throwable, A]) => Unit) => Unit) = ???
-
-    override def suspend[A](thunk: => ValidationT[Future, A]) = ???
-
-    override def flatMap[A, B](fa: ValidationT[Future, A])(f: (A) => ValidationT[Future, B]) = ???
-
-    override def tailRecM[A, B](a: A)(f: (A) => ValidationT[Future, Either[A, B]]) = ???
-
-    override def raiseError[A](e: Throwable) = ???
-
-    override def handleErrorWith[A](fa: ValidationT[Future, A])(f: (Throwable) => ValidationT[Future, A]) = ???
-
-    override def ap2[A, B, Z](
-      ff: ValidationT[Future, (A, B) => Z]
-    )(fa: ValidationT[Future, A], fb: ValidationT[Future, B]): ValidationT[Future, Z] =
-      ValidationT[Future, Z](for {
-        faa <- fa.value
-        fbb <- fb.value
-        fff <- ff.value
-      } yield Apply[Validation].ap2(fff)(faa, fbb))
-
-    //super.ap2(ff)(fa, fb)
-
-    override def pure[A](x: A): ValidationT[Future, A] = ValidationT[Future, A](Future.successful(Valid(x)))
-  }
-
-  println(
-    validationEffect
-      .ap2[Unit, Unit, Unit](((a: Unit, b: Unit) => ()).validNel)(
-        Missing("34").invalidNel[Unit],
-        Missing("dsfdsf").invalidNel[Unit]
-      )
-  )
-
-  println(
-    Await.result(
-      implicitly[ExtruderEffect[ValidationT[IO, ?]]]
-        .ap2[Unit, Unit, Unit](ValidationT[IO, (Unit, Unit) => Unit](IO.pure(((a: Unit, b: Unit) => ()).validNel)))(
-          ValidationT[IO, Unit](IO.pure(Missing("34").invalidNel[Unit])),
-          ValidationT[IO, Unit](IO.pure(Missing("dsfdsf").invalidNel[Unit]))
-        )
-        .value
-        .unsafeToFuture(),
-      Duration.Inf
-    )
-  )
-
-  implicitly[Effect[EitherT[Future, Throwable, ?]]]
-  implicitly[ExtruderEffect[Future]]
-  implicitly[ExtruderEffect[IO]]
-  implicitly[ExtruderEffect[ValidationT[IO, ?]]]
+//  implicitly[Effect[EitherT[Future, Throwable, ?]]]
+//  implicitly[ExtruderEffect[Future]]
+//  implicitly[ExtruderEffect[IO]]
+//  implicitly[ExtruderEffect[ValidationT[IO, ?]]]
+  //implicitly[ExtruderEffect[Task]]
+  implicitly[ExtruderEffect[Validation]]
+  implicitly[Effect[fs2.Task]]
   //println(decode[CC, EitherT[Future, Throwable, ?], Throwable](config))
 //  println(decodeIO[CC](config))
 //  println(decodeIO[CC, EitherThrowable, Throwable](config))
