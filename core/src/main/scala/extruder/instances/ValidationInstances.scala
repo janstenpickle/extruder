@@ -100,6 +100,12 @@ trait ValidationInstances {
         case Valid(a) => f(a).value
       })
 
+    override def ap[A, B](ff: ValidationT[Eval, A => B])(fa: ValidationT[Eval, A]): ValidationT[Eval, B] =
+      ValidationT(for {
+        fa0 <- fa.value
+        ff0 <- ff.value
+      } yield Apply[Validation].ap(ff0)(fa0))
+
     override def ap2[A, B, Z](
       ff: ValidationT[Eval, (A, B) => Z]
     )(fa: ValidationT[Eval, A], fb: ValidationT[Eval, B]): ValidationT[Eval, Z] =
