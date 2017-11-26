@@ -11,7 +11,7 @@ import scala.concurrent.duration.Duration
 trait PrimitiveEncoders { self: Encoders with EncodeTypes =>
   protected def writeValue[F[_]](path: List[String], value: String)(implicit hints: Hint, F: Eff[F]): F[EncodeData]
 
-  implicit def primitiveEncoder[F[_], T](implicit shows: Show[T], hints: Hint, F: Eff[F]): Enc[F, T] =
+  implicit def primitiveEncoder[F[_], T](implicit shows: Show[T], hints: Hint, F: Eff[F], lp: LowPriority): Enc[F, T] =
     mkEncoder[F, T] { (path, value) =>
       writeValue(path, shows.show(value))
     }
@@ -19,15 +19,6 @@ trait PrimitiveEncoders { self: Encoders with EncodeTypes =>
   implicit def optionalEncoder[F[_], T](implicit encoder: Lazy[Enc[F, T]], hints: Hint, F: Eff[F]): Enc[F, Option[T]] =
     mkEncoder[F, Option[T]] { (path, value) =>
       value.fold[F[EncodeData]](F.pure(monoid.empty))(encoder.value.write(path, _))
-    }
-
-  implicit def traversableEncoder[F[_], T, FF[T] <: TraversableOnce[T]](
-    implicit shows: Show[T],
-    hints: Hint,
-    F: Eff[F]
-  ): Enc[F, FF[T]] =
-    mkEncoder { (path, value) =>
-      writeValue(path, value.map(shows.show).filter(_.trim.nonEmpty).mkString(hints.ListSeparator))
     }
 }
 
@@ -48,6 +39,14 @@ trait Shows {
       case x: Duration if x == Duration.MinusInf => "MinusInf"
       case x: Any => x.toString
     })
+
+  def traversableBuilder[T, F[_], FF[T] <: TraversableOnce[T]](
+    concat: TraversableOnce[String] => String
+  )(implicit shows: Show[T]): Show[FF[T]] =
+    Show((x: FF[T]) => concat(x.map(shows.show).filter(_.trim.nonEmpty)))
+
+  implicit def traversable[T, F[_], FF[T] <: TraversableOnce[T]](implicit shows: Show[T]): Show[FF[T]] =
+    traversableBuilder[T, F, FF](_.mkString(","))
 }
 
 case class Show[T](show: T => String)

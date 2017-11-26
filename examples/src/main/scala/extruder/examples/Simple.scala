@@ -4,12 +4,16 @@ import java.net.URL
 
 import cats.data.EitherT
 import cats.effect.IO
+import com.typesafe.config.ConfigFactory
+import extruder.core.{MapHints, MapSource, Parser}
 import extruder.data.ValidationT
 import extruder.effect.{ExtruderAsync, ExtruderMonadError, ExtruderSync}
 import extruder.system.{EnvironmentSource, SafeEnvironmentSource, SafeSystemPropertiesSource, SystemPropertiesSource}
-import extruder.typesafe.{SafeTypesafeConfigSource, TypesafeConfigSource}
+import extruder.typesafe.{SafeTypesafeConfigSource, TypesafeConfigDecoder, TypesafeConfigEncoder, TypesafeConfigSource}
 
 //import scala.concurrent.ExecutionContext.Implicits.global
+
+import scala.collection.JavaConverters._
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
@@ -61,7 +65,15 @@ object Simple extends App {
   implicitly[ExtruderMonadError[Eit]]
   implicitly[ExtruderMonadError[Val]]
 
-  println(SafeEnvironmentSource.decode[CC, Val].value.unsafeRunSync())
+  println(TypesafeConfigSource.traversableEncoder[Val, Int, Seq])
+  println(TypesafeConfigSource.encode[Seq[Int]](List("232"), Seq(1, 3)))
+
+//  println(
+//    EnvironmentSource
+//      .decode[List[String], Val]
+//      .value
+//      .unsafeRunSync()
+//  )
   //println(MapDecoder.decode[Int, Val](config))
 //  implicit val fut = ExtruderApplicativeError.fromMonadError[Future]
 

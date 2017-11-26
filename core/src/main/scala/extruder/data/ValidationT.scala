@@ -11,7 +11,7 @@ case class ValidationT[F[_], A](value: F[Validation[A]]) {
 
   def flatMap[B](f: A => ValidationT[F, B])(implicit F: Monad[F]): ValidationT[F, B] =
     ValidationT(F.flatMap(value) {
-      case l @ Invalid(_) => F.pure(l)
+      case err @ Invalid(_) => F.pure(err)
       case Valid(b) => f(b).value
     })
 
@@ -35,4 +35,6 @@ object ValidationT {
   def pure[F[_], A](a: A)(implicit F: Applicative[F]): ValidationT[F, A] = liftF(F.pure(a))
 
   def liftF[F[_], A](fa: F[A])(implicit F: Functor[F]): ValidationT[F, A] = ValidationT(F.map(fa)(Valid(_)))
+
+  def lift[F[_], A](va: Validation[A])(implicit F: Applicative[F]): ValidationT[F, A] = ValidationT(F.pure(va))
 }

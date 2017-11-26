@@ -34,7 +34,9 @@ trait DerivedEncoders { self: Encoders with EncodeTypes =>
     implicit gen: LabelledGeneric.Aux[T, O],
     underlying: Lazy[Enc[F, O]],
     F: Eff[F],
-    lp: LowPriority
+    lp: LowPriority,
+    neOpt: T <:!< Option[_],
+    neCol: T <:!< TraversableOnce[_]
   ): Enc[F, T] =
     mkEncoder((path, value) => underlying.value.write(path, gen.to(value)))
 

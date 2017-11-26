@@ -1,6 +1,8 @@
 package extruder.typesafe
 
-import cats.Monoid
+import cats.instances.all._
+import cats.{Applicative, Monoid}
+import cats.syntax.either._
 import com.typesafe.config.ConfigException.Missing
 import com.typesafe.config.{ConfigFactory, ConfigList, ConfigObject, ConfigValue, Config => TConfig}
 import extruder.core._
@@ -8,6 +10,8 @@ import extruder.effect.{ExtruderMonadError, ExtruderSync}
 import shapeless.Coproduct
 
 import scala.collection.JavaConverters._
+import scala.collection.TraversableOnce
+import scala.collection.generic.CanBuildFrom
 
 trait TypesafeConfigDecoders extends BaseTypesafeConfigDecoders {
   override type Eff[F[_]] = ExtruderMonadError[F]
@@ -31,10 +35,7 @@ trait BaseTypesafeConfigDecoders
   override type Hint = TypesafeConfigHints
   override type Dec[F[_], T] = TypesafeConfigDecoder[F, T]
 
-  protected def lookup[T, F[_]](f: TConfig => T, path: List[String], data: TConfig)(
-    implicit hints: Hint,
-    F: Eff[F]
-  ): F[Option[T]] =
+  protected def lookup[T, F[_]](f: TConfig => T, data: TConfig)(implicit hints: Hint, F: Eff[F]): F[Option[T]] =
     F.recoverWith(F.map[T, Option[T]](F.catchNonFatal(f(data)))(Some(_))) {
       case _: Missing => F.pure(None)
     }
@@ -49,33 +50,58 @@ trait BaseTypesafeConfigDecoders
     path: List[String],
     data: TConfig
   )(implicit hints: TypesafeConfigHints, F: Eff[F]): F[Boolean] =
-    F.map(lookup[ConfigValue, F](_.getValue(hints.pathToString(path)), path, data))(_.isDefined)
+    F.map(lookup[ConfigValue, F](_.getValue(hints.pathToString(path)), data))(_.isDefined)
 
   override protected def lookupValue[F[_]](
     path: List[String],
     data: TConfig
   )(implicit hints: Hint, F: Eff[F]): F[Option[String]] =
-    lookup(_.getString(hints.pathToString(path)), path, data)
-
-  override protected def lookupList[F[_]](
-    path: List[String],
-    data: TConfig
-  )(implicit hints: Hint, F: Eff[F]): F[Option[List[String]]] =
-    lookup(_.getStringList(hints.pathToString(path)).asScala.toList, path, data)
+    lookup(_.getString(hints.pathToString(path)), data)
 
   private def resolve[F[_], T](
     lookup: (List[String], TConfig) => F[Option[T]]
   )(implicit F: Eff[F]): (List[String], Option[T], TConfig) => F[T] =
     resolve[F, T, T](F.pure, lookup)
 
+  implicit def traversableDecoder[T, F[_], FF[T] <: TraversableOnce[T]](
+    implicit hints: Hint,
+    parser: Parser[T],
+    cbf: CanBuildFrom[List[T], T, FF[T]],
+    F: Eff[F]
+  ): TypesafeConfigDecoder[F, FF[T]] = {
+    println("hell")
+    mkDecoder[F, FF[T]](
+      (path, default, data) =>
+        F.flatMap(lookup[List[String], F](_.getStringList(hints.pathToString(path)).asScala.toList, data))(
+          listOpt =>
+            (listOpt, default) match {
+              case (None, None) =>
+                F.missing(s"Could not find list at '${hints.pathToString(path)}' and no default available")
+              case (None, Some(li)) => F.pure(li)
+              case (Some(li), _) =>
+                Applicative[Either[String, ?]]
+                  .sequence(li.map(parser.parse))
+                  .map(_.map[T, FF[T]](identity))
+                  .fold(
+                    err =>
+                      F.validationFailure(
+                        s"Could not parse value '${li.toString()}' at '${hints.pathToString(path)}': $err"
+                    ),
+                    F.pure
+                  )
+          }
+      )
+    )
+  }
+
   implicit def dataValueDecoder[F[_]](implicit hints: Hint, F: Eff[F]): TypesafeConfigDecoder[F, ConfigValue] =
-    mkDecoder(resolve[F, ConfigValue]((path, data) => lookup(_.getValue(hints.pathToString(path)), path, data)))
+    mkDecoder(resolve[F, ConfigValue]((path, data) => lookup(_.getValue(hints.pathToString(path)), data)))
 
   implicit def dataListDecoder[F[_]](implicit hints: Hint, F: Eff[F]): TypesafeConfigDecoder[F, ConfigList] =
-    mkDecoder(resolve[F, ConfigList]((path, data) => lookup(_.getList(hints.pathToString(path)), path, data)))
+    mkDecoder(resolve[F, ConfigList]((path, data) => lookup(_.getList(hints.pathToString(path)), data)))
 
   implicit def dataObjectDecoder[F[_]](implicit hints: Hint, F: Eff[F]): TypesafeConfigDecoder[F, ConfigObject] =
-    mkDecoder(resolve[F, ConfigObject]((path, data) => lookup(_.getObject(hints.pathToString(path)), path, data)))
+    mkDecoder(resolve[F, ConfigObject]((path, data) => lookup(_.getObject(hints.pathToString(path)), data)))
 
   override def mkDecoder[F[_], T](f: (List[String], Option[T], TConfig) => F[T]): TypesafeConfigDecoder[F, T] =
     new TypesafeConfigDecoder[F, T] {
@@ -89,7 +115,15 @@ trait TypesafeConfigDecoder[F[_], T] extends Decoder[F, T, TConfig]
 
 object TypesafeConfigDecoder extends TypesafeConfigDecoders
 
-trait TypesafeConfigEncoders
+trait TypesafeConfigEncoders extends BaseTypesafeConfigEncoders {
+  override type Eff[F[_]] = ExtruderMonadError[F]
+}
+
+trait SafeTypesafeConfigEncoders extends BaseTypesafeConfigEncoders {
+  override type Eff[F[_]] = ExtruderSync[F]
+}
+
+trait BaseTypesafeConfigEncoders
     extends Encode
     with Encoders
     with PrimitiveEncoders
@@ -130,7 +164,7 @@ trait TypesafeConfigEncoders
           v.select[List[String]].map(_.asJava)).map(k -> _)
     }.asJava))
 
-  override implicit def traversableEncoder[F[_], T, FF[T] <: TraversableOnce[T]](
+  implicit def traversableEncoder[F[_], T, FF[T] <: TraversableOnce[T]](
     implicit shows: Show[T],
     hints: Hint,
     F: Eff[F]
@@ -166,7 +200,7 @@ object TypesafeConfigEncoder extends TypesafeConfigEncoders
 
 object TypesafeConfigSource extends TypesafeConfigDecoders with TypesafeConfigEncoders
 
-object SafeTypesafeConfigSource extends SafeTypesafeConfigDecoders with TypesafeConfigEncoders
+object SafeTypesafeConfigSource extends SafeTypesafeConfigDecoders with SafeTypesafeConfigEncoders
 
 trait TypesafeConfigHints extends Hints
 

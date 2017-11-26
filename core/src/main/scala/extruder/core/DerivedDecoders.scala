@@ -37,7 +37,9 @@ trait DerivedDecoders { self: Decoders with DecodeTypes =>
     implicit gen: LabelledGeneric.Aux[T, V],
     underlying: Lazy[Dec[F, V]],
     F: Eff[F],
-    lp: LowPriority
+    lp: LowPriority,
+    neOpt: T <:!< Option[_],
+    neCol: T <:!< TraversableOnce[_]
   ): Dec[F, T] =
     mkDecoder { (path, _, data) =>
       underlying.value.read(path, None, data).map(gen.from)

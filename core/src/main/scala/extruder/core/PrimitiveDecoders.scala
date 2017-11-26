@@ -2,10 +2,11 @@ package extruder.core
 
 import java.net.URL
 
+import cats.Applicative
 import cats.implicits._
 import mouse.string._
 import shapeless.syntax.typeable._
-import shapeless.{Lazy, Typeable}
+import shapeless.{Lazy, LowPriority, Typeable}
 
 import scala.collection.generic.CanBuildFrom
 import scala.concurrent.duration.Duration
@@ -19,28 +20,13 @@ trait PrimitiveDecoders extends { self: Decoders with DecodeTypes =>
     F: Eff[F]
   ): F[Option[String]]
 
-  protected def lookupList[F[_]](
-    path: List[String],
-    data: DecodeData
-  )(implicit hints: Hint, F: Eff[F]): F[Option[List[String]]] =
-    lookupValue[F](path, data).map(_.map(_.split(hints.ListSeparator).toList.map(_.trim)))
-
-  implicit def primitiveDecoder[F[_], T](implicit parser: Parser[T], hints: Hint, F: Eff[F]): Dec[F, T] =
-    mkDecoder[F, T]((path, default, data) => resolveValue(formatParserError(parser, path)).apply(path, default, data))
-
-  implicit def traversableDecoder[F[_], T, FF[T] <: TraversableOnce[T]](
+  implicit def primitiveDecoder[F[_], T](
     implicit parser: Parser[T],
-    cbf: CanBuildFrom[FF[T], T, FF[T]],
     hints: Hint,
-    F: Eff[F]
-  ): Dec[F, FF[T]] =
-    mkDecoder { (path, default, data) =>
-      resolveList { x =>
-        val seq: F[List[T]] = F.sequence(x.filterNot(_.isEmpty).map(formatParserError(parser, path)))
-
-        F.map(seq)(_.foldLeft(cbf())(_ += _).result())
-      }.apply(path, default, data)
-    }
+    F: Eff[F],
+    lp: LowPriority
+  ): Dec[F, T] =
+    mkDecoder[F, T]((path, default, data) => resolveValue(formatParserError(parser, path)).apply(path, default, data))
 
   implicit def optionalDecoder[F[_], T](implicit decoder: Lazy[Dec[F, T]], hints: Hint, F: Eff[F]): Dec[F, Option[T]] =
     mkDecoder[F, Option[T]] { (path, _, data) =>
@@ -60,11 +46,6 @@ trait PrimitiveDecoders extends { self: Decoders with DecodeTypes =>
     parser: String => F[T]
   )(implicit hints: Hint, AE: Eff[F]): (List[String], Option[T], DecodeData) => F[T] =
     resolve[F, T, String](parser, lookupValue[F])
-
-  protected def resolveList[F[_], T](
-    parser: List[String] => F[T]
-  )(implicit hints: Hint, F: Eff[F]): (List[String], Option[T], DecodeData) => F[T] =
-    resolve[F, T, List[String]](parser, lookupList[F])
 
   protected def resolve[F[_], T, V](
     parser: V => F[T],
@@ -120,6 +101,22 @@ trait Parsers {
             )
         )
     )
+
+  def traversableBuilder[T, F[T] <: TraversableOnce[T]](
+    split: String => List[String]
+  )(implicit parser: Parser[T], cbf: CanBuildFrom[List[T], T, F[T]]): Parser[F[T]] =
+    Parser(
+      input =>
+        Applicative[Either[String, ?]]
+          .sequence(split(input).filterNot(_.isEmpty).map(parser.parse))
+          .map(_.map[T, F[T]](identity))
+    )
+
+  implicit def traversable[T, F[T] <: TraversableOnce[T]](
+    implicit parser: Parser[T],
+    cbf: CanBuildFrom[List[T], T, F[T]]
+  ): Parser[F[T]] =
+    traversableBuilder[T, F](_.split(',').toList)
 }
 
 case class Parser[T](parse: String => Either[String, T])
