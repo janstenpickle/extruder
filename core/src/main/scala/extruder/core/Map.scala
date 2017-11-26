@@ -1,6 +1,7 @@
 package extruder.core
 
 import cats.Monoid
+import extruder.effect.ExtruderAsync
 
 trait BaseMapEncoders extends Encoders with PrimitiveEncoders with DerivedEncoders with EncodeTypes {
   override type EncodeData = Map[String, String]
@@ -14,7 +15,7 @@ trait BaseMapEncoders extends Encoders with PrimitiveEncoders with DerivedEncode
   override protected def writeValue[F[_]](
     path: List[String],
     value: String
-  )(implicit hints: Hint, F: ExtruderEffect[F]): F[Map[String, String]] =
+  )(implicit hints: Hint, F: ExtruderAsync[F]): F[Map[String, String]] =
     F.pure(Map(hints.pathToString(path) -> value))
 
   override protected def mkEncoder[F[_], T](f: (List[String], T) => F[Map[String, String]]): MapEncoder[F, T] =
@@ -30,13 +31,13 @@ trait BaseMapDecoders extends Decoders with PrimitiveDecoders with DerivedDecode
   override protected def hasValue[F[_]](
     path: List[String],
     data: Map[String, String]
-  )(implicit hints: Hint, F: ExtruderEffect[F]): F[Boolean] =
+  )(implicit hints: Hint, F: ExtruderAsync[F]): F[Boolean] =
     F.map(lookupValue(path, data))(_.isDefined)
 
   override protected def lookupValue[F[_]](
     path: List[String],
     data: Map[String, String]
-  )(implicit hints: Hint, F: ExtruderEffect[F]): F[Option[String]] =
+  )(implicit hints: Hint, F: ExtruderAsync[F]): F[Option[String]] =
     F.pure(data.get(hints.pathToString(path)))
 
   override protected def mkDecoder[F[_], T](
@@ -54,7 +55,7 @@ trait MapDecoders extends BaseMapDecoders with Decode with MapDataSource {
   override protected def prepareInput[F[_]](
     namespace: List[String],
     data: Map[String, String]
-  )(implicit F: ExtruderEffect[F], util: Hint): F[Map[String, String]] =
+  )(implicit F: ExtruderAsync[F], util: Hint): F[Map[String, String]] =
     F.pure(data)
 }
 
@@ -66,7 +67,7 @@ trait MapEncoders extends BaseMapEncoders with Encode with MapDataSource {
   override protected def finalizeOutput[F[_]](
     namespace: List[String],
     inter: Map[String, String]
-  )(implicit F: ExtruderEffect[F], util: Hint): F[Map[String, String]] =
+  )(implicit F: ExtruderAsync[F], util: Hint): F[Map[String, String]] =
     F.pure(inter)
 }
 
@@ -87,5 +88,6 @@ object MapHints extends HintsCompanion[MapHints] {
 trait MapDataSource extends DataSource {
   override type InputData = Map[String, String]
   override type OutputData = Map[String, String]
+  // override type ExtruderAsync[F[_]] = ExtruderAsync[F]
   override type Hint = MapHints
 }

@@ -18,6 +18,7 @@ import org.typelevel.discipline.specs2.Discipline
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import TestCommon._
+import extruder.effect.ExtruderAsync
 
 import scala.util.Try
 
@@ -117,7 +118,7 @@ trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with 
   def test[T](
     gen: Gen[T]
   )(implicit encoder: Enc[Validation, T], decoder: Dec[Validation, T], teq: Eq[T], equals: Eq[Validation[T]]): Prop = {
-    val F: ExtruderEffect[Validation] = ExtruderEffect[Validation]
+    val F: ExtruderAsync[Validation] = ExtruderAsync[Validation]
     Prop.forAll(gen, namespaceGen) { (value, namespace) =>
       def eqv(encoded: Validation[OutputData], decoded: InputData => Validation[T]): Boolean =
         equals.eqv(F.flatMap(encoded)(decoded), value.validNel)

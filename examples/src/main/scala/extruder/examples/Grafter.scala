@@ -52,8 +52,8 @@ object Grafter extends App {
       case err: Any => StartFailure(err.message)
     })
 
-  val start: Eval[List[StartResult]] = decode[ApplicationConfig]
-    .fold(convertToStartResult, app => Rewriter.start(GenericReader[ApplicationConfig, Application].run(app)))
-
-  println(start.value)
+//  val start: Eval[List[StartResult]] = decode[ApplicationConfig]
+//    .fold(convertToStartResult, app => Rewriter.start(GenericReader[ApplicationConfig, Application].run(app)))
+//
+//  println(start.value)
 }
