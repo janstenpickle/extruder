@@ -2,7 +2,6 @@ package extruder.core
 
 import java.net.URL
 
-import cats.effect.IO
 import cats.instances.all._
 import cats.kernel.laws.GroupLaws
 import cats.syntax.all._
@@ -10,15 +9,13 @@ import cats.{Eq, FlatMap}
 import extruder.core.ValidationCatsInstances._
 import extruder.instances.ValidationInstances
 import org.scalacheck.Gen.Choose
-import org.scalacheck.Shapeless._
+import org.scalacheck.ScalacheckShapeless._
 import org.scalacheck.{Gen, Prop}
 import org.specs2.matcher.{EitherMatchers, MatchResult}
 import org.specs2.specification.core.SpecStructure
 import org.specs2.{ScalaCheck, Specification}
 import org.typelevel.discipline.specs2.Discipline
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import TestCommon._
 
@@ -75,8 +72,6 @@ trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with 
 
       Can load data defaults with
         Standard sync decode $testDefaultDecode
-        IO async decode $testDefaultDecodeIO
-        Future async decode $testDefaultDecodeAsync
         Unsafe decode $testDefaultDecodeUnsafe
 
       Can represent the following types as a table of required params
@@ -89,8 +84,6 @@ trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with 
   def testNumeric[T: Numeric](
     implicit encoder: Enc[Validation, T],
     decoder: Dec[Validation, T],
-    eitherEncoder: Enc[EitherErrors, T],
-    eitherDecoder: Dec[EitherErrors, T],
     listEncoder: Enc[Validation, List[T]],
     listDecoder: Dec[Validation, List[T]],
     tEq: Eq[T],
@@ -102,8 +95,6 @@ trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with 
   def testType[T](gen: Gen[T])(
     implicit encoder: Enc[Validation, T],
     decoder: Dec[Validation, T],
-    eitherEncoder: Enc[EitherErrors, T],
-    eitherDecoder: Dec[EitherErrors, T],
     listEncoder: Enc[Validation, List[T]],
     listDecoder: Dec[Validation, List[T]],
     tEq: Eq[T]
@@ -111,8 +102,6 @@ trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with 
     test(gen) ++
       test(Gen.option(gen)) ++
       testList(Gen.listOf(gen).suchThat(_.nonEmpty)) ++
-      testIO[T](gen) ++
-      testAsync[T](gen) ++
       testUnsafe[T](gen)
 
   def testList[T, F[T] <: TraversableOnce[T]](
@@ -125,47 +114,17 @@ trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with 
       } yield decoded) must beRight.which(_.toList === value.filter(_.toString.trim.nonEmpty).toList)
     }
 
-  def test[T](gen: Gen[T])(
-    implicit encoder: Enc[Validation, T],
-    decoder: Dec[Validation, T],
-    teq: Eq[T],
-    equals: Eq[Validation[T]],
-    FM: FlatMap[Validation]
-  ): Prop =
+  def test[T](
+    gen: Gen[T]
+  )(implicit encoder: Enc[Validation, T], decoder: Dec[Validation, T], teq: Eq[T], equals: Eq[Validation[T]]): Prop = {
+    val F: ExtruderEffect[Validation] = ExtruderEffect[Validation]
     Prop.forAll(gen, namespaceGen) { (value, namespace) =>
       def eqv(encoded: Validation[OutputData], decoded: InputData => Validation[T]): Boolean =
-        equals.eqv(FM.flatMap(encoded)(decoded), value.validNel)
+        equals.eqv(F.flatMap(encoded)(decoded), value.validNel)
 
       eqv(encode[T](namespace, value), decode[T](namespace, _)) &&
       (if (supportsEmptyNamespace) eqv(encode[T](value), decode[T]) else true)
     }
-
-  def testIO[T](gen: Gen[T])(
-    implicit encoder: Enc[Validation, T],
-    decoder: Dec[Validation, T],
-    teq: Eq[T],
-    equals: Eq[IO[Validation[T]]]
-  ): Prop = Prop.forAll(gen, namespaceGen) { (value, namespace) =>
-    def eqv(encoded: IO[Validation[OutputData]], decoded: InputData => IO[Validation[T]]): Boolean =
-      equals.eqv(ioFlatMapForValidation.flatMap(encoded)(decoded), IO(value.validNel))
-
-    eqv(encodeIO[T](namespace, value), decodeIO[T](namespace, _)) &&
-    (if (supportsEmptyNamespace) eqv(encodeIO[T](value), decodeIO[T]) else true)
-  }
-
-  def testAsync[T](gen: Gen[T])(
-    implicit encoder: Enc[Validation, T],
-    decoder: Dec[Validation, T],
-    teq: Eq[T],
-    equals: Eq[IO[Validation[T]]],
-    ioc: IOConvert[Future]
-  ): Prop = Prop.forAll(gen, namespaceGen) { (value, namespace) =>
-    def eqv(encoded: Future[Validation[OutputData]], decoded: InputData => Future[Validation[T]]): Boolean =
-      equals
-        .eqv(ioFlatMapForValidation.flatMap(ioc.toIO(encoded))(e => ioc.toIO(decoded(e))), IO(value.validNel))
-
-    eqv(encodeAsync[T, Future](namespace, value), decodeAsync[T, Future](namespace, _)) &&
-    (if (supportsEmptyNamespace) eqv(encodeAsync[T, Future](value), decodeAsync[T, Future]) else true)
   }
 
   def testUnsafe[T](gen: Gen[T])(
@@ -200,14 +159,6 @@ trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with 
   def testDefaultDecode(implicit cvEq: Eq[Validation[CaseClass]]): Boolean =
     cvEq.eqv(decode[CaseClass], expectedCaseClass.validNel) &&
       cvEq.eqv(decode[CaseClass](List.empty), expectedCaseClass.validNel)
-
-  def testDefaultDecodeIO(implicit ioEq: Eq[IO[Validation[CaseClass]]]): Boolean =
-    ioEq.eqv(decodeIO[CaseClass], IO(expectedCaseClass.validNel)) &&
-      ioEq.eqv(decodeIO[CaseClass](List.empty), IO(expectedCaseClass.validNel))
-
-  def testDefaultDecodeAsync(implicit futEq: Eq[Future[Validation[CaseClass]]]): Boolean =
-    futEq.eqv(decodeAsync[CaseClass, Future], Future(expectedCaseClass.validNel)) &&
-      futEq.eqv(decodeAsync[CaseClass, Future](List.empty), Future(expectedCaseClass.validNel))
 
   def testDefaultDecodeUnsafe(implicit ccEq: Eq[CaseClass]): Boolean =
     ccEq.eqv(decodeUnsafe[CaseClass], expectedCaseClass) &&
