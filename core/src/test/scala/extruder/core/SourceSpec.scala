@@ -5,7 +5,7 @@ import java.net.URL
 import cats.instances.all._
 import cats.kernel.laws.GroupLaws
 import cats.syntax.all._
-import cats.{Eq, FlatMap}
+import cats.{Eq, FlatMap, MonadError}
 import extruder.core.ValidationCatsInstances._
 import extruder.instances.ValidationInstances
 import org.scalacheck.Gen.Choose
@@ -18,11 +18,11 @@ import org.typelevel.discipline.specs2.Discipline
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import TestCommon._
-import extruder.effect.ExtruderAsync
+import extruder.effect.{ExtruderAsync, ExtruderMonadError}
 
 import scala.util.Try
 
-trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with Discipline with ValidationInstances {
+trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with Discipline {
   self: Encode
     with Encoders
     with PrimitiveEncoders
@@ -35,11 +35,12 @@ trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with 
     with DerivedDecoders
     with DecodeTypes =>
 
+  type Eff[F[_]] = ExtruderMonadError[F]
   override type OutputData = InputData
 
   val supportsEmptyNamespace: Boolean = true
   def ext: SpecStructure = s2""""""
-  def monoidGroupLaws: GroupLaws[EncodeData]
+  //def monoidGroupLaws: GroupLaws[EncodeData]
   implicit def hints: Hint
 
   implicit val caseClassEq: Eq[CaseClass] = Eq.fromUniversalEquals
@@ -58,29 +59,35 @@ trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with 
     s2"""
        Can decode and encode the following types
         String ${testType(Gen.alphaNumStr)}
-        Int ${testNumeric[Int]}
-        Long ${testNumeric[Long]}
-        Double ${testNumeric[Double]}
-        Float ${testNumeric[Float]}
-        Short ${testNumeric[Short]}
-        Byte ${testNumeric[Byte]}
-        Boolean ${testType(Gen.oneOf(true, false))}
-        URL ${testType(urlGen)}
-        Duration ${testType(durationGen)}
-        FiniteDuration ${testType(finiteDurationGen)}
-        Case class tree ${test(Gen.resultOf(CaseClass))}
-        Case class with defaults set $testDefaults
-
-      Can load data defaults with
-        Standard sync decode $testDefaultDecode
-        Unsafe decode $testDefaultDecodeUnsafe
-
-      Can represent the following types as a table of required params
-        Case class tree $testCaseClassParams
-      $ext
-
-      ${checkAll("Encoder monoid", monoidGroupLaws.monoid(monoid))}
       """
+
+//  override def is: SpecStructure =
+//    s2"""
+//       Can decode and encode the following types
+//        String ${testType(Gen.alphaNumStr)}
+//        Int ${testNumeric[Int]}
+//        Long ${testNumeric[Long]}
+//        Double ${testNumeric[Double]}
+//        Float ${testNumeric[Float]}
+//        Short ${testNumeric[Short]}
+//        Byte ${testNumeric[Byte]}
+//        Boolean ${testType(Gen.oneOf(true, false))}
+//        URL ${testType(urlGen)}
+//        Duration ${testType(durationGen)}
+//        FiniteDuration ${testType(finiteDurationGen)}
+//        Case class tree ${test(Gen.resultOf(CaseClass))}
+//        Case class with defaults set $testDefaults
+//
+//      Can load data defaults with
+//        Standard sync decode $testDefaultDecode
+//        Unsafe decode $testDefaultDecodeUnsafe
+//
+//      Can represent the following types as a table of required params
+//        Case class tree $testCaseClassParams
+//      $ext
+//
+//      ${checkAll("Encoder monoid", monoidGroupLaws.monoid(monoid))}
+//      """
 
   def testNumeric[T: Numeric](
     implicit encoder: Enc[Validation, T],
@@ -118,7 +125,7 @@ trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with 
   def test[T](
     gen: Gen[T]
   )(implicit encoder: Enc[Validation, T], decoder: Dec[Validation, T], teq: Eq[T], equals: Eq[Validation[T]]): Prop = {
-    val F: ExtruderAsync[Validation] = ExtruderAsync[Validation]
+    val F: Eff[Validation] = ExtruderMonadError[Validation]
     Prop.forAll(gen, namespaceGen) { (value, namespace) =>
       def eqv(encoded: Validation[OutputData], decoded: InputData => Validation[T]): Boolean =
         equals.eqv(F.flatMap(encoded)(decoded), value.validNel)

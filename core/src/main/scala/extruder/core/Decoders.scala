@@ -1,7 +1,5 @@
 package extruder.core
 
-import extruder.effect.ExtruderAsync
-
 trait Decoders { self: DecodeTypes =>
   protected def mkDecoder[F[_], T](f: (List[String], Option[T], DecodeData) => F[T]): Dec[F, T]
 
@@ -10,7 +8,7 @@ trait Decoders { self: DecodeTypes =>
 
 trait Decode { self: DecodeTypes =>
   protected def prepareInput[F[_]](namespace: List[String], input: InputData)(
-    implicit F: ExtruderAsync[F],
+    implicit F: Eff[F],
     hints: Hint
   ): F[DecodeData]
 
@@ -19,14 +17,14 @@ trait Decode { self: DecodeTypes =>
     *
     * @param input   data source
     * @param decoder implicit [[Decoder]] instance
-    * @param F       implicit [[ExtruderAsync]] instance
+    * @param F       implicit [[Eff]] instance
     * @param hints   implicit [[Hints]] instance
     * @tparam T type to be decoded
     * @return Either the requested type or a non-empty list of validation errors
     */
   def decode[T](
     input: InputData
-  )(implicit decoder: Dec[Validation, T], F: ExtruderAsync[Validation], hints: Hint): Validation[T] =
+  )(implicit decoder: Dec[Validation, T], F: Eff[Validation], hints: Hint): Validation[T] =
     decode[T, Validation](input)
 
   /** Decode the specified type from given data source in a given namespace
@@ -35,7 +33,7 @@ trait Decode { self: DecodeTypes =>
     * @param namespace namespace within the data source to look for values
     * @param input     data source
     * @param decoder   implicit [[Decoder]] instance
-    * @param F         implicit [[ExtruderAsync]] instance
+    * @param F         implicit [[Eff]] instance
     * @param hints     implicit [[Hints]] instance
     * @tparam T type to be decoded
     * @return Either the requested type or a non-empty list of validation errors
@@ -43,7 +41,7 @@ trait Decode { self: DecodeTypes =>
   def decode[T](
     namespace: List[String],
     input: InputData
-  )(implicit decoder: Dec[Validation, T], F: ExtruderAsync[Validation], hints: Hint): Validation[T] =
+  )(implicit decoder: Dec[Validation, T], F: Eff[Validation], hints: Hint): Validation[T] =
     decode[T, Validation](namespace, input)
 
   /** Decode the specified type from given data source, wrapping the result in specified target monad
@@ -51,13 +49,13 @@ trait Decode { self: DecodeTypes =>
     *
     * @param input   data source
     * @param decoder implicit [[Decoder]] instance
-    * @param F       implicit [[ExtruderAsync]] instance
+    * @param F       implicit [[Eff]] instance
     * @param hints   implicit [[Hints]] instance
     * @tparam T type to be decoded
     * @tparam F target monad (e.g. [[scala.util.Try]])
     * @return The requested type wrapped in the target monad
     */
-  def decode[T, F[_]](input: InputData)(implicit decoder: Dec[F, T], F: ExtruderAsync[F], hints: Hint): F[T] =
+  def decode[T, F[_]](input: InputData)(implicit decoder: Dec[F, T], F: Eff[F], hints: Hint): F[T] =
     decode(List.empty, input)
 
   /** Decode the specified type from given data source in a given namespace, wrapping the result in specified target monad
@@ -65,7 +63,7 @@ trait Decode { self: DecodeTypes =>
     * @param namespace namespace within the data source to look for values
     * @param input data source
     * @param decoder implicit [[Decoder]] instance
-    * @param F implicit [[ExtruderAsync]] instance
+    * @param F implicit [[Eff]] instance
     * @param hints implicit [[Hints]] instance
     * @tparam T type to be decoded
     * @tparam F target monad (e.g. [[scala.util.Try]])
@@ -74,7 +72,7 @@ trait Decode { self: DecodeTypes =>
   def decode[T, F[_]](
     namespace: List[String],
     input: InputData
-  )(implicit decoder: Dec[F, T], F: ExtruderAsync[F], hints: Hint): F[T] =
+  )(implicit decoder: Dec[F, T], F: Eff[F], hints: Hint): F[T] =
     F.flatMap(prepareInput(namespace, input))(decoder.read(namespace, None, _))
 
   /** Decode the specified type from given data source
@@ -82,15 +80,13 @@ trait Decode { self: DecodeTypes =>
     *
     * @param input   data source
     * @param decoder implicit [[Decoder]] instance
-    * @param F       implicit [[ExtruderAsync]] instance
+    * @param F       implicit [[Eff]] instance
     * @param hints   implicit [[Hints]] instance
     * @tparam T type to be decoded
     * @throws Throwable any error encountered during decoding
     * @return the requested type
     */
-  def decodeUnsafe[T](
-    input: InputData
-  )(implicit decoder: Dec[Validation, T], F: ExtruderAsync[Validation], hints: Hint): T =
+  def decodeUnsafe[T](input: InputData)(implicit decoder: Dec[Validation, T], F: Eff[Validation], hints: Hint): T =
     decodeUnsafe[T](List.empty, input)
 
   /** Decode the specified type from given data source in a given namespace
@@ -99,7 +95,7 @@ trait Decode { self: DecodeTypes =>
     * @param namespace namespace within the data source to look for values
     * @param input     data source
     * @param decoder   implicit [[Decoder]] instance
-    * @param F         implicit [[ExtruderAsync]] instance
+    * @param F         implicit [[Eff]] instance
     * @param hints     implicit [[Hints]] instance
     * @tparam T type to be decoded
     * @throws Throwable any error encountered during decoding
@@ -108,7 +104,7 @@ trait Decode { self: DecodeTypes =>
   def decodeUnsafe[T](
     namespace: List[String],
     input: InputData
-  )(implicit decoder: Dec[Validation, T], F: ExtruderAsync[Validation], hints: Hint): T =
+  )(implicit decoder: Dec[Validation, T], F: Eff[Validation], hints: Hint): T =
     decode[T](namespace, input).fold(errs => throw errorsToThrowable(errs), identity)
 
   /** Create a table of parameters as they should appear in the data source
@@ -134,18 +130,18 @@ trait Decode { self: DecodeTypes =>
 }
 
 trait DecodeFromDefaultSource { self: Decode with DecodeTypes =>
-  protected def loadInput[F[_]](implicit F: ExtruderAsync[F]): F[InputData]
+  protected def loadInput[F[_]](implicit F: Eff[F]): F[InputData]
 
   /** Decode the specified type from a default data source
     * If the data source is asynchronous by nature this method will wait for the duration specified in `hints` for decoding to timeout
     *
     * @param decoder implicit [[Decoder]] instance
-    * @param F       implicit [[ExtruderAsync]] instance
+    * @param F       implicit [[Eff]] instance
     * @param hints   implicit [[Hints]] instance
     * @tparam T type to be decoded
     * @return Either the requested type or a non-empty list of validation errors
     */
-  def decode[T](implicit decoder: Dec[Validation, T], F: ExtruderAsync[Validation], hints: Hint): Validation[T] =
+  def decode[T](implicit decoder: Dec[Validation, T], F: Eff[Validation], hints: Hint): Validation[T] =
     decode[T, Validation]
 
   /** Decode the specified type from a default data source in a given namespace
@@ -153,27 +149,27 @@ trait DecodeFromDefaultSource { self: Decode with DecodeTypes =>
     *
     * @param namespace namespace within the data source to look for values
     * @param decoder   implicit [[Decoder]] instance
-    * @param F         implicit [[ExtruderAsync]] instance
+    * @param F         implicit [[Eff]] instance
     * @param hints     implicit [[Hints]] instance
     * @tparam T type to be decoded
     * @return Either the requested type or a non-empty list of validation errors
     */
   def decode[T](
     namespace: List[String]
-  )(implicit decoder: Dec[Validation, T], F: ExtruderAsync[Validation], hints: Hint): Validation[T] =
+  )(implicit decoder: Dec[Validation, T], F: Eff[Validation], hints: Hint): Validation[T] =
     decode[T, Validation](namespace)
 
   /** Decode the specified type from a default data source, wrapping the result in specified target monad
     * If the data source is asynchronous by nature this method will wait for the duration specified in `hints` for decoding to timeout
     *
     * @param decoder implicit [[Decoder]] instance
-    * @param F       implicit [[ExtruderAsync]] instance
+    * @param F       implicit [[Eff]] instance
     * @param hints   implicit [[Hints]] instance
     * @tparam T type to be decoded
     * @tparam F target monad (e.g. [[scala.util.Try]])
     * @return The requested type wrapped in the target monad
     */
-  def decode[T, F[_]](implicit decoder: Dec[F, T], F: ExtruderAsync[F], hints: Hint): F[T] =
+  def decode[T, F[_]](implicit decoder: Dec[F, T], F: Eff[F], hints: Hint): F[T] =
     decode[T, F](List.empty)
 
   /** Decode the specified type from a default data source in a given namespace, wrapping the result in specified target monad
@@ -181,26 +177,26 @@ trait DecodeFromDefaultSource { self: Decode with DecodeTypes =>
     *
     * @param namespace namespace within the data source to look for values
     * @param decoder implicit [[Decoder]] instance
-    * @param F         implicit [[ExtruderAsync]] instance
+    * @param F         implicit [[Eff]] instance
     * @param hints implicit [[Hints]] instance
     * @tparam T type to be decoded
     * @tparam F target monad (e.g. [[scala.util.Try]])
     * @return The requested type wrapped in the target monad
     */
-  def decode[T, F[_]](namespace: List[String])(implicit decoder: Dec[F, T], F: ExtruderAsync[F], hints: Hint): F[T] =
+  def decode[T, F[_]](namespace: List[String])(implicit decoder: Dec[F, T], F: Eff[F], hints: Hint): F[T] =
     F.flatMap(loadInput)(decode[T, F](namespace, _))
 
   /** Decode the specified type from a default data source
     * If the data source is asynchronous by nature this method will wait for the duration specified in `hints` for decoding to timeout
     *
     * @param decoder implicit [[Decoder]] instance
-    * @param F implicit [[ExtruderAsync]] instance
+    * @param F implicit [[Eff]] instance
     * @param hints implicit [[Hints]] instance
     * @tparam T type to be decoded
     * @throws Throwable any error encountered during decoding
     * @return the requested type
     */
-  def decodeUnsafe[T](implicit decoder: Dec[Validation, T], F: ExtruderAsync[Validation], hints: Hint): T =
+  def decodeUnsafe[T](implicit decoder: Dec[Validation, T], F: Eff[Validation], hints: Hint): T =
     decodeUnsafe[T](List.empty)
 
   /** Decode the specified type from a default data source in a given namespace
@@ -208,7 +204,7 @@ trait DecodeFromDefaultSource { self: Decode with DecodeTypes =>
     *
     * @param namespace namespace within the data source to look for values
     * @param decoder implicit [[Decoder]] instance
-    * @param F implicit [[ExtruderAsync]] instance
+    * @param F implicit [[Eff]] instance
     * @param hints implicit [[Hints]] instance
     * @tparam T type to be decoded
     * @throws Throwable any error encountered during decoding
@@ -216,7 +212,7 @@ trait DecodeFromDefaultSource { self: Decode with DecodeTypes =>
     */
   def decodeUnsafe[T](
     namespace: List[String]
-  )(implicit decoder: Dec[Validation, T], F: ExtruderAsync[Validation], hints: Hint): T =
+  )(implicit decoder: Dec[Validation, T], F: Eff[Validation], hints: Hint): T =
     decode[T](namespace).fold(errs => throw errorsToThrowable(errs), identity)
 }
 

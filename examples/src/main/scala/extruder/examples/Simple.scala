@@ -4,15 +4,14 @@ import java.net.URL
 
 import cats.data.EitherT
 import cats.effect.IO
-import extruder.core.{MapDecoder, Validation}
 import extruder.data.ValidationT
 import extruder.effect.{ExtruderAsync, ExtruderMonadError, ExtruderSync}
+import extruder.system.{EnvironmentSource, SafeSystemPropertiesSource, SystemPropertiesSource}
+import extruder.typesafe.{SafeTypesafeConfigSource, TypesafeConfigSource}
 
 //import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
-
-import cats.instances.all._
 
 case class CC(
   a: String = "test",
@@ -60,9 +59,10 @@ object Simple extends App {
   implicitly[ExtruderAsync[Eit]]
   implicitly[ExtruderSync[Eit]]
   implicitly[ExtruderMonadError[Eit]]
+  implicitly[ExtruderMonadError[Val]]
 
-  println(MapDecoder.decode[Int, Eit](config))
-  println(MapDecoder.decode[Int, Val](config))
+  println(SafeTypesafeConfigSource.decode[CC, Val].value.unsafeRunSync())
+  //println(MapDecoder.decode[Int, Val](config))
 //  implicit val fut = ExtruderApplicativeError.fromMonadError[Future]
 
   //println(decode[CC, Future, Throwable](config))

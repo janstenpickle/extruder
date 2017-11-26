@@ -29,17 +29,18 @@ object TestCommon {
   val durationGen: Gen[Duration] =
     Gen.oneOf(finiteDurationGen, Gen.const(Duration.Inf), Gen.const(Duration.MinusInf), Gen.const(Duration.Zero))
 
-  implicit def futureEq[A](implicit e: Eq[A]): Eq[Future[A]] = ioEq[A].on(fut => IO.fromFuture(Eval.later(fut)))
+//  implicit def futureEq[A](implicit e: Eq[A]): Eq[Future[A]] = Eq.by[Future[A], A](fut => IO.fromFuture(Eval.later(fut))) // ioEq[A].on(fut => IO.fromFuture(Eval.later(fut)))
 
-  implicit def tryEq[A](implicit e: Eq[A]): Eq[Try[A]] = catsStdEqForTry[A, Throwable](e, Eq[String].on(_.toString))
+  implicit def tryEq[A](implicit e: Eq[A]): Eq[Try[A]] =
+    catsStdEqForTry[A, Throwable](e, Eq.by[Throwable, String](_.toString))
 
-  implicit def ioEq[A](implicit e: Eq[A]): Eq[IO[A]] = new Eq[IO[A]] {
-
-    override def eqv(a: IO[A], b: IO[A]): Boolean = {
-      val a1 = Try(a.unsafeRunSync())
-      val b1 = Try(b.unsafeRunSync())
-
-      tryEq[A].eqv(a1, b1)
-    }
-  }
+//  implicit def ioEq[A](implicit e: Eq[A]): Eq[IO[A]] = new Eq[IO[A]] {
+//
+//    override def eqv(a: IO[A], b: IO[A]): Boolean = {
+//      val a1 = Try(a.unsafeRunSync())
+//      val b1 = Try(b.unsafeRunSync())
+//
+//      tryEq[A].eqv(a1, b1)
+//    }
+//  }
 }

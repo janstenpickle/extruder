@@ -7,13 +7,9 @@ import extruder.instances.{EitherInstances, ValidationInstances}
 
 import scala.util.Either
 
-trait ExtruderAsync[F[_]] extends Async[F] {
-  def missing[A](message: String): F[A]
-  def validationFailure[A](message: String): F[A]
-  def validationException[A](message: String, ex: Throwable): F[A]
-}
+trait ExtruderAsync[F[_]] extends ExtruderSync[F] with Async[F]
 
-abstract class LowPriorityAsyncInstances {
+trait LowPriorityAsyncInstances {
   implicit def validationTAsync[F[_]: Async]: ExtruderAsync[ValidationT[F, ?]] =
     new ValidationTAsync[F] {
       protected def F: Async[F] = Async[F]
@@ -31,7 +27,7 @@ abstract class LowPriorityAsyncInstances {
   }
 }
 
-abstract class AsyncInstances extends LowPriorityAsyncInstances {
+trait AsyncInstances {
   abstract class FromSync[F[_]](implicit F: Sync[F]) extends ExtruderAsync[F] {
     override def pure[A](x: A): F[A] = F.pure(x)
     override def suspend[A](thunk: => F[A]): F[A] = F.suspend(thunk)
@@ -54,6 +50,10 @@ abstract class AsyncInstances extends LowPriorityAsyncInstances {
     }
 }
 
-object ExtruderAsync extends AsyncInstances with ValidationInstances with EitherInstances {
+object ExtruderAsync
+    extends AsyncInstances
+    with LowPrioritySyncInstances
+    with ValidationInstances
+    with EitherInstances {
   def apply[F[_]](implicit async: ExtruderAsync[F]): ExtruderAsync[F] = async
 }
