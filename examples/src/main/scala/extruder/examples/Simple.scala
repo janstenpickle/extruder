@@ -2,22 +2,18 @@ package extruder.examples
 
 import java.net.URL
 
-import cats.{Apply, Eval}
-import cats.data.{EitherT, NonEmptyList}
+import cats.data.EitherT
 import cats.effect.IO
-import com.typesafe.config.ConfigFactory
-import extruder.core._
-import extruder.effect.{ExtruderAsync, ExtruderMonadError, ExtruderSync}
-import extruder.system.{EnvironmentSource, SafeEnvironmentSource, SafeSystemPropertiesSource, SystemPropertiesSource}
-import extruder.typesafe.{SafeTypesafeConfigSource, TypesafeConfigDecoder, TypesafeConfigEncoder, TypesafeConfigSource}
+import extruder.core.MapSource._
 
-import scala.util.Either
-
-//import scala.concurrent.ExecutionContext.Implicits.global
-
-import scala.collection.JavaConverters._
-
+import scala.concurrent.Future
 import scala.concurrent.duration.{Duration, FiniteDuration}
+import cats.instances.all._
+import extruder.core.ValidationErrors
+
+import scala.util.Try
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 case class CC(
   a: String = "test",
@@ -26,8 +22,8 @@ case class CC(
   d: CC2,
   e: CC3,
   f: Set[Int],
-//  dur: Duration,
-//  finDur: FiniteDuration
+  dur: Duration,
+  finDur: FiniteDuration
 )
 case class CC2(x: String = "test4", y: Option[Int] = Some(232), z: CC3, dfs: Long)
 case class CC3(a: Option[String])
@@ -46,87 +42,18 @@ object Simple extends App {
     "cc.d.cc2.z.cc3.a" -> "testing",
     "cc3.a" -> "hello",
     "cc.f" -> "2, 3",
-    //"cc.dur" -> "Inf",
+    "cc.dur" -> "Inf",
     "cc.findur" -> "22 days",
     "ccimpl2.a" -> "sdfds",
     "ccimpl2.b" -> "34",
     "thingimpl.t" -> "sadfsf"
   )
 
-  //implicitly[ExtruderSync[ValidationT[IO, ?]]]
+  type EitherIO[A] = EitherT[IO, ValidationErrors, A]
 
-  //println(ExtruderSync.validationTSync[IO])
-
-  //implicit val derp = ExtruderAsync.validationTAsync[IO]
-
-  //type Val[A] = ValidationT[IO, A]
-  type Eit[A] = EitherT[IO, Throwable, A]
-  type EitV[A] = EitherT[IO, ValidationErrors, A]
-
-  implicitly[ExtruderAsync[Eit]]
-  implicitly[ExtruderSync[Eit]]
-  implicitly[ExtruderMonadError[Eit]]
-  implicitly[ExtruderAsync[EitV]]
-
-//  println(TypesafeConfigSource.traversableEncoder[Val, Int, Seq])
-  println(TypesafeConfigSource.encode[Seq[Int]](List("232"), Seq(1, 3)))
-  println(MapSource.decode[CC](List("232"), Map.empty[String, String]))
-  implicitly[MapDecoder[Validation, Set[Int]]]
-
-  implicitly[Parser[Set[Int]]]
-
-  implicitly[ExtruderAsync[IO]]
-
-  Parser.traversable[Int, Set]
-
-  val f: (Unit, Unit) => Unit = (_, _) => ()
-
-  implicitly[ExtruderMonadError[Either[ValidationErrors, ?]]]
-
-//  println(
-//    implicitly[ExtruderAsync[EitV]]
-//      .ap2[Unit, Unit, Unit](EitherT[IO, ValidationErrors, (Unit, Unit) => Unit](IO.pure(Right(f))))(
-//        EitherT[IO, ValidationErrors, Unit](IO.pure(Left(NonEmptyList.of(Missing("fdsfw"))))),
-//        EitherT[IO, ValidationErrors, Unit](IO.pure(Left(NonEmptyList.of(Missing("fder3sfw")))))
-//      )
-//      .value
-//      .unsafeRunSync()
-//  )
-
-  println(
-    implicitly[ExtruderMonadError[Validation]]
-      .ap2[Unit, Unit, Unit](Right(f))(
-        Left[ValidationErrors, Unit](NonEmptyList.of(Missing("fdsfw"))),
-        Left[ValidationErrors, Unit](NonEmptyList.of(Missing("fder3sfw")))
-      )
-  )
-
-  // println(Apply[Either[ValidationErrors, ?]].ap2()(fa0, fb0))
-
-//  println(
-//    EnvironmentSource
-//      .decode[List[String], Val]
-//      .value
-//      .unsafeRunSync()
-//  )
-  //println(MapDecoder.decode[Int, Val](config))
-//  implicit val fut = ExtruderApplicativeError.fromMonadError[Future]
-
-  //println(decode[CC, Future, Throwable](config))
-
-  //implicitly[ExtruderApplicativeError[EitherT[Future, Throwable, ?], Throwable]]
-
-//  ExtruderApplicativeError.fromMonadError[EitherT[Future, Throwable, ?]]
-
-  //implicitly[Effect[EitherT[Future, Throwable, ?]]]
-  //implicitly[ExtruderEffect[Future]]
-  // implicitly[ExtruderAsync[IO]]
-  // implicitly[ExtruderAsync[ValidationT[IO, ?]]]
-//  implicitly[ExtruderAsync[Task]]
-  // implicitly[Async[EitherT[IO, NonEmptyList[String], ?]]]
-  //println(decode[CC, EitherT[Future, Throwable, ?], Throwable](config))
-//  println(decodeIO[CC](config))
-//  println(decodeIO[CC, EitherThrowable, Throwable](config))
-//  println(decodeAsync[CC, Task](config))
-//  println(decodeAsync[CC, Task, EitherErrors, ValidationErrors](config))
+  println(decode[CC](config))
+  println(decode[CC, Try](config))
+  println(decode[CC, Future](config))
+  println(decode[CC, IO](config))
+  println(decode[CC, EitherIO](config))
 }
