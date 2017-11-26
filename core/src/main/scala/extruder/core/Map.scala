@@ -1,7 +1,7 @@
 package extruder.core
 
 import cats.Monoid
-import cats.effect.IO
+import extruder.effect.ExtruderMonadError
 
 trait BaseMapEncoders extends Encoders with PrimitiveEncoders with DerivedEncoders with EncodeTypes {
   override type EncodeData = Map[String, String]
@@ -12,15 +12,15 @@ trait BaseMapEncoders extends Encoders with PrimitiveEncoders with DerivedEncode
     override def combine(x: Map[String, String], y: Map[String, String]): Map[String, String] = x ++ y
   }
 
-  override protected def writeValue[F[_], E](
+  override protected def writeValue[F[_]](
     path: List[String],
     value: String
-  )(implicit hints: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[Map[String, String]]] =
-    IO(AE.pure(Map(hints.pathToString(path) -> value)))
+  )(implicit hints: Hint, F: Eff[F]): F[Map[String, String]] =
+    F.pure(Map(hints.pathToString(path) -> value))
 
-  override protected def mkEncoder[F[_], T](f: (List[String], T) => IO[F[Map[String, String]]]): MapEncoder[F, T] =
+  override protected def mkEncoder[F[_], T](f: (List[String], T) => F[Map[String, String]]): MapEncoder[F, T] =
     new MapEncoder[F, T] {
-      override def write(path: List[String], in: T): IO[F[Map[String, String]]] = f(path, in)
+      override def write(path: List[String], in: T): F[Map[String, String]] = f(path, in)
     }
 }
 
@@ -28,23 +28,23 @@ trait BaseMapDecoders extends Decoders with PrimitiveDecoders with DerivedDecode
   override type DecodeData = Map[String, String]
   override type Dec[F[_], T] = MapDecoder[F, T]
 
-  override protected def hasValue[F[_], E](
+  override protected def hasValue[F[_]](
     path: List[String],
     data: Map[String, String]
-  )(implicit hints: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[Boolean]] =
-    lookupValue(path, data).map(AE.map(_)(_.isDefined))
+  )(implicit hints: Hint, F: Eff[F]): F[Boolean] =
+    F.map(lookupValue(path, data))(_.isDefined)
 
-  override protected def lookupValue[F[_], E](
+  override protected def lookupValue[F[_]](
     path: List[String],
     data: Map[String, String]
-  )(implicit hints: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[Option[String]]] =
-    IO(AE.pure(data.get(hints.pathToString(path))))
+  )(implicit hints: Hint, F: Eff[F]): F[Option[String]] =
+    F.pure(data.get(hints.pathToString(path)))
 
   override protected def mkDecoder[F[_], T](
-    f: (List[String], Option[T], Map[String, String]) => IO[F[T]]
+    f: (List[String], Option[T], Map[String, String]) => F[T]
   ): MapDecoder[F, T] =
     new MapDecoder[F, T] {
-      override def read(path: List[String], default: Option[T], data: Map[String, String]): IO[F[T]] =
+      override def read(path: List[String], default: Option[T], data: Map[String, String]): F[T] =
         f(path, default, data)
     }
 }
@@ -52,11 +52,11 @@ trait BaseMapDecoders extends Decoders with PrimitiveDecoders with DerivedDecode
 trait MapDecoder[F[_], T] extends Decoder[F, T, Map[String, String]]
 
 trait MapDecoders extends BaseMapDecoders with Decode with MapDataSource {
-  override protected def prepareInput[F[_], E](
+  override protected def prepareInput[F[_]](
     namespace: List[String],
     data: Map[String, String]
-  )(implicit AE: ExtruderApplicativeError[F, E], util: Hint): IO[F[Map[String, String]]] =
-    IO(AE.pure(data))
+  )(implicit F: Eff[F], util: Hint): F[Map[String, String]] =
+    F.pure(data)
 }
 
 object MapDecoder extends MapDecoders
@@ -64,11 +64,11 @@ object MapDecoder extends MapDecoders
 trait MapEncoder[F[_], T] extends Encoder[F, T, Map[String, String]]
 
 trait MapEncoders extends BaseMapEncoders with Encode with MapDataSource {
-  override protected def finalizeOutput[F[_], E](
+  override protected def finalizeOutput[F[_]](
     namespace: List[String],
     inter: Map[String, String]
-  )(implicit AE: ExtruderApplicativeError[F, E], util: Hint): IO[F[Map[String, String]]] =
-    IO(AE.pure(inter))
+  )(implicit F: Eff[F], util: Hint): F[Map[String, String]] =
+    F.pure(inter)
 }
 
 object MapEncoder extends MapEncoders
@@ -88,5 +88,6 @@ object MapHints extends HintsCompanion[MapHints] {
 trait MapDataSource extends DataSource {
   override type InputData = Map[String, String]
   override type OutputData = Map[String, String]
+  override type Eff[F[_]] = ExtruderMonadError[F]
   override type Hint = MapHints
 }

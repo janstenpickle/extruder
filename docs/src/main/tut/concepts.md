@@ -8,25 +8,22 @@ position: 1
 
 # Overview
 
-Extruder provides some default methods for decoding and encoding case classes from differing data sources which returns the value wrapped in a [cats] `ValidatedNel` instance. However this is just the default implementation, extruder allows you to specify your own target monads.
+Extruder provides some default methods for decoding and encoding case classes from differing data sources which returns the value wrapped in a `Either` where left hand side of errors is  [cats] `NonEmptyList` instance. However this is just the default implementation, extruder allows you to specify your own target monads.
 
-The design of extruder assumes that reading and writing data could be side affecting and therefore requires that whenever a value is read from data it is wrapped in the [cats effect] `IO` monad, as well as the extruder typeclass for aggregating errors; `ExtruderApplicativeError`.
+## Effects
 
-1. `IO` monad models side effects in loading data and fails on the first error.
-1. `ExtruderApplicativeError` models errors in decoding data values and optionally aggregates those errors depending on the target monad.
+Extruder use [cats][cats] and [cats effect][cats effect] to define target monads. By default, when encoding or decoding, Extruder returns an `Either[ValidatedNel[ValidationError], A]` where, errors are collected on the left hand side.
 
-For more information on how to use different monads with extruder see the [documentation on decoding and encoding](decode_encode.html)
+Extruder extends the `MonadError`, `Sync` and `Async` typeclasses from the Typelevel cats ecosystem. Each of these typeclasses handle effects in different ways, it us up to the maintainer of the [data source](data_source.html) as to which typeclass models the side effects of their target backend. For example the provided data source for `Map[String, String]` uses `MonadError` because there are no side effects in looking up from an already initialised map. However a data source implementation for reading from a database should use the `Async` typeclass so that any asynchronous computation is captured and handled correctly.
 
-## Why use the `IO` monad and not `Effect`?
+Extruder provides types for separating validation errors from effects via the `EitherT` monad transformer, combined with one of the typeclasses mentioed above. For example `EitherT[IO, ValidatedNel[ValidationError], A]`'s underlying value is `IO[Either[ValidatedNel[ValidationError], A]]` where side effects of asynchronous computation are captured by the [cats effect][cats effect] `IO` monad and validation errors are modelled by `Either[ValidatedNel[ValidationError], A]`. The same is true for any implementation of `Sync` or `Async` typeclasses such the [Monix][monix] `Task`.
 
-Extruder acts like a bridge between data and a target type. The target type may be wrapped an an effect monad and a validation monad of the user's choosing (1 and 2 above), provided the required [implicits exist](decode_encode.html). In certain sections of Extruder internals, both the side affect and and validation monad must be flat-mapped together. This causes a problem when both are unknown because `flatMap` instances for all permutations of effect and validation monads must be provided. Instead the reference implementation of [cats effect], `IO`, is used as a concrete target for flat-mapping and side-effecting monads, such as `Future` or [Monix]'s `Task` may be converted to and from `IO`.
+There is a hierarchy of power when it comes to these typeclasses, where `Async` > `Sync` > `MonadError`. This means that an `Async` typeclass implementation may be used for data sources specifying `MonadError` as their target monad, however the reverse isn't true.
 
-An example of how this may work from data source to result is shown below
-<div class="mermaid">
-graph LR;
-    S[Data Source - Future]-->E[Extruder - IO];
-    E[Extruder IO]-->R[Result - Task];
-</div>
+> Note that the default `decode` method uses a `MonadError` instance, so if the backend you are using requires an `Async` or `Sync` target you must specify the type manually.
+
+See the [examples](examples.html) documentation on how to use these typeclasses effectively and specifying a target monad.
+
 # Terms
 
 Some of the key terms for extruder are described below:

@@ -1,6 +1,8 @@
 import microsites._
 
 val specs2Ver = "4.0.1"
+val catsVer = "1.0.0-RC1"
+val catsEffectVer = "0.5"
 
 val commonSettings = Seq(
   organization := "extruder",
@@ -13,6 +15,7 @@ val commonSettings = Seq(
     "-feature",
     "-deprecation:false",
     "-Xcheckinit",
+    //  "-Xlog-implicits",
     "-Xlint:-nullary-unit",
     "-Ywarn-numeric-widen",
     "-Ywarn-dead-code",
@@ -49,13 +52,15 @@ lazy val core = (project in file("core")).settings(
     Seq(
       name := "extruder-core",
       libraryDependencies ++= Seq(
-        ("org.typelevel"           %% "cats"        % "0.9.0").exclude("org.scalacheck", "scalacheck"),
-        ("org.typelevel"           %% "cats-effect" % "0.3").exclude("org.scalacheck", "scalacheck"),
-        ("com.github.benhutchison" %% "mouse"       % "0.9").exclude("org.scalacheck", "scalacheck"),
-        ("com.chuusai"             %% "shapeless"   % "2.3.2").exclude("org.scalacheck", "scalacheck"),
+        ("org.typelevel" %% "cats-core"   % catsVer).exclude("org.scalacheck", "scalacheck"),
+        ("org.typelevel" %% "cats-effect" % catsEffectVer).exclude("org.scalacheck", "scalacheck"),
+        ("org.typelevel" %% "mouse"       % "0.12").exclude("org.scalacheck", "scalacheck"),
+        ("com.chuusai"   %% "shapeless"   % "2.3.2").exclude("org.scalacheck", "scalacheck"),
         "org.specs2" %% "specs2-core"       % specs2Ver % "test",
         "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test",
-        ("org.typelevel"              %% "discipline"                % "0.8"   % "test").exclude("org.scalacheck", "scalacheck"),
+        ("org.typelevel" %% "cats-effect-laws" % catsEffectVer).exclude("org.scalacheck", "scalacheck"),
+        ("org.typelevel" %% "discipline"       % "0.8" % "test")
+          .exclude("org.scalacheck", "scalacheck"),
         ("com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % "1.1.7" % "test")
           .exclude("org.scalacheck", "scalacheck")
       ),
@@ -71,13 +76,9 @@ lazy val systemSources = (project in file("system-sources"))
 lazy val examples = (project in file("examples"))
   .settings(
     commonSettings ++
-      Seq(
-        name := "extruder-examples",
-        libraryDependencies += "org.zalando" %% "grafter" % "1.4.8",
-        publishArtifact := false
-      )
+      Seq(name := "extruder-examples", publishArtifact := false)
   )
-  .dependsOn(systemSources, typesafe, refined, monix)
+  .dependsOn(systemSources, typesafe, refined)
 
 lazy val typesafe = (project in file("typesafe"))
   .settings(
@@ -110,37 +111,6 @@ lazy val refined = (project in file("refined"))
   )
   .dependsOn(core % "compile->compile;test->test")
 
-lazy val monix = (project in file("monix"))
-  .settings(
-    commonSettings ++
-      Seq(
-        name := "extruder-monix",
-        libraryDependencies ++= Seq(
-          "io.monix"   %% "monix-eval"        % "2.3.0",
-          "io.monix"   %% "monix-cats"        % "2.3.0",
-          "org.specs2" %% "specs2-core"       % specs2Ver % "test",
-          "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test"
-        ),
-        coverageEnabled.in(Test, test) := true
-      )
-  )
-  .dependsOn(core % "compile->compile;test->test")
-
-lazy val fs2 = (project in file("fs2"))
-  .settings(
-    commonSettings ++
-      Seq(
-        name := "extruder-fs2",
-        libraryDependencies ++= Seq(
-          "co.fs2"     %% "fs2-core"          % "0.9.7",
-          "org.specs2" %% "specs2-core"       % specs2Ver % "test",
-          "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test"
-        ),
-        coverageEnabled.in(Test, test) := true
-      )
-  )
-  .dependsOn(core % "compile->compile;test->test")
-
 lazy val root = (project in file("."))
   .settings(
     commonSettings ++
@@ -151,7 +121,7 @@ lazy val root = (project in file("."))
         libraryDependencies := libraryDependencies.all(aggregateCompile).value.flatten
       )
   )
-  .aggregate(core, typesafe, refined, monix, fs2)
+  .aggregate(core, typesafe, refined)
 
 lazy val aggregateCompile =
   ScopeFilter(inProjects(core, systemSources), inConfigurations(Compile))
@@ -167,6 +137,10 @@ lazy val docSettings = commonSettings ++ Seq(
   micrositeGithubOwner := "janstenpickle",
   micrositeGithubRepo := "extruder",
   micrositeExtraMdFiles := Map(file("CONTRIBUTING.md") -> ExtraMdFileConfig("contributing.md", "docs")),
+  micrositeFavicons := Seq(
+    MicrositeFavicon("favicon16x16.png", "16x16"),
+    MicrositeFavicon("favicon32x32.png", "32x32")
+  ),
   micrositePalette := Map(
     "brand-primary" -> "#009933",
     "brand-secondary" -> "#006600",
@@ -206,12 +180,12 @@ lazy val docSettings = commonSettings ++ Seq(
 )
 
 lazy val docs = project
-  .dependsOn(core, systemSources, typesafe, refined, monix)
+  .dependsOn(core, systemSources, typesafe, refined)
   .settings(
     moduleName := "extruder-docs",
     name := "Extruder docs",
-    publish := (),
-    publishLocal := (),
+    publish := (()),
+    publishLocal := (()),
     publishArtifact := false
   )
   .settings(docSettings)

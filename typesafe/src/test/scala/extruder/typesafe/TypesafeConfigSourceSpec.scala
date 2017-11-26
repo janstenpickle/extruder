@@ -1,18 +1,20 @@
 package extruder.typesafe
 
 import cats.Eq
-import cats.effect.IO
-import cats.kernel.laws.GroupLaws
+import cats.data.NonEmptyList
 import cats.instances.all._
+import cats.syntax.either._
+import cats.kernel.laws.discipline.MonoidTests
 import com.typesafe.config._
-import extruder.core.{SourceSpec, ValidationException}
-import org.scalacheck.{Arbitrary, Gen}
+import extruder.core.ValidationCatsInstances._
+import extruder.core._
+import extruder.effect.ExtruderMonadError
+import org.scalacheck.{Arbitrary, Gen, Prop}
 import org.specs2.matcher.MatchResult
 import org.specs2.specification.core.SpecStructure
-import shapeless._
+import shapeless.Coproduct
 
 import scala.collection.JavaConverters._
-import extruder.core.ValidationCatsInstances._
 
 class TypesafeConfigSourceSpec extends SourceSpec with TypesafeConfigDecoders with TypesafeConfigEncoders {
   import TypesafeConfigSourceSpec._
@@ -28,7 +30,8 @@ class TypesafeConfigSourceSpec extends SourceSpec with TypesafeConfigDecoders wi
     ConfigFactory.parseMap(config)
   }
 
-  override def loadInput: IO[InputData] = IO(convertData(caseClassData))
+  override def loadInput[F[_]](implicit F: ExtruderMonadError[F]): F[Config] =
+    F.catchNonFatal(convertData(caseClassData))
 
   override def ext: SpecStructure =
     s2"""
@@ -37,15 +40,37 @@ class TypesafeConfigSourceSpec extends SourceSpec with TypesafeConfigDecoders wi
           ConfigObject ${test[ConfigObject](configObjectGen)}
           ConfigList ${test[ConfigList](configListGen)}
 
+        Can encode and decode a list $testTypesafeList
+        Fails to decode a missing list $testTypsafeListMissing
+        Fails to decode an invalid list $testTypsafeListInvalid
+
         Fails to convert an invalid type $testException
       """
 
   def testException: MatchResult[Any] =
-    decode[String](List(Key), new BrokenConfig(LookupFailureMessage)).toEither must beLeft.which(
+    decode[String](List(Key), new BrokenConfig(LookupFailureMessage)) must beLeft.which(
       _.head.asInstanceOf[ValidationException].exception.getMessage === LookupFailureMessage
     )
 
-  override def monoidGroupLaws: GroupLaws[ConfigMap] = GroupLaws[ConfigMap]
+  def testTypesafeList: Prop = prop { (li: List[Int]) =>
+    (for {
+      enc <- encode[List[Int]](List("a"), li)
+      dec <- decode[List[Int]](List("a"), enc)
+    } yield dec) must beRight.which(_ === li)
+  }
+
+  def testTypsafeListMissing: MatchResult[Validation[List[Int]]] =
+    decode[List[Int]](List("a")) must beLeft.which(
+      _.head === Missing("Could not find list at 'a' and no default available")
+    )
+
+  def testTypsafeListInvalid: Prop = prop { (li: NonEmptyList[String]) =>
+    decode[List[Int]](List("a"), ConfigFactory.parseMap(Map[String, Any]("a" -> li.toList.asJava).asJava)) must beLeft
+      .which(_.head === ValidationFailure(s"""Could not parse value '${li.toList
+        .mkString(", ")}' at 'a': For input string: "${li.head}""""))
+  }
+
+  override def monoidTests: MonoidTests[ConfigMap]#RuleSet = MonoidTests[ConfigMap](monoid).monoid
 
   override implicit def hints: TypesafeConfigHints = TypesafeConfigHints.default
 }
@@ -71,4 +96,10 @@ object TypesafeConfigSourceSpec {
 
   implicit val configTypeArb: Arbitrary[ConfigTypes] =
     Arbitrary(Gen.alphaNumStr.map(Coproduct[ConfigTypes].apply[String]))
+
+  implicit val nonEmptyListArb: Arbitrary[NonEmptyList[String]] =
+    Arbitrary(for {
+      h <- Gen.alphaStr
+      t <- Gen.listOf(Gen.alphaStr)
+    } yield NonEmptyList(h, t))
 }

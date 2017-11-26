@@ -2,23 +2,21 @@ package extruder.system
 
 import java.util.Properties
 
-import cats.effect.IO
-import cats.syntax.cartesian._
 import extruder.core._
+import extruder.effect.{ExtruderMonadError, ExtruderSync}
 
 import scala.collection.JavaConverters._
 
 trait SystemPropertiesDecoders extends BaseMapDecoders with Decode with DecodeFromDefaultSource with DecodeTypes {
   override type InputData = java.util.Properties
-  override type OutputData = Unit
 
-  override protected def prepareInput[F[_], E](
+  override protected def prepareInput[F[_]](
     namespace: List[String],
     data: java.util.Properties
-  )(implicit AE: ExtruderApplicativeError[F, E], util: Hint): IO[F[Map[String, String]]] =
-    IO(AE.pure(data.asScala.toMap))
+  )(implicit F: Eff[F], util: Hint): F[Map[String, String]] =
+    F.pure(data.asScala.toMap)
 
-  override def loadInput: IO[Properties] = IO(System.getProperties)
+  override def loadInput[F[_]](implicit F: Eff[F]): F[Properties] = F.catchNonFatal(System.getProperties)
 }
 
 object SystemPropertiesDecoder extends SystemPropertiesDecoders
@@ -26,20 +24,36 @@ object SystemPropertiesDecoder extends SystemPropertiesDecoders
 trait SystemPropertiesEncoders extends BaseMapEncoders with Encode {
   override type OutputData = Unit
 
-  override protected def finalizeOutput[F[_], E](
+  override protected def finalizeOutput[F[_]](
     namespace: List[String],
     inter: Map[String, String]
-  )(implicit AE: ExtruderApplicativeError[F, E], util: Hint): IO[F[Unit]] = IO.pure {
+  )(implicit F: Eff[F], util: Hint): F[Unit] =
     inter
-      .map { case (k, v) => AE.catchNonFatal(System.setProperty(k, v)) }
-      .foldLeft(AE.pure(()))((acc, v) => (acc |@| v).map((_, _) => ()))
-  }
+      .map { case (k, v) => F.catchNonFatal(System.setProperty(k, v)) }
+      .foldLeft(F.pure(()))((acc, v) => F.ap2(F.pure((_: Unit, _: String) => ()))(acc, v))
 }
 
 object SystemPropertiesEncoder extends SystemPropertiesEncoders
 
 trait SystemPropertiesSource extends SystemPropertiesDecoders with SystemPropertiesEncoders {
+  override type Eff[F[_]] = ExtruderMonadError[F]
   override type Hint = MapHints
 }
 
 object SystemPropertiesSource extends SystemPropertiesSource
+
+trait SafeSystemPropertiesSource extends SystemPropertiesDecoders with SystemPropertiesEncoders {
+  override type Eff[F[_]] = ExtruderSync[F]
+  override type Hint = MapHints
+  override def loadInput[F[_]](implicit F: Eff[F]): F[Properties] = F.delay(System.getProperties)
+
+  override protected def finalizeOutput[F[_]](
+    namespace: List[String],
+    inter: Map[String, String]
+  )(implicit F: Eff[F], util: Hint): F[Unit] =
+    inter
+      .map { case (k, v) => F.delay(System.setProperty(k, v)) }
+      .foldLeft(F.pure(()))((acc, v) => F.ap2(F.pure((_: Unit, _: String) => ()))(acc, v))
+}
+
+object SafeSystemPropertiesSource extends SafeSystemPropertiesSource

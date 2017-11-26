@@ -2,109 +2,74 @@ package extruder.core
 
 import java.net.URL
 
-import cats.effect.IO
+import cats.Applicative
 import cats.implicits._
 import mouse.string._
 import shapeless.syntax.typeable._
-import shapeless.{Lazy, Typeable}
+import shapeless.{Lazy, LowPriority, Typeable}
 
 import scala.collection.generic.CanBuildFrom
 import scala.concurrent.duration.Duration
 import scala.reflect.ClassTag
 
-trait PrimitiveDecoders { self: Decoders with DecodeTypes =>
-  protected def hasValue[F[_], E](path: List[String], data: DecodeData)(
-    implicit hints: Hint,
-    AE: ExtruderApplicativeError[F, E]
-  ): IO[F[Boolean]]
-  protected def lookupValue[F[_], E](path: List[String], data: DecodeData)(
-    implicit hints: Hint,
-    AE: ExtruderApplicativeError[F, E]
-  ): IO[F[Option[String]]]
-  protected def lookupList[F[_], E](
-    path: List[String],
-    data: DecodeData
-  )(implicit hints: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[Option[List[String]]]] =
-    lookupValue[F, E](path, data).map(_.map(_.map(_.split(hints.ListSeparator).toList.map(_.trim))))
+trait PrimitiveDecoders extends { self: Decoders with DecodeTypes =>
+  protected def hasValue[F[_]](path: List[String], data: DecodeData)(implicit hints: Hint, F: Eff[F]): F[Boolean]
 
-  implicit def primitiveDecoder[F[_], E, T](
+  protected def lookupValue[F[_]](path: List[String], data: DecodeData)(
+    implicit hints: Hint,
+    F: Eff[F]
+  ): F[Option[String]]
+
+  implicit def primitiveDecoder[F[_], T](
     implicit parser: Parser[T],
     hints: Hint,
-    AE: ExtruderApplicativeError[F, E]
+    F: Eff[F],
+    lp: LowPriority
   ): Dec[F, T] =
     mkDecoder[F, T]((path, default, data) => resolveValue(formatParserError(parser, path)).apply(path, default, data))
 
-  implicit def traversableDecoder[F[_], E, T, FF[T] <: TraversableOnce[T]](
-    implicit parser: Parser[T],
-    cbf: CanBuildFrom[FF[T], T, FF[T]],
-    hints: Hint,
-    AE: ExtruderApplicativeError[F, E]
-  ): Dec[F, FF[T]] =
-    mkDecoder { (path, default, data) =>
-      resolveList { x =>
-        val seq: F[List[T]] = AE.sequence(x.filterNot(_.isEmpty).map(formatParserError(parser, path)))
-
-        AE.map(seq)(_.foldLeft(cbf())(_ += _).result())
-      }.apply(path, default, data)
-    }
-
-  implicit def optionalDecoder[F[_], E, T](
-    implicit decoder: Lazy[Dec[F, T]],
-    hints: Hint,
-    AE: ExtruderApplicativeError[F, E]
-  ): Dec[F, Option[T]] =
+  implicit def optionalDecoder[F[_], T](implicit decoder: Lazy[Dec[F, T]], hints: Hint, F: Eff[F]): Dec[F, Option[T]] =
     mkDecoder[F, Option[T]] { (path, _, data) =>
-      val evaluateOptional: (Either[E, T], Boolean) => F[Option[T]] = {
-        case (Right(v), _) => AE.pure(Some(v))
-        case (Left(e), true) => AE.raiseError(e)
-        case (_, false) => AE.pure(None)
+      val decoded = decoder.value.read(path, None, data)
+      val lookedUp = hasValue[F](path, data)
+
+      val evaluateOptional: (Either[Throwable, T], Boolean) => F[Option[T]] = {
+        case (Right(v), _) => F.pure(Some(v))
+        case (Left(_), true) => F.map(decoded)(Some(_))
+        case (_, false) => F.pure(None)
       }
 
-      for {
-        attempted <- decoder.value.read(path, None, data).map(AE.attempt)
-        lookedUp <- hasValue[F, E](path, data)
-      } yield AE.flatMap(attempted)(att => AE.flatMap(lookedUp)(lu => evaluateOptional(att, lu)))
+      F.flatMap(F.attempt(decoded))(att => F.flatMap(lookedUp)(lu => evaluateOptional(att, lu)))
     }
 
   protected def resolveValue[F[_], E, T](
     parser: String => F[T]
-  )(implicit hints: Hint, AE: ExtruderApplicativeError[F, E]): (List[String], Option[T], DecodeData) => IO[F[T]] =
-    resolve[F, E, T, String](parser, lookupValue[F, E])
+  )(implicit hints: Hint, AE: Eff[F]): (List[String], Option[T], DecodeData) => F[T] =
+    resolve[F, T, String](parser, lookupValue[F])
 
-  protected def resolveList[F[_], E, T](
-    parser: List[String] => F[T]
-  )(implicit hints: Hint, AE: ExtruderApplicativeError[F, E]): (List[String], Option[T], DecodeData) => IO[F[T]] =
-    resolve[F, E, T, List[String]](parser, lookupList[F, E])
+  protected def resolve[F[_], T, V](
+    parser: V => F[T],
+    lookup: (List[String], DecodeData) => F[Option[V]]
+  )(path: List[String], default: Option[T], data: DecodeData)(implicit hints: Hint, F: Eff[F]): F[T] =
+    F.flatMap(lookup(path, data)) { v =>
+      (v, default) match {
+        case (None, None) =>
+          F.missing(s"Could not find value at '${hints.pathToString(path)}' and no default available")
+        case (None, Some(value)) => F.pure(value)
+        case (Some(value), _) => parser(value)
+      }
+    }
 
-  protected def resolve[F[_], E, T, V](parser: V => F[T], lookup: (List[String], DecodeData) => IO[F[Option[V]]])(
-    path: List[String],
-    default: Option[T],
-    data: DecodeData
-  )(implicit hints: Hint, AE: ExtruderApplicativeError[F, E]): IO[F[T]] = {
-
-    lookup(path, data).map(
-      AE.flatMap[Option[V], T](_)(
-        v =>
-          (v, default) match {
-            case (None, None) =>
-              AE.missing(s"Could not find value at '${hints.pathToString(path)}' and no default available")
-            case (None, Some(value)) => AE.pure(value)
-            case (Some(value), _) => parser(value)
-        }
-      )
-    )
-  }
-
-  protected def formatParserError[F[_], E, T](
+  protected def formatParserError[F[_], T](
     parser: Parser[T],
     path: List[String]
-  )(implicit hints: Hint, AE: ExtruderApplicativeError[F, E]): String => F[T] =
+  )(implicit hints: Hint, F: Eff[F]): String => F[T] =
     value =>
       parser
         .parse(value)
         .fold[F[T]](
-          err => AE.validationFailure(s"Could not parse value '$value' at '${hints.pathToString(path)}': $err"),
-          AE.pure
+          err => F.validationFailure(s"Could not parse value '$value' at '${hints.pathToString(path)}': $err"),
+          F.pure
       )
 }
 
@@ -136,6 +101,27 @@ trait Parsers {
             )
         )
     )
+
+  def convertTraversable[T, F[T] <: TraversableOnce[T]](
+    li: TraversableOnce[T]
+  )(implicit cbf: CanBuildFrom[F[T], T, F[T]]): F[T] =
+    li.foldLeft(cbf())(_ += _).result()
+
+  def traversableBuilder[T, F[T] <: TraversableOnce[T]](
+    split: String => List[String]
+  )(implicit parser: Parser[T], cbf: CanBuildFrom[F[T], T, F[T]]): Parser[F[T]] =
+    Parser(
+      input =>
+        Applicative[Either[String, ?]]
+          .sequence(split(input).filterNot(_.isEmpty).map(parser.parse))
+          .map(convertTraversable(_))
+    )
+
+  implicit def traversable[T, F[T] <: TraversableOnce[T]](
+    implicit parser: Parser[T],
+    cbf: CanBuildFrom[F[T], T, F[T]]
+  ): Parser[F[T]] =
+    traversableBuilder[T, F](_.split(',').toList)
 }
 
 case class Parser[T](parse: String => Either[String, T])

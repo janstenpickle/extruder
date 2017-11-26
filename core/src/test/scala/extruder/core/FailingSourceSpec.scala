@@ -1,8 +1,7 @@
 package extruder.core
 
 import cats.data.NonEmptyList
-import cats.effect.IO
-import cats.syntax.all._
+import cats.syntax.either._
 import org.scalacheck.{Gen, Prop}
 import org.specs2.matcher.{EitherMatchers, MatchResult}
 import org.specs2.specification.core.SpecStructure
@@ -27,33 +26,33 @@ class FailingSourceSpec extends Specification with ScalaCheck with EitherMatcher
         Finalization of the data sink fails $testFinalizeFail
       """
 
-  override protected def finalizeOutput[F[_], E](
+  override protected def finalizeOutput[F[_]](
     namespace: List[String],
     data: Map[String, String]
-  )(implicit AE: ExtruderApplicativeError[F, E], util: Hint): IO[F[Map[String, String]]] =
-    if (data.keys.forall(_.contains(finalizeFailKey))) IO.pure(AE.validationFailure(finalizeFailMessage))
-    else IO.pure(AE.pure(data))
+  )(implicit F: Eff[F], util: Hint): F[Map[String, String]] =
+    if (data.keys.forall(_.contains(finalizeFailKey))) F.validationFailure(finalizeFailMessage)
+    else F.pure(data)
 
-  override protected def prepareInput[F[_], E](
+  override protected def prepareInput[F[_]](
     namespace: List[String],
     data: Map[String, String]
-  )(implicit AE: ExtruderApplicativeError[F, E], util: Hint): IO[F[Map[String, String]]] =
-    if (data.keys.forall(_.contains(prepareFailKey))) IO.pure(AE.validationFailure(prepareFailMessage))
-    else IO.pure(AE.pure(data))
+  )(implicit F: Eff[F], util: Hint): F[Map[String, String]] =
+    if (data.keys.forall(_.contains(prepareFailKey))) F.validationFailure(prepareFailMessage)
+    else F.pure(data)
 
-  override protected def lookupValue[F[_], E](
+  override protected def lookupValue[F[_]](
     path: List[String],
     data: Map[String, String]
-  )(implicit hints: MapHints, AE: ExtruderApplicativeError[F, E]): IO[F[Option[String]]] =
-    if (path.contains(okNamespace)) IO.pure(AE.pure(data.get(hints.pathToString(path))))
-    else IO.pure(AE.validationFailure(lookupFailMessage))
+  )(implicit hints: MapHints, F: Eff[F]): F[Option[String]] =
+    if (path.contains(okNamespace)) F.pure(data.get(hints.pathToString(path)))
+    else F.validationFailure(lookupFailMessage)
 
-  override protected def writeValue[F[_], E](
+  override protected def writeValue[F[_]](
     path: List[String],
     value: String
-  )(implicit hints: MapHints, AE: ExtruderApplicativeError[F, E]): IO[F[Map[String, String]]] =
-    if (path.contains(okNamespace)) IO.pure(AE.validationFailure(writeFailMessage))
-    else IO.pure(AE.pure(Map(hints.pathToString(path) -> value)))
+  )(implicit hints: MapHints, F: Eff[F]): F[Map[String, String]] =
+    if (path.contains(okNamespace)) F.validationFailure(writeFailMessage)
+    else F.pure(Map(hints.pathToString(path) -> value))
 
   def testLookupFail[T](
     gen: Gen[T]
@@ -65,18 +64,14 @@ class FailingSourceSpec extends Specification with ScalaCheck with EitherMatcher
   )(implicit encoder: MapEncoder[Validation, T], decoder: MapDecoder[Validation, T]): Prop =
     test[T](gen, _ mustEqual NonEmptyList.of(ValidationFailure(writeFailMessage)), Some(okNamespace))
 
-  def testCnilDecoder(
-    implicit hints: MapHints,
-    AE: ExtruderApplicativeError[Validation, NonEmptyList[ValidationError]]
-  ): MatchResult[Any] =
-    cnilDecoder.read(List.empty, None, Map.empty) mustEqual IO.pure(
-      AE.validationFailure(
+  def testCnilDecoder(implicit hints: MapHints, F: Eff[Validation]): MatchResult[Any] =
+    cnilDecoder.read(List.empty, None, Map.empty) mustEqual
+      F.validationFailure(
         s"Could not find specified implementation of sealed type at path '${hints.pathToStringWithType(List.empty)}'"
       )
-    )
 
   def testDurationDecoder: MatchResult[Any] =
-    decode[FiniteDuration](List(okNamespace), Map(okNamespace -> "Inf")).toEither must beLeft(
+    decode[FiniteDuration](List(okNamespace), Map(okNamespace -> "Inf")) must beLeft(
       NonEmptyList.of(
         ValidationFailure(
           s"Could not parse value 'Inf' at '$okNamespace': Could not parse value 'Inf' as a valid duration for type 'FiniteDuration'"
@@ -87,7 +82,7 @@ class FailingSourceSpec extends Specification with ScalaCheck with EitherMatcher
   def testCharDecoder: Prop =
     Prop.forAllNoShrink(Gen.alphaNumStr.suchThat(_.length > 1))(
       value =>
-        decode[Char](List(okNamespace), Map(okNamespace -> value)).toEither must beLeft(
+        decode[Char](List(okNamespace), Map(okNamespace -> value)) must beLeft(
           NonEmptyList.of(ValidationFailure(s"Could not parse value '$value' at '$okNamespace': Not a valid Char"))
       )
     )
@@ -95,15 +90,13 @@ class FailingSourceSpec extends Specification with ScalaCheck with EitherMatcher
   def testPrepareFail: Prop =
     Prop.forAll(Gen.alphaNumStr)(
       value =>
-        decode[String](Map(prepareFailKey -> value)).toEither must beLeft(
-          NonEmptyList.of(ValidationFailure(prepareFailMessage))
-      )
+        decode[String](Map(prepareFailKey -> value)) must beLeft(NonEmptyList.of(ValidationFailure(prepareFailMessage)))
     )
 
   def testFinalizeFail: Prop =
     Prop.forAll(Gen.alphaNumStr)(
       value =>
-        encode[String](List(finalizeFailKey), value).toEither must beLeft(
+        encode[String](List(finalizeFailKey), value) must beLeft(
           NonEmptyList.of(ValidationFailure(finalizeFailMessage))
       )
     )
@@ -116,8 +109,8 @@ class FailingSourceSpec extends Specification with ScalaCheck with EitherMatcher
     Prop.forAll(gen, namespaceGen) { (value, namespace) =>
       val ns = namespacePrefix.fold(namespace)(namespace :+ _)
       (for {
-        encoded <- encode[T](ns, value).toEither
-        decoded <- decode[T](ns, encoded).toEither
+        encoded <- encode[T](ns, value)
+        decoded <- decode[T](ns, encoded)
       } yield decoded) must beLeft.which(expected)
     }
 }

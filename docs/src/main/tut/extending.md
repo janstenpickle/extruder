@@ -16,22 +16,22 @@ import extruder.core._
 
 trait WithURL extends MapSource {
   implicit def urlDecoder[F[_], E](implicit hints: Hint,
-                                   AE: ExtruderApplicativeError[F, E]): MapDecoder[F, URL] =
-    mkDecoder[F, URL]((path, default, src) => IO {
+                                   F: Eff[F]): MapDecoder[F, URL] =
+    mkDecoder[F, URL]((path, default, src) =>
       (src.get(hints.pathToString(path)), default) match {
         case (Some(v), _) => Either.catchNonFatal(new URL(v)).fold(ex =>
-            AE.validationException(ex.getMessage, ex),
-            AE.pure
+            F.validationException(ex.getMessage, ex),
+            F.pure
           )
-        case (None, Some(url)) => AE.pure(url)
-        case _ => AE.missing(s"Could not find value for ${hints.pathToString(path)}")
+        case (None, Some(url)) => F.pure(url)
+        case _ => F.missing(s"Could not find value for ${hints.pathToString(path)}")
       }
-    })
+    )
 
   implicit def urlEncoder[F[_], E](implicit hints: Hint,
-                                   AE: ExtruderApplicativeError[F, E]): MapEncoder[F, URL] =
+                                   F: Eff[F]): MapEncoder[F, URL] =
     mkEncoder[F, URL]((path, value) =>
-      IO(AE.pure(Map(hints.pathToString(path) -> value.toString)))
+      F.pure(Map(hints.pathToString(path) -> value.toString))
     )
 }
 

@@ -1,4 +1,4 @@
-<div style="text-align:center"><img src ="https://janstenpickle.github.io/extruder/img/main.png" /></div>
+<div style="text-align:center"><img src ="https://janstenpickle.github.io/extruder/img/extruder.svg" /></div>
 
 # Extruder
 
@@ -14,27 +14,19 @@ This library uses [shapeless](https://github.com/milessabin/shapeless) and [cats
 | **Extruder**|Main module, includes core functionality and basic resolvers.|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder/_latestVersion)|
 | **Typesafe Config**|Support for resolution from [Typesafe Config](https://github.com/typesafehub/config).|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder-typesafe/_latestVersion)|
 | **Refined**|Support for [Refined](https://github.com/fthomas/refined) types.|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder-refined/_latestVersion)|
-| **Monix**|Support for [Monix](https://monix.io) types.|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder-monix/_latestVersion)|
-| **FS2**|Support for [FS2](https://github.com/functional-streams-for-scala/fs2) types.|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder-fs2/_latestVersion)|
 
 
 ## Install with SBT
 Add the following to your `build.sbt`:
 ```scala
 resolvers += Resolver.bintrayRepo("janstenpickle", "maven")
-libraryDependencies += "extruder" %% "extruder" % "0.6.3"
+libraryDependencies += "extruder" %% "extruder" % "0.7.0"
 
 // only if you require support for Typesafe config
-libraryDependencies += "extruder" %% "extruder-typesafe" % "0.6.3"
+libraryDependencies += "extruder" %% "extruder-typesafe" % "0.7.0"
 
 // only if you require support for refined types
-libraryDependencies += "extruder" %% "extruder-refined" % "0.6.3"
-
-// only if you require support for wrapping result in monix's task
-libraryDependencies += "extruder" %% "extruder-monix" % "0.6.3"
-
-// only if you require support for wrapping result in fs2's task
-libraryDependencies += "extruder" %% "extruder-fs2" % "0.6.3"
+libraryDependencies += "extruder" %% "extruder-refined" % "0.7.0"
 ```
 
 # Participation

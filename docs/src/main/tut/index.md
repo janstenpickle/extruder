@@ -3,7 +3,7 @@ layout: home
 title:  "Home"
 section: "home"
 ---
-<div style="text-align:center"><img src ="{{ site.url }}/extruder/img/main.png" /></div>
+<div style="text-align:center"><img src ="{{ site.url }}/extruder/img/extruder.svg" /></div>
 
 # Extruder
 
@@ -25,7 +25,7 @@ Try out [Grafter][grafter]. This project complements applications which use [Gra
 
 Specifically Grafter requires that all configuration be part single case class to be passed to the entry point of the application. Structuring the config in classes like this works well, but leaves the question of how are these classes populated with config?
 
-This is where Extruder comes in, the [example here](examples/src/main/scala/extruder/examples/Grafter.scala) shows how they may be used together.
+This is where Extruder comes in, you can load your configuration from a [data source](data_source.html) and use it with [Grafter][grafter] for dependency injection.
 
 # Modules
 
@@ -35,8 +35,6 @@ This is where Extruder comes in, the [example here](examples/src/main/scala/extr
 | **Extruder**|Main module, includes core functionality and basic resolvers.|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder/_latestVersion)|
 | **Typesafe Config**|Support for resolution from [Typesafe Config][typesafe].|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder-typesafe/_latestVersion)|
 | **Refined**|Support for [Refined][refined] types.|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder-refined/_latestVersion)|
-| **Monix**|Support for [Monix] types.|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder-monix/_latestVersion)|
-| **FS2**|Support for [FS2] types.|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder-fs2/_latestVersion)|
 
 # Supported Functionality
 

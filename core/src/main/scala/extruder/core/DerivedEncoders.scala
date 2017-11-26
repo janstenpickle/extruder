@@ -1,77 +1,75 @@
 package extruder.core
 
-import cats.effect.IO
-import cats.syntax.cartesian._
 import shapeless._
 import shapeless.labelled.FieldType
 
 import scala.reflect.runtime.universe.TypeTag
 
 trait DerivedEncoders { self: Encoders with EncodeTypes =>
-  implicit def cnilEncoder[F[_], E](implicit AE: ExtruderApplicativeError[F, E]): Enc[F, CNil] = mkEncoder { (_, _) =>
-    IO.pure(AE.validationFailure(s"Impossible!"))
+  implicit def cnilEncoder[F[_]](implicit F: Eff[F]): Enc[F, CNil] = mkEncoder { (_, _) =>
+    F.validationFailure(s"Impossible!")
   }
 
-  implicit def cconsEncoder[F[_], E, K <: Symbol, H, T <: Coproduct](
+  implicit def cconsEncoder[F[_], K <: Symbol, H, T <: Coproduct](
     implicit key: Witness.Aux[K],
     headEncode: Enc[F, H],
     tailEncode: Lazy[Enc[F, T]],
     typeEncode: Lazy[Enc[F, String]],
     hints: Hint,
-    AE: ExtruderApplicativeError[F, E]
+    F: Eff[F]
   ): Enc[F, FieldType[K, H] :+: T] =
     mkEncoder { (path, value) =>
-      val chooseEncoder: IO[F[EncodeData]] = value match {
+      val chooseEncoder: F[EncodeData] = value match {
         case Inl(h) => headEncode.write(path, h)
         case Inr(t) => tailEncode.value.write(path, t)
       }
 
-      for {
-        tpe <- typeEncode.value.write(hints.pathWithType(path), key.value.name)
-        v <- chooseEncoder
-      } yield (tpe |@| v).map(monoid.combine)
+      F.ap2(F.pure[(EncodeData, EncodeData) => EncodeData](monoid.combine))(
+        typeEncode.value.write(hints.pathWithType(path), key.value.name),
+        chooseEncoder
+      )
     }
 
-  implicit def unionEncoder[F[_], E, T, O <: Coproduct](
+  implicit def unionEncoder[F[_], T, O <: Coproduct](
     implicit gen: LabelledGeneric.Aux[T, O],
     underlying: Lazy[Enc[F, O]],
-    AE: ExtruderApplicativeError[F, E],
-    lp: LowPriority
+    F: Eff[F],
+    lp: LowPriority,
+    neOpt: T <:!< Option[_],
+    neCol: T <:!< TraversableOnce[_]
   ): Enc[F, T] =
     mkEncoder((path, value) => underlying.value.write(path, gen.to(value)))
 
   trait DerivedEncoder[T, F[_], Repr <: HList] {
-    def write(path: List[String], value: Repr): IO[F[EncodeData]]
+    def write(path: List[String], value: Repr): F[EncodeData]
   }
 
-  implicit def hNilDerivedEncoder[T, F[_], E](
-    implicit AE: ExtruderApplicativeError[F, E]
-  ): DerivedEncoder[T, F, HNil] =
+  implicit def hNilDerivedEncoder[T, F[_]](implicit F: Eff[F]): DerivedEncoder[T, F, HNil] =
     new DerivedEncoder[T, F, HNil] {
-      override def write(path: List[String], value: HNil): IO[F[EncodeData]] = IO(AE.pure(monoid.empty))
+      override def write(path: List[String], value: HNil): F[EncodeData] = F.pure(monoid.empty)
     }
 
-  implicit def hConsDerivedEncoder[T, F[_], E, K <: Symbol, V, TailRepr <: HList](
+  implicit def hConsDerivedEncoder[T, F[_], K <: Symbol, V, TailRepr <: HList](
     implicit key: Witness.Aux[K],
-    AE: ExtruderApplicativeError[F, E],
+    F: Eff[F],
     encoder: Lazy[Enc[F, V]],
     tailEncoder: Lazy[DerivedEncoder[T, F, TailRepr]]
   ): DerivedEncoder[T, F, FieldType[K, V] :: TailRepr] =
     new DerivedEncoder[T, F, FieldType[K, V] :: TailRepr] {
-      override def write(path: List[String], value: FieldType[K, V] :: TailRepr): IO[F[EncodeData]] = {
+      override def write(path: List[String], value: FieldType[K, V] :: TailRepr): F[EncodeData] = {
         val fieldName = key.value.name
 
-        for {
-          head <- encoder.value.write(path :+ fieldName, value.head)
-          tail <- tailEncoder.value.write(path, value.tail)
-        } yield (head |@| tail).map(monoid.combine)
+        F.ap2(F.pure[(EncodeData, EncodeData) => EncodeData](monoid.combine))(
+          encoder.value.write(path :+ fieldName, value.head),
+          tailEncoder.value.write(path, value.tail)
+        )
       }
     }
 
-  implicit def productEncoder[F[_], E, T, GenRepr <: HList](
+  implicit def productEncoder[F[_], T, GenRepr <: HList](
     implicit gen: LabelledGeneric.Aux[T, GenRepr],
     tag: TypeTag[T],
-    AE: ExtruderApplicativeError[F, E],
+    F: Eff[F],
     encoder: Lazy[DerivedEncoder[T, F, GenRepr]]
   ): Enc[F, T] = {
     lazy val className: String = tag.tpe.typeSymbol.name.toString
@@ -79,5 +77,4 @@ trait DerivedEncoders { self: Encoders with EncodeTypes =>
       encoder.value.write(path :+ className, gen.to(value))
     }
   }
-
 }

@@ -2,14 +2,18 @@ package extruder.examples
 
 import java.net.URL
 
+import cats.data.EitherT
+import cats.effect.IO
 import extruder.core.MapSource._
-import extruder.core.{EitherErrors, EitherThrowable, ValidationErrors}
-import extruder.monix._
-import monix.eval.Task
-import monix.execution.Scheduler.Implicits.global
 
 import scala.concurrent.Future
 import scala.concurrent.duration.{Duration, FiniteDuration}
+import cats.instances.all._
+import extruder.core.ValidationErrors
+
+import scala.util.Try
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 case class CC(
   a: String = "test",
@@ -45,10 +49,11 @@ object Simple extends App {
     "thingimpl.t" -> "sadfsf"
   )
 
+  type EitherIO[A] = EitherT[IO, ValidationErrors, A]
+
   println(decode[CC](config))
-  println(decode[CC, Future, Throwable](config))
-  println(decodeIO[CC](config))
-  println(decodeIO[CC, EitherThrowable, Throwable](config))
-  println(decodeAsync[CC, Task](config))
-  println(decodeAsync[CC, Task, EitherErrors, ValidationErrors](config))
+  println(decode[CC, Try](config))
+  println(decode[CC, Future](config))
+  println(decode[CC, IO](config))
+  println(decode[CC, EitherIO](config))
 }
