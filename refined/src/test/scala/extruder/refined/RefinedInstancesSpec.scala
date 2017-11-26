@@ -59,14 +59,14 @@ class RefinedInstancesSpec
     prop(
       (v: T) =>
         (for {
-          encoded <- encode[T](v).toEither
-          decoded <- decode[T](encoded).toEither
+          encoded <- encode[T](v)
+          decoded <- decode[T](encoded)
         } yield decoded) must beRight(v)
     )
 
   def failEncodeDecode[T, V](gen: Gen[V])(implicit decoder: MapDecoder[Validation, T]): Prop =
     Prop.forAll(gen) { src =>
-      decode[T](Map("" -> src.toString)).toEither must beLeft.which(
+      decode[T](Map("" -> src.toString)) must beLeft.which(
         failure =>
           (failure.toList must haveSize(1)).and(failure.toList.head.message.toLowerCase must contain("predicate"))
       )

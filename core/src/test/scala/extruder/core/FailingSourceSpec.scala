@@ -71,7 +71,7 @@ class FailingSourceSpec extends Specification with ScalaCheck with EitherMatcher
       )
 
   def testDurationDecoder: MatchResult[Any] =
-    decode[FiniteDuration](List(okNamespace), Map(okNamespace -> "Inf")).toEither must beLeft(
+    decode[FiniteDuration](List(okNamespace), Map(okNamespace -> "Inf")) must beLeft(
       NonEmptyList.of(
         ValidationFailure(
           s"Could not parse value 'Inf' at '$okNamespace': Could not parse value 'Inf' as a valid duration for type 'FiniteDuration'"
@@ -82,7 +82,7 @@ class FailingSourceSpec extends Specification with ScalaCheck with EitherMatcher
   def testCharDecoder: Prop =
     Prop.forAllNoShrink(Gen.alphaNumStr.suchThat(_.length > 1))(
       value =>
-        decode[Char](List(okNamespace), Map(okNamespace -> value)).toEither must beLeft(
+        decode[Char](List(okNamespace), Map(okNamespace -> value)) must beLeft(
           NonEmptyList.of(ValidationFailure(s"Could not parse value '$value' at '$okNamespace': Not a valid Char"))
       )
     )
@@ -90,7 +90,7 @@ class FailingSourceSpec extends Specification with ScalaCheck with EitherMatcher
   def testPrepareFail: Prop =
     Prop.forAll(Gen.alphaNumStr)(
       value =>
-        decode[String](Map(prepareFailKey -> value)).toEither must beLeft(
+        decode[String](Map(prepareFailKey -> value)) must beLeft(
           NonEmptyList.of(ValidationFailure(prepareFailMessage))
       )
     )
@@ -98,7 +98,7 @@ class FailingSourceSpec extends Specification with ScalaCheck with EitherMatcher
   def testFinalizeFail: Prop =
     Prop.forAll(Gen.alphaNumStr)(
       value =>
-        encode[String](List(finalizeFailKey), value).toEither must beLeft(
+        encode[String](List(finalizeFailKey), value) must beLeft(
           NonEmptyList.of(ValidationFailure(finalizeFailMessage))
       )
     )
@@ -111,8 +111,8 @@ class FailingSourceSpec extends Specification with ScalaCheck with EitherMatcher
     Prop.forAll(gen, namespaceGen) { (value, namespace) =>
       val ns = namespacePrefix.fold(namespace)(namespace :+ _)
       (for {
-        encoded <- encode[T](ns, value).toEither
-        decoded <- decode[T](ns, encoded).toEither
+        encoded <- encode[T](ns, value)
+        decoded <- decode[T](ns, encoded)
       } yield decoded) must beLeft.which(expected)
     }
 }

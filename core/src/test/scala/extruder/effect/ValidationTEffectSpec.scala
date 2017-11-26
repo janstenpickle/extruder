@@ -1,24 +1,25 @@
 package extruder.effect
 
+import cats.data.EitherT
 import cats.{Applicative, Eq}
-import cats.syntax.validated._
 import extruder.core.{Validation, ValidationErrors}
-import extruder.data.ValidationT
 
-trait ValidationTEffectSpec[F[_]] extends ValidationEffectSpec[ValidationT[F, ?]] {
-  self: EffectSpec[ValidationT[F, ?], ValidationErrors] =>
+trait ValidationTEffectSpec[F[_]] extends ValidationEffectSpec[EitherT[F, ValidationErrors, ?]] {
+  self: EffectSpec[EitherT[F, ValidationErrors, ?], ValidationErrors] =>
 
   implicit def FF: Applicative[F]
 
   implicit def validationEq[A]: Eq[Validation[A]] = Eq.fromUniversalEquals
 
-  override def compareErrors[A](f: ValidationT[F, A], v1: Option[ValidationErrors], v2: Option[ValidationErrors])(
-    implicit e: Eq[A]
-  ): Boolean = {
-    val err: ValidationT[F, A] = (v1, v2) match {
-      case (Some(e1), Some(e2)) => ValidationT.lift[F, A]((e1 ++ e2.toList).invalid)
-      case (Some(e1), None) => ValidationT.lift[F, A](e1.invalid)
-      case (None, Some(e2)) => ValidationT.lift[F, A](e2.invalid)
+  override def compareErrors[A](
+    f: EitherT[F, ValidationErrors, A],
+    v1: Option[ValidationErrors],
+    v2: Option[ValidationErrors]
+  )(implicit e: Eq[A]): Boolean = {
+    val err: EitherT[F, ValidationErrors, A] = (v1, v2) match {
+      case (Some(e1), Some(e2)) => EitherT.leftT(e1 ++ e2.toList)
+      case (Some(e1), None) => EitherT.leftT(e1)
+      case (None, Some(e2)) => EitherT.leftT(e2)
       case _ => f
     }
     feq[A].eqv(f, err)

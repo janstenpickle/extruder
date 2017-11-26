@@ -1,16 +1,15 @@
-package extruder.instances
+package extruder.effect
 
 import cats.data.EitherT
 import cats.effect.IO
 import cats.instances.all._
 import cats.{Eq, MonadError}
 import extruder.core.TestCommon
-import extruder.effect.{ExtruderAsyncSpec, ThrowableEffectSpec}
-import extruder.instances.EitherTIOExtruderAsyncSpec._
+import extruder.effect.EitherTIOEffectSpec.EitherIO
 
 import scala.util.Try
 
-class EitherTIOExtruderAsyncSpec extends ExtruderAsyncSpec[EitherIO, Throwable] with ThrowableEffectSpec[EitherIO] {
+trait EitherTIOEffectSpec extends ThrowableEffectSpec[EitherIO] { self: EffectSpec[EitherIO, Throwable] =>
   override def FF: MonadError[EitherIO, Throwable] = MonadError[EitherIO, Throwable]
 
   override implicit def feq[A](implicit eq: Eq[A]): Eq[EitherT[IO, Throwable, A]] = Eq.instance { (x, y) =>
@@ -32,6 +31,6 @@ class EitherTIOExtruderAsyncSpec extends ExtruderAsyncSpec[EitherIO, Throwable] 
   override def getError[A](fa: EitherIO[A]): Throwable = fa.value.unsafeRunSync().left.get
 }
 
-object EitherTIOExtruderAsyncSpec {
+object EitherTIOEffectSpec {
   type EitherIO[A] = EitherT[IO, Throwable, A]
 }

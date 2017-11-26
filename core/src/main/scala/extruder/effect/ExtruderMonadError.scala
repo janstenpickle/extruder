@@ -1,14 +1,9 @@
 package extruder.effect
 
-import cats.data.EitherT
-import cats.data.Validated.{Invalid, Valid}
-import cats.{Applicative, Apply, Monad, MonadError}
-import extruder.core.{Missing, Validation, ValidationException, ValidationFailure}
-import extruder.data.ValidationT
-import extruder.instances.{EitherInstances, ValidationInstances}
-
-import scala.util.Either
-import cats.syntax.validated._
+import cats.data.{EitherT, NonEmptyList}
+import cats.{Applicative, Monad, MonadError}
+import extruder.core._
+import extruder.instances.EitherInstances
 import shapeless.LowPriority
 
 trait ExtruderMonadError[F[_]] extends MonadError[F, Throwable] {
@@ -17,57 +12,57 @@ trait ExtruderMonadError[F[_]] extends MonadError[F, Throwable] {
   def validationException[A](message: String, ex: Throwable): F[A]
 }
 
-trait LowPriorityMonadErrorInstances {
-  implicit def validationTMonadError[F[_]](
+trait LowPriorityMonadErrorInstances { self: EitherInstances =>
+  implicit def eitherTMonadError[F[_]](
     implicit ev0: MonadError[F, Throwable]
-  ): ExtruderMonadError[ValidationT[F, ?]] =
-    new ValidationTMonadError[F] {
-      override protected def FFF: MonadError[F, Throwable] = MonadError[F, Throwable]
-    }
+  ): ExtruderMonadError[EitherT[F, ValidationErrors, ?]] = new EitherTMonadError[F] {
+    override protected def F: Monad[F] = Monad[F]
 
-  trait ValidationTMonadError[F[_]] extends ExtruderMonadError[ValidationT[F, ?]] {
-    protected def FFF: MonadError[F, Throwable]
+    override protected def FFFE: MonadError[EitherT[F, ValidationErrors, ?], Throwable] =
+      EitherT.catsDataMonadErrorFForEitherT
+  }
 
-    override def missing[A](message: String): ValidationT[F, A] =
-      ValidationT(FFF.pure(Missing(message).invalidNel))
+  trait EitherTMonadError[F[_]] extends ExtruderMonadError[EitherT[F, ValidationErrors, ?]] {
+    protected def F: Monad[F]
+    protected def FFFE: MonadError[EitherT[F, ValidationErrors, ?], Throwable]
 
-    override def validationFailure[A](message: String): ValidationT[F, A] =
-      ValidationT(FFF.pure(ValidationFailure(message).invalidNel))
+    override def missing[A](message: String): EitherT[F, ValidationErrors, A] =
+      EitherT.leftT[F, A].apply[ValidationErrors](NonEmptyList.of(Missing(message)))(F)
 
-    override def validationException[A](message: String, ex: Throwable): ValidationT[F, A] =
-      ValidationT(FFF.pure(ValidationException(message, ex).invalidNel))
+    override def validationFailure[A](message: String): EitherT[F, ValidationErrors, A] =
+      EitherT.leftT[F, A].apply[ValidationErrors](NonEmptyList.of(ValidationFailure(message)))(F)
 
-    override def raiseError[A](e: Throwable): ValidationT[F, A] = ValidationT(FFF.raiseError(e))
+    override def validationException[A](message: String, ex: Throwable): EitherT[F, ValidationErrors, A] =
+      EitherT.leftT[F, A].apply[ValidationErrors](NonEmptyList.of(ValidationException(message, ex)))(F)
 
-    override def pure[A](x: A): ValidationT[F, A] = ValidationT.pure[F, A](x)(FFF)
+    override def flatMap[A, B](
+      fa: EitherT[F, ValidationErrors, A]
+    )(f: A => EitherT[F, ValidationErrors, B]): EitherT[F, ValidationErrors, B] =
+      FFFE.flatMap(fa)(f)
 
-    override def flatMap[A, B](fa: ValidationT[F, A])(f: A => ValidationT[F, B]): ValidationT[F, B] =
-      fa.flatMap(f)(FFF)
+    override def tailRecM[A, B](a: A)(
+      f: A => EitherT[F, ValidationErrors, Either[A, B]]
+    ): EitherT[F, ValidationErrors, B] = FFFE.tailRecM(a)(f)
 
-    override def tailRecM[A, B](a: A)(f: A => ValidationT[F, Either[A, B]]): ValidationT[F, B] = ValidationT[F, B](
-      FFF.tailRecM(a)(
-        a0 =>
-          FFF.map(f(a0).value) {
-            case Invalid(e) => Right(Invalid(e))
-            case Valid(Left(a1)) => Left(a1)
-            case Valid(Right(b)) => Right(Valid(b))
-        }
-      )
-    )
+    override def raiseError[A](e: Throwable): EitherT[F, ValidationErrors, A] = FFFE.raiseError(e)
 
-    override def handleErrorWith[A](fa: ValidationT[F, A])(f: Throwable => ValidationT[F, A]) =
-      ValidationT(FFF.handleErrorWith(fa.value)(f.andThen(_.value)))
+    override def handleErrorWith[A](
+      fa: EitherT[F, ValidationErrors, A]
+    )(f: Throwable => EitherT[F, ValidationErrors, A]): EitherT[F, ValidationErrors, A] =
+      FFFE.handleErrorWith(fa)(f)
 
-    override def ap[A, B](ff: ValidationT[F, A => B])(fa: ValidationT[F, A]): ValidationT[F, B] =
-      ValidationT(FFF.flatMap(fa.value)(fa0 => FFF.map(ff.value)(ff0 => Apply[Validation].ap(ff0)(fa0))))
+    override def pure[A](x: A): EitherT[F, ValidationErrors, A] = FFFE.pure(x)
+
+    override def ap[A, B](
+      ff: EitherT[F, ValidationErrors, A => B]
+    )(fa: EitherT[F, ValidationErrors, A]): EitherT[F, ValidationErrors, B] =
+      EitherT(F.flatMap(fa.value)(fa0 => F.map(ff.value)(ff0 => eitherApply.ap(ff0)(fa0))))
 
     override def ap2[A, B, Z](
-      ff: ValidationT[F, (A, B) => Z]
-    )(fa: ValidationT[F, A], fb: ValidationT[F, B]): ValidationT[F, Z] =
-      ValidationT(
-        FFF.flatMap(fa.value)(
-          fa0 => FFF.flatMap(fb.value)(fb0 => FFF.map(ff.value)(ff0 => Apply[Validation].ap2(ff0)(fa0, fb0)))
-        )
+      ff: EitherT[F, ValidationErrors, (A, B) => Z]
+    )(fa: EitherT[F, ValidationErrors, A], fb: EitherT[F, ValidationErrors, B]): EitherT[F, ValidationErrors, Z] =
+      EitherT(
+        F.flatMap(fa.value)(fa0 => F.flatMap(fb.value)(fb0 => F.map(ff.value)(ff0 => eitherApply.ap2(ff0)(fa0, fb0))))
       )
   }
 }
@@ -98,18 +93,14 @@ trait ExtruderMonadErrorInstances {
     FF: Applicative[F]
   ): ExtruderMonadError[EitherT[F, Throwable, ?]] = new FromMonadError[EitherT[F, Throwable, ?]]()(F) {
     override def validationException[A](message: String, ex: Throwable): EitherT[F, Throwable, A] =
-      EitherT(FF.pure(Left(ex)))
+      EitherT.leftT(ex)
     override def missing[A](message: String): EitherT[F, Throwable, A] =
-      EitherT(FF.pure(Left(new NoSuchElementException(message))))
+      EitherT.leftT(new NoSuchElementException(message))
     override def validationFailure[A](message: String): EitherT[F, Throwable, A] =
-      EitherT(FF.pure(Left(new RuntimeException(message))))
+      EitherT.leftT(new RuntimeException(message))
   }
 }
 
-object ExtruderMonadError
-    extends ValidationInstances
-    with EitherInstances
-    with ExtruderMonadErrorInstances
-    with LowPriorityMonadErrorInstances {
+object ExtruderMonadError extends EitherInstances with ExtruderMonadErrorInstances with LowPriorityMonadErrorInstances {
   def apply[F[_]](implicit monadError: ExtruderMonadError[F]): ExtruderMonadError[F] = monadError
 }

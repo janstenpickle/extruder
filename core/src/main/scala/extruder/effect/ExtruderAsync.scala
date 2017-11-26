@@ -1,59 +1,35 @@
 package extruder.effect
 
 import cats.data.EitherT
-import cats.{Applicative, Monad, MonadError}
 import cats.effect._
-import cats.syntax.validated._
-import extruder.data.ValidationT
-import extruder.instances.{EitherInstances, ValidationInstances}
+import cats.{Applicative, Monad}
+import extruder.core.ValidationErrors
+import extruder.instances.EitherInstances
 import shapeless.LowPriority
-
-import scala.util.Either
 
 trait ExtruderAsync[F[_]] extends ExtruderSync[F] with Async[F]
 
 trait LowPriorityAsyncInstances {
-  implicit def validationTAsync[F[_]: Async]: ExtruderAsync[ValidationT[F, ?]] =
-    new ValidationTAsync[F] {
-      protected def F: Async[F] = Async[F]
+  implicit def eitherTAsync[F[_]: Async]: ExtruderAsync[EitherT[F, ValidationErrors, ?]] =
+    new EitherTAsync[F] {
+      override protected def F: Monad[F] = Monad[F]
+
+      override protected def FE: Async[EitherT[F, ValidationErrors, ?]] = Async.catsEitherTAsync
     }
 
-  trait ValidationTAsync[F[_]] extends ExtruderSync.ValidationTSync[F] with ExtruderAsync[ValidationT[F, ?]] {
-    protected implicit def F: Async[F]
-    override protected implicit def FF: Sync[F] = F
+  trait EitherTAsync[F[_]] extends ExtruderSync.EitherTSync[F] with ExtruderAsync[EitherT[F, ValidationErrors, ?]] {
+    protected def FE: Async[EitherT[F, ValidationErrors, ?]]
+    override protected def FFE: Sync[EitherT[F, ValidationErrors, ?]] = FE
 
-    override def async[A](k: (Either[Throwable, A] => Unit) => Unit): ValidationT[F, A] =
-      ValidationT(F.map(F.async(k))(_.validNel))
+    override def async[A](k: ((Either[Throwable, A]) => Unit) => Unit): EitherT[F, ValidationErrors, A] =
+      FE.async(k)
 
-    override def liftIO[A](ioa: IO[A]): ValidationT[F, A] =
-      ValidationT(F.map(F.liftIO(ioa))(_.validNel))
+    override def liftIO[A](ioa: IO[A]): EitherT[F, ValidationErrors, A] = FE.liftIO(ioa)
   }
 }
 
 trait AsyncInstances {
-  abstract class FromApplicative[F[_]](implicit F: Applicative[F]) extends ExtruderAsync[F] {
-    override def pure[A](x: A): F[A] = F.pure(x)
-  }
-
-  abstract class FromMonad[F[_]](implicit F: Monad[F]) extends FromApplicative[F] {
-    override def flatMap[A, B](fa: F[A])(f: A => F[B]): F[B] = F.flatMap(fa)(f)
-    override def tailRecM[A, B](a: A)(f: A => F[Either[A, B]]): F[B] = F.tailRecM(a)(f)
-  }
-
-  abstract class FromMonadError[F[_]](implicit F: MonadError[F, Throwable]) extends FromMonad[F] {
-    override def missing[A](message: String): F[A] = raiseError(new NoSuchElementException(message))
-    override def validationFailure[A](message: String): F[A] = raiseError(new RuntimeException(message))
-    override def validationException[A](message: String, ex: Throwable): F[A] = raiseError(ex)
-    override def raiseError[A](e: Throwable): F[A] = F.raiseError(e)
-    override def handleErrorWith[A](fa: F[A])(f: Throwable => F[A]): F[A] = F.handleErrorWith(fa)(f)
-  }
-
-  abstract class FromSync[F[_]](implicit F: Sync[F]) extends FromMonadError[F] {
-    override def suspend[A](thunk: => F[A]): F[A] = F.suspend(thunk)
-    override def delay[A](thunk: => A): F[A] = F.delay(thunk)
-  }
-
-  class FromAsync[F[_]](implicit F: Async[F]) extends FromSync[F]()(F) {
+  class FromAsync[F[_]](implicit F: Async[F]) extends ExtruderSync.FromSync[F]()(F) with ExtruderAsync[F] {
     override def async[A](k: (Either[Throwable, A] => Unit) => Unit): F[A] = F.async(k)
     override def liftIO[A](ioa: IO[A]): F[A] = F.liftIO(ioa)
   }
@@ -74,10 +50,6 @@ trait AsyncInstances {
   }
 }
 
-object ExtruderAsync
-    extends AsyncInstances
-    with LowPriorityAsyncInstances
-    with ValidationInstances
-    with EitherInstances {
+object ExtruderAsync extends AsyncInstances with LowPriorityAsyncInstances with EitherInstances {
   def apply[F[_]](implicit async: ExtruderAsync[F]): ExtruderAsync[F] = async
 }
