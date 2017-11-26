@@ -69,9 +69,7 @@ trait EitherInstances {
       )(f: (A) => Either[ValidationErrors, B]): Either[ValidationErrors, B] =
         F.flatMap(fa)(f)
 
-      override def tailRecM[A, B](
-        a: A
-      )(f: (A) => Either[ValidationErrors, Either[A, B]]): Either[ValidationErrors, B] =
+      override def tailRecM[A, B](a: A)(f: (A) => Either[ValidationErrors, Either[A, B]]): Either[ValidationErrors, B] =
         F.tailRecM(a)(f)
 
       override def pure[A](x: A): Either[ValidationErrors, A] = F.pure(x)

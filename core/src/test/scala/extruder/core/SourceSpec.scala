@@ -3,9 +3,9 @@ package extruder.core
 import java.net.URL
 
 import cats.Eq
+import cats.syntax.either._
 import cats.instances.all._
 import cats.kernel.laws.discipline.MonoidTests
-import cats.syntax.all._
 import extruder.core.TestCommon._
 import extruder.core.ValidationCatsInstances._
 import extruder.effect.ExtruderMonadError
@@ -129,11 +129,7 @@ trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with 
       (s, i, l) =>
         decode[CaseClass](
           convertData(
-            Map(
-              List("CaseClass", "s") -> s,
-              List("CaseClass", "i") -> i.toString,
-              List("CaseClass", "l") -> l.toString
-            )
+            Map(List("CaseClass", "s") -> s, List("CaseClass", "i") -> i.toString, List("CaseClass", "l") -> l.toString)
           )
         ) must beRight(CaseClass(s, i, l, None))
     )

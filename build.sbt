@@ -76,15 +76,7 @@ lazy val systemSources = (project in file("system-sources"))
 lazy val examples = (project in file("examples"))
   .settings(
     commonSettings ++
-      Seq(
-        name := "extruder-examples",
-        libraryDependencies ++= Seq(
-          "org.zalando" %% "grafter"  % "1.4.8",
-          "co.fs2"      %% "fs2-core" % "0.10.0-M8",
-          "io.monix"    %% "monix"    % "3.0.0-M1"
-        ),
-        publishArtifact := false
-      )
+      Seq(name := "extruder-examples", publishArtifact := false)
   )
   .dependsOn(systemSources, typesafe, refined)
 
@@ -145,6 +137,10 @@ lazy val docSettings = commonSettings ++ Seq(
   micrositeGithubOwner := "janstenpickle",
   micrositeGithubRepo := "extruder",
   micrositeExtraMdFiles := Map(file("CONTRIBUTING.md") -> ExtraMdFileConfig("contributing.md", "docs")),
+  micrositeFavicons := Seq(
+    MicrositeFavicon("favicon16x16.png", "16x16"),
+    MicrositeFavicon("favicon32x32.png", "32x32")
+  ),
   micrositePalette := Map(
     "brand-primary" -> "#009933",
     "brand-secondary" -> "#006600",
@@ -188,8 +184,8 @@ lazy val docs = project
   .settings(
     moduleName := "extruder-docs",
     name := "Extruder docs",
-    publish := (),
-    publishLocal := (),
+    publish := (()),
+    publishLocal := (()),
     publishArtifact := false
   )
   .settings(docSettings)
