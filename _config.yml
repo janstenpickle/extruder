@@ -1,0 +1,11 @@
+name: extruder
+baseurl: /extruder
+description: Populate Scala case classes from any data source
+highlighter: rouge
+docs: true
+collections:
+  tut:
+    output: true
+version: 0.6.4-SNAPSHOT
+org: extruder
+markdown: kramdown
