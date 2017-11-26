@@ -2,11 +2,11 @@ package extruder.typesafe
 
 import cats.Eq
 import cats.instances.all._
-import cats.kernel.laws.GroupLaws
+import cats.kernel.laws.discipline.MonoidTests
 import com.typesafe.config._
 import extruder.core.ValidationCatsInstances._
 import extruder.core.{SourceSpec, ValidationException}
-import extruder.effect.ExtruderAsync
+import extruder.effect.ExtruderMonadError
 import org.scalacheck.{Arbitrary, Gen}
 import org.specs2.matcher.MatchResult
 import org.specs2.specification.core.SpecStructure
@@ -28,7 +28,8 @@ class TypesafeConfigSourceSpec extends SourceSpec with TypesafeConfigDecoders wi
     ConfigFactory.parseMap(config)
   }
 
-  override def loadInput[F[_]](implicit F: ExtruderAsync[F]): F[InputData] = F.delay(convertData(caseClassData))
+  override def loadInput[F[_]](implicit F: ExtruderMonadError[F]): F[Config] =
+    F.catchNonFatal(convertData(caseClassData))
 
   override def ext: SpecStructure =
     s2"""
@@ -45,7 +46,7 @@ class TypesafeConfigSourceSpec extends SourceSpec with TypesafeConfigDecoders wi
       _.head.asInstanceOf[ValidationException].exception.getMessage === LookupFailureMessage
     )
 
-  override def monoidGroupLaws: GroupLaws[ConfigMap] = GroupLaws[ConfigMap]
+  override def monoidTests: MonoidTests[ConfigMap]#RuleSet = MonoidTests[ConfigMap](monoid).monoid
 
   override implicit def hints: TypesafeConfigHints = TypesafeConfigHints.default
 }

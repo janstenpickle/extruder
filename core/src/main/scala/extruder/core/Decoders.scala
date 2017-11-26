@@ -75,38 +75,6 @@ trait Decode { self: DecodeTypes =>
   )(implicit decoder: Dec[F, T], F: Eff[F], hints: Hint): F[T] =
     F.flatMap(prepareInput(namespace, input))(decoder.read(namespace, None, _))
 
-  /** Decode the specified type from given data source
-    * If the data source is asynchronous by nature this method will wait for the duration specified in `hints` for decoding to timeout
-    *
-    * @param input   data source
-    * @param decoder implicit [[Decoder]] instance
-    * @param F       implicit [[Eff]] instance
-    * @param hints   implicit [[Hints]] instance
-    * @tparam T type to be decoded
-    * @throws Throwable any error encountered during decoding
-    * @return the requested type
-    */
-  def decodeUnsafe[T](input: InputData)(implicit decoder: Dec[Validation, T], F: Eff[Validation], hints: Hint): T =
-    decodeUnsafe[T](List.empty, input)
-
-  /** Decode the specified type from given data source in a given namespace
-    * If the data source is asynchronous by nature this method will wait for the duration specified in `hints` for decoding to timeout
-    *
-    * @param namespace namespace within the data source to look for values
-    * @param input     data source
-    * @param decoder   implicit [[Decoder]] instance
-    * @param F         implicit [[Eff]] instance
-    * @param hints     implicit [[Hints]] instance
-    * @tparam T type to be decoded
-    * @throws Throwable any error encountered during decoding
-    * @return the requested type
-    */
-  def decodeUnsafe[T](
-    namespace: List[String],
-    input: InputData
-  )(implicit decoder: Dec[Validation, T], F: Eff[Validation], hints: Hint): T =
-    decode[T](namespace, input).fold(errs => throw errorsToThrowable(errs), identity)
-
   /** Create a table of parameters as they should appear in the data source
     *
     * @param params implicit [[Parameters]] type class as a representation of `T`
@@ -185,35 +153,6 @@ trait DecodeFromDefaultSource { self: Decode with DecodeTypes =>
     */
   def decode[T, F[_]](namespace: List[String])(implicit decoder: Dec[F, T], F: Eff[F], hints: Hint): F[T] =
     F.flatMap(loadInput)(decode[T, F](namespace, _))
-
-  /** Decode the specified type from a default data source
-    * If the data source is asynchronous by nature this method will wait for the duration specified in `hints` for decoding to timeout
-    *
-    * @param decoder implicit [[Decoder]] instance
-    * @param F implicit [[Eff]] instance
-    * @param hints implicit [[Hints]] instance
-    * @tparam T type to be decoded
-    * @throws Throwable any error encountered during decoding
-    * @return the requested type
-    */
-  def decodeUnsafe[T](implicit decoder: Dec[Validation, T], F: Eff[Validation], hints: Hint): T =
-    decodeUnsafe[T](List.empty)
-
-  /** Decode the specified type from a default data source in a given namespace
-    * If the data source is asynchronous by nature this method will wait for the duration specified in `hints` for decoding to timeout
-    *
-    * @param namespace namespace within the data source to look for values
-    * @param decoder implicit [[Decoder]] instance
-    * @param F implicit [[Eff]] instance
-    * @param hints implicit [[Hints]] instance
-    * @tparam T type to be decoded
-    * @throws Throwable any error encountered during decoding
-    * @return the requested type
-    */
-  def decodeUnsafe[T](
-    namespace: List[String]
-  )(implicit decoder: Dec[Validation, T], F: Eff[Validation], hints: Hint): T =
-    decode[T](namespace).fold(errs => throw errorsToThrowable(errs), identity)
 }
 
 trait Decoder[F[_], T, C] {

@@ -1,10 +1,7 @@
 package extruder.effect
 
-import cats.data.Validated.{Invalid, Valid}
 import cats.effect.Sync
-import cats.syntax.validated._
-import cats.{Applicative, Apply, Monad, MonadError}
-import extruder.core.{Missing, Validation, ValidationException, ValidationFailure}
+import cats.{Applicative, Monad, MonadError}
 import extruder.data.ValidationT
 import extruder.instances.ValidationInstances
 
@@ -54,6 +51,6 @@ trait SyncInstances {
     }
 }
 
-object ExtruderSync extends SyncInstances with LowPrioritySyncInstances with ValidationInstances {
+object ExtruderSync extends ValidationInstances with SyncInstances with LowPrioritySyncInstances {
   def apply[F[_]](implicit sync: ExtruderSync[F]): ExtruderSync[F] = sync
 }

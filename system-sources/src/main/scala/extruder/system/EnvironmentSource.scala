@@ -7,14 +7,24 @@ import scala.collection.JavaConverters._
 
 trait EnvironmentDecoder[F[_], T] extends Decoder[F, T, Map[String, String]]
 
-trait EnvironmentDecoders
+trait EnvironmentDecoders extends BaseEnvironmentDecoders {
+  override type Eff[F[_]] = ExtruderMonadError[F]
+}
+
+trait SafeEnvironmentDecoders extends BaseEnvironmentDecoders {
+  override type Eff[F[_]] = ExtruderSync[F]
+
+  override def loadInput[F[_]](implicit F: Eff[F]): F[java.util.Map[String, String]] =
+    F.delay(System.getenv())
+}
+
+trait BaseEnvironmentDecoders
     extends Decoders
     with PrimitiveDecoders
     with DerivedDecoders
     with Decode
     with DecodeFromDefaultSource
     with DecodeTypes {
-  override type Eff[F[_]] = ExtruderMonadError[F]
   override type InputData = java.util.Map[String, String]
   override type DecodeData = Map[String, String]
   override type Dec[F[_], T] = EnvironmentDecoder[F, T]
@@ -53,6 +63,8 @@ trait EnvironmentDecoders
 object EnvironmentDecoder extends EnvironmentDecoders
 
 object EnvironmentSource extends EnvironmentDecoders
+
+object SafeEnvironmentSource extends SafeEnvironmentDecoders
 
 trait EnvironmentHints extends Hints
 

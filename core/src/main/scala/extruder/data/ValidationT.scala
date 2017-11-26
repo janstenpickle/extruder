@@ -1,10 +1,10 @@
 package extruder.data
 
-import cats.data.{EitherT, NonEmptyList}
-import cats.{Applicative, Functor, Monad}
+import cats.data.EitherT
 import cats.data.Validated.{Invalid, Valid}
-import extruder.core.{Validation, ValidationErrors}
 import cats.syntax.validated._
+import cats.{Applicative, Functor, Monad}
+import extruder.core.{Validation, ValidationErrors}
 
 case class ValidationT[F[_], A](value: F[Validation[A]]) {
   def map[B](f: A => B)(implicit F: Functor[F]): ValidationT[F, B] = ValidationT(F.map(value)(_.map(f)))
