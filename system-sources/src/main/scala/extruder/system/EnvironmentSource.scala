@@ -30,12 +30,6 @@ trait BaseEnvironmentDecoders
   override type Dec[F[_], T] = EnvironmentDecoder[F, T]
   override type Hint = EnvironmentHints
 
-  override protected def hasValue[F[_]](
-    path: List[String],
-    data: Map[String, String]
-  )(implicit hints: Hint, F: Eff[F]): F[Boolean] =
-    F.map(lookupValue(path, data))(_.isDefined)
-
   override protected def lookupValue[F[_]](
     path: List[String],
     data: Map[String, String]

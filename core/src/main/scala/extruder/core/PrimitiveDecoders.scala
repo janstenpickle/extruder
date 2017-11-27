@@ -13,7 +13,8 @@ import scala.concurrent.duration.Duration
 import scala.reflect.ClassTag
 
 trait PrimitiveDecoders extends { self: Decoders with DecodeTypes =>
-  protected def hasValue[F[_]](path: List[String], data: DecodeData)(implicit hints: Hint, F: Eff[F]): F[Boolean]
+  protected def hasValue[F[_]](path: List[String], data: DecodeData)(implicit hints: Hint, F: Eff[F]): F[Boolean] =
+    F.map(lookupValue[F](path, data))(_.isDefined)
 
   protected def lookupValue[F[_]](path: List[String], data: DecodeData)(
     implicit hints: Hint,

@@ -28,12 +28,6 @@ trait BaseMapDecoders extends Decoders with PrimitiveDecoders with DerivedDecode
   override type DecodeData = Map[String, String]
   override type Dec[F[_], T] = MapDecoder[F, T]
 
-  override protected def hasValue[F[_]](
-    path: List[String],
-    data: Map[String, String]
-  )(implicit hints: Hint, F: Eff[F]): F[Boolean] =
-    F.map(lookupValue(path, data))(_.isDefined)
-
   override protected def lookupValue[F[_]](
     path: List[String],
     data: Map[String, String]
