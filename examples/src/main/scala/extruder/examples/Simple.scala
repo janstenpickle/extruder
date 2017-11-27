@@ -4,16 +4,14 @@ import java.net.URL
 
 import cats.data.EitherT
 import cats.effect.IO
-import extruder.core.MapSource._
-
-import scala.concurrent.Future
-import scala.concurrent.duration.{Duration, FiniteDuration}
 import cats.instances.all._
-import extruder.core.ValidationErrors
-
-import scala.util.Try
+//import extruder.core.MapSource._
+import extruder.core._
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.util.Try
 
 case class CC(
   a: String = "test",
@@ -50,10 +48,22 @@ object Simple extends App {
   )
 
   type EitherIO[A] = EitherT[IO, ValidationErrors, A]
+//
+//  println(decode[CC](config))
+//  println(decode[CC, Try](config))
+//  println(decode[CC, Future](config))
+//  println(decode[CC, IO](config))
+//  println(decode[CC, EitherIO](config))
 
-  println(decode[CC](config))
-  println(decode[CC, Try](config))
-  println(decode[CC, Future](config))
-  println(decode[CC, IO](config))
-  println(decode[CC, EitherIO](config))
+  def decodeList(input: List[String])(params: Parameters[CC3], hints: MapHints): Validation[CC3] = {
+    val headers = params.eval(List.empty[String]).map(p => hints.pathToString(p.path))
+    MapSource.decode[CC3](headers.zip(input).toMap)
+  }
+
+  val csv = new CSVSource[Validation, CC3]()
+  import csv._
+
+  val decoded = decodeAll(Iterable(List("sdfsf"), List("342fewwswf"), List("sfofnknfw")))
+
+  println(decoded)
 }
