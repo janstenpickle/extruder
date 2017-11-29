@@ -69,6 +69,13 @@ lazy val core = (project in file("core")).settings(
     )
 )
 
+lazy val csv = (project in file("csv"))
+  .settings(
+    commonSettings ++
+      Seq(name := "extruder-csv", coverageEnabled.in(Test, test) := true)
+  )
+  .dependsOn(core % "compile->compile;test->test")
+
 lazy val systemSources = (project in file("system-sources"))
   .settings(commonSettings ++ Seq(name := "extruder-system-sources"))
   .dependsOn(core)

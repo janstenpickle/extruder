@@ -5,6 +5,7 @@ import java.net.URL
 import cats.data.EitherT
 import cats.effect.IO
 import cats.instances.all._
+import extruder.csv.CSVSource
 //import extruder.core.MapSource._
 import extruder.core._
 
@@ -61,9 +62,8 @@ object Simple extends App {
   }
 
   val csv = new CSVSource[Validation, CC3]()
-  import csv._
 
-  val decoded = decodeAll(Iterable(List("sdfsf"), List("342fewwswf"), List("sfofnknfw")))
+  val decoded = csv.decodeAll(Iterable(List("sdfsf"), List("342fewwswf"), List("sfofnknfw")))
 
   println(decoded)
 }
