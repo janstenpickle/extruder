@@ -6,10 +6,10 @@ val catsEffectVer = "0.5"
 
 val commonSettings = Seq(
   organization := "extruder",
-  scalaVersion := "2.12.4",
-  crossScalaVersions := Seq("2.11.11", "2.12.4"),
-  addCompilerPlugin(("org.scalamacros" % "paradise"       % "2.1.1").cross(CrossVersion.full)),
-  addCompilerPlugin(("org.spire-math"  % "kind-projector" % "0.9.4").cross(CrossVersion.binary)),
+  scalaOrganization := "org.typelevel",
+  scalaVersion := "2.12.4-bin-typelevel-4",
+  //addCompilerPlugin(("org.scalamacros" % "paradise"       % "2.1.1").cross(CrossVersion.full)),
+  addCompilerPlugin(("org.spire-math" % "kind-projector" % "0.9.4").cross(CrossVersion.binary)),
   scalacOptions ++= Seq(
     "-unchecked",
     "-feature",
@@ -69,10 +69,10 @@ lazy val core = (project in file("core")).settings(
     )
 )
 
-lazy val csv = (project in file("csv"))
+lazy val stream = (project in file("stream"))
   .settings(
     commonSettings ++
-      Seq(name := "extruder-csv", coverageEnabled.in(Test, test) := true)
+      Seq(name := "extruder-stream", coverageEnabled.in(Test, test) := true)
   )
   .dependsOn(core % "compile->compile;test->test")
 
@@ -85,7 +85,7 @@ lazy val examples = (project in file("examples"))
     commonSettings ++
       Seq(name := "extruder-examples", publishArtifact := false)
   )
-  .dependsOn(systemSources, typesafe, refined)
+  .dependsOn(systemSources, typesafe, refined, stream)
 
 lazy val typesafe = (project in file("typesafe"))
   .settings(

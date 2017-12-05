@@ -5,7 +5,8 @@ import java.net.URL
 import cats.data.EitherT
 import cats.effect.IO
 import cats.instances.all._
-import extruder.csv.CSVSource
+import extruder.stream.{StreamSource, ValueLength}
+import shapeless.{Nat, Sized}
 //import extruder.core.MapSource._
 import extruder.core._
 
@@ -13,6 +14,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.util.Try
+
+import shapeless.syntax.sized._
 
 case class CC(
   a: String = "test",
@@ -31,6 +34,7 @@ case class CC4(a: Option[CC3])
 sealed trait Sealed
 case object ObjImpl extends Sealed
 case class CCImpl(a: String, i: Long = 76, u: URL, s: Set[Int], cc: Option[CC4]) extends Sealed
+case class CCImpl2(dsf: Int) extends Sealed
 
 object Simple extends App {
 
@@ -61,9 +65,11 @@ object Simple extends App {
     MapSource.decode[CC3](headers.zip(input).toMap)
   }
 
-  val csv = new CSVSource[Validation, CC3]()
+  val csv =
+    StreamSource
+      .mappedHeadersIndex[Validation, (Int, Int, Int), Nat._3](Sized[List]("a" -> 1, "b" -> 2, "c" -> 0))
 
-  val decoded = csv.decodeAll(Iterable(List("sdfsf"), List("342fewwswf"), List("sfofnknfw")))
+  val decoded = Iterable(List("1", "2", "3"), List("342fewwswf"), List("")).map(csv.decode)
 
   println(decoded)
 }

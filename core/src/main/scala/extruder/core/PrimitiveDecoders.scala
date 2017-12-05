@@ -27,7 +27,9 @@ trait PrimitiveDecoders extends { self: Decoders with DecodeTypes =>
     F: Eff[F],
     lp: LowPriority
   ): Dec[F, T] =
-    mkDecoder[F, T]((path, default, data) => resolveValue(formatParserError(parser, path)).apply(path, default, data))
+    mkDecoder[F, T](
+      (path, default, data) => resolveValue(formatParserError(parser, path, data)).apply(path, default, data)
+    )
 
   implicit def optionalDecoder[F[_], T](implicit decoder: Lazy[Dec[F, T]], hints: Hint, F: Eff[F]): Dec[F, Option[T]] =
     mkDecoder[F, Option[T]] { (path, _, data) =>
@@ -54,24 +56,28 @@ trait PrimitiveDecoders extends { self: Decoders with DecodeTypes =>
   )(path: List[String], default: Option[T], data: DecodeData)(implicit hints: Hint, F: Eff[F]): F[T] =
     F.flatMap(lookup(path, data)) { v =>
       (v, default) match {
-        case (None, None) =>
-          F.missing(s"Could not find value at '${hints.pathToString(path)}' and no default available")
+        case (None, None) => missingError(path, data)
         case (None, Some(value)) => F.pure(value)
         case (Some(value), _) => parser(value)
       }
     }
 
-  protected def formatParserError[F[_], T](
-    parser: Parser[T],
-    path: List[String]
-  )(implicit hints: Hint, F: Eff[F]): String => F[T] =
+  protected def missingError[F[_], T](path: List[String], data: DecodeData)(implicit hints: Hint, F: Eff[F]): F[T] =
+    F.missing(s"Could not find value at '${hints.pathToString(path)}' and no default available")
+
+  protected def formatParserError[F[_], T](parser: Parser[T], path: List[String], data: DecodeData)(
+    implicit hints: Hint,
+    F: Eff[F]
+  ): String => F[T] =
     value =>
       parser
         .parse(value)
-        .fold[F[T]](
-          err => F.validationFailure(s"Could not parse value '$value' at '${hints.pathToString(path)}': $err"),
-          F.pure
-      )
+        .fold[F[T]](err => parserError[F, T](path, value, err, data), F.pure)
+
+  protected def parserError[F[_], T](path: List[String], value: String, err: String, data: DecodeData)(
+    implicit hints: Hint,
+    F: Eff[F]
+  ): F[T] = F.validationFailure(s"Could not parse value '$value' at '${hints.pathToString(path)}': $err")
 }
 
 trait Parsers {
