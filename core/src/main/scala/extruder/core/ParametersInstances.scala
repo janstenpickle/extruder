@@ -10,10 +10,6 @@ import scala.collection.TraversableOnce
 import scala.reflect.runtime.universe.TypeTag
 
 trait ParametersInstances extends Shows {
-
-  implicit def objectParameters[T](implicit gen: Generic.Aux[T, HNil], tag: TypeTag[T]): Parameters[T] =
-    Parameters(_ => List.empty)
-
   implicit val cnilParameters: Parameters[CNil] = new Parameters[CNil](_ => List.empty)
 
   implicit def cconsParameters[K <: Symbol, H, T <: Coproduct](

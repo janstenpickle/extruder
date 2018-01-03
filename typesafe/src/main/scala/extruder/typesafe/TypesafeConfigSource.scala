@@ -1,7 +1,7 @@
 package extruder.typesafe
 
 import cats.instances.all._
-import cats.{Applicative, Monoid}
+import cats.{Monoid, Traverse}
 import cats.syntax.either._
 import com.typesafe.config.ConfigException.Missing
 import com.typesafe.config.{ConfigFactory, ConfigList, ConfigObject, ConfigValue, Config => TConfig}
@@ -78,8 +78,8 @@ trait BaseTypesafeConfigDecoders
                 F.missing(s"Could not find list at '${hints.pathToString(path)}' and no default available")
               case (None, Some(li)) => F.pure(li)
               case (Some(li), _) =>
-                Applicative[Either[String, ?]]
-                  .sequence(li.map(parser.parse))
+                Traverse[List]
+                  .sequence[Either[String, ?], T](li.map(parser.parse))
                   .map(Parser.convertTraversable(_))
                   .fold(
                     err =>

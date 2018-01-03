@@ -1,15 +1,15 @@
 import microsites._
 
-val specs2Ver = "4.0.1"
-val catsVer = "1.0.0-RC1"
-val catsEffectVer = "0.5"
+val specs2Ver = "4.0.2"
+val catsVer = "1.0.1"
+val catsEffectVer = "0.7"
+val refinedVer = "0.8.6"
 
 val commonSettings = Seq(
   organization := "extruder",
   scalaVersion := "2.12.4",
-  crossScalaVersions := Seq("2.11.11", "2.12.4"),
-  addCompilerPlugin(("org.scalamacros" % "paradise"       % "2.1.1").cross(CrossVersion.full)),
-  addCompilerPlugin(("org.spire-math"  % "kind-projector" % "0.9.4").cross(CrossVersion.binary)),
+  crossScalaVersions := Seq("2.11.12", "2.12.4"),
+  addCompilerPlugin(("org.spire-math" % "kind-projector" % "0.9.4").cross(CrossVersion.binary)),
   scalacOptions ++= Seq(
     "-unchecked",
     "-feature",
@@ -54,8 +54,8 @@ lazy val core = (project in file("core")).settings(
       libraryDependencies ++= Seq(
         ("org.typelevel" %% "cats-core"   % catsVer).exclude("org.scalacheck", "scalacheck"),
         ("org.typelevel" %% "cats-effect" % catsEffectVer).exclude("org.scalacheck", "scalacheck"),
-        ("org.typelevel" %% "mouse"       % "0.12").exclude("org.scalacheck", "scalacheck"),
-        ("com.chuusai"   %% "shapeless"   % "2.3.2").exclude("org.scalacheck", "scalacheck"),
+        ("org.typelevel" %% "mouse"       % "0.15").exclude("org.scalacheck", "scalacheck"),
+        ("com.chuusai"   %% "shapeless"   % "2.3.3").exclude("org.scalacheck", "scalacheck"),
         "org.specs2" %% "specs2-core"       % specs2Ver % "test",
         "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test",
         ("org.typelevel" %% "cats-effect-laws" % catsEffectVer).exclude("org.scalacheck", "scalacheck"),
@@ -101,8 +101,8 @@ lazy val refined = (project in file("refined"))
       Seq(
         name := "extruder-refined",
         libraryDependencies ++= Seq(
-          "eu.timepit" %% "refined"            % "0.8.4",
-          "eu.timepit" %% "refined-scalacheck" % "0.8.4",
+          "eu.timepit" %% "refined"            % refinedVer,
+          "eu.timepit" %% "refined-scalacheck" % refinedVer,
           "org.specs2" %% "specs2-core"        % specs2Ver % "test",
           "org.specs2" %% "specs2-scalacheck"  % specs2Ver % "test"
         ),
