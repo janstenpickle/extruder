@@ -73,7 +73,6 @@ trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with 
         Standard sync decode $testDefaultDecode
 
       Can represent the following types as a table of required params
-        Case class tree $testCaseClassParams
 
       ${checkAll("Encoder monoid", monoidTests)}
       $ext

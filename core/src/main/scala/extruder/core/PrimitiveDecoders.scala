@@ -2,7 +2,7 @@ package extruder.core
 
 import java.net.URL
 
-import cats.Applicative
+import cats.Traverse
 import cats.implicits._
 import mouse.string._
 import shapeless.syntax.typeable._
@@ -112,8 +112,8 @@ trait Parsers {
   )(implicit parser: Parser[T], cbf: CanBuildFrom[F[T], T, F[T]]): Parser[F[T]] =
     Parser(
       input =>
-        Applicative[Either[String, ?]]
-          .sequence(split(input).filterNot(_.isEmpty).map(parser.parse))
+        Traverse[List]
+          .sequence[Either[String, ?], T](split(input).filterNot(_.isEmpty).map(parser.parse))
           .map(convertTraversable(_))
     )
 
