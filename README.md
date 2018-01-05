@@ -20,13 +20,13 @@ This library uses [shapeless](https://github.com/milessabin/shapeless) and [cats
 Add the following to your `build.sbt`:
 ```scala
 resolvers += Resolver.bintrayRepo("janstenpickle", "maven")
-libraryDependencies += "extruder" %% "extruder" % "0.7.1"
+libraryDependencies += "extruder" %% "extruder" % "0.7.2"
 
 // only if you require support for Typesafe config
-libraryDependencies += "extruder" %% "extruder-typesafe" % "0.7.1"
+libraryDependencies += "extruder" %% "extruder-typesafe" % "0.7.2"
 
 // only if you require support for refined types
-libraryDependencies += "extruder" %% "extruder-refined" % "0.7.1"
+libraryDependencies += "extruder" %% "extruder-refined" % "0.7.2"
 ```
 
 # Participation
