@@ -6,6 +6,6 @@ docs: true
 collections:
   tut:
     output: true
-version: 0.7.1-SNAPSHOT
+version: 0.7.2-SNAPSHOT
 org: extruder
 markdown: kramdown
