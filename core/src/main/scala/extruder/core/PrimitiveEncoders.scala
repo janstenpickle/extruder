@@ -2,6 +2,7 @@ package extruder.core
 
 import java.net.URL
 
+import cats.data.NonEmptyList
 import cats.instances.all._
 import cats.{Show => CatsShow}
 import shapeless._
@@ -14,6 +15,11 @@ trait PrimitiveEncoders { self: Encoders with EncodeTypes =>
   implicit def primitiveEncoder[F[_], T](implicit shows: Show[T], hints: Hint, F: Eff[F], lp: LowPriority): Enc[F, T] =
     mkEncoder[F, T] { (path, value) =>
       writeValue(path, shows.show(value))
+    }
+
+  implicit def nonEmptyListEncoder[F[_], T](implicit encoder: Lazy[Enc[F, List[T]]]): Enc[F, NonEmptyList[T]] =
+    mkEncoder { (path, value) =>
+      encoder.value.write(path, value.toList)
     }
 
   implicit def optionalEncoder[F[_], T](implicit encoder: Lazy[Enc[F, T]], hints: Hint, F: Eff[F]): Enc[F, Option[T]] =

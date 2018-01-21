@@ -41,7 +41,7 @@ val commonSettings = Seq(
     false
   },
   bintrayReleaseOnPublish := false,
-  coverageMinimum := 90,
+  coverageMinimum := 85,
   releaseCrossBuild := true,
   scalafmtOnCompile := true,
   scalafmtTestOnCompile := true

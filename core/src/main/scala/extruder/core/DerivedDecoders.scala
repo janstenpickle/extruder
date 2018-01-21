@@ -38,6 +38,7 @@ trait DerivedDecoders { self: Decoders with DecodeTypes =>
     underlying: Lazy[Dec[F, V]],
     F: Eff[F],
     lp: LowPriority,
+    refute: Refute[Parser[T]],
     neOpt: T <:!< Option[_],
     neCol: T <:!< TraversableOnce[_]
   ): Dec[F, T] =
@@ -80,12 +81,15 @@ trait DerivedDecoders { self: Decoders with DecodeTypes =>
     defaults: Default.AsOptions.Aux[T, DefaultOptsRepr],
     tag: TypeTag[T],
     F: Eff[F],
-    decoder: Lazy[DerivedDecoderWithDefault[T, F, GenRepr, DefaultOptsRepr]]
-  ): Dec[F, T] = {
-    lazy val className: String = tag.tpe.typeSymbol.name.toString
+    decoder: Lazy[DerivedDecoderWithDefault[T, F, GenRepr, DefaultOptsRepr]],
+    hints: Hint,
+    lp: LowPriority
+  ): Dec[F, T] =
     mkDecoder { (path, _, data) =>
-      decoder.value.read(path :+ className, defaults(), data).map(gen.from)
+      val newPath =
+        if (hints.includeClassNameInPath) path :+ tag.tpe.typeSymbol.name.toString
+        else path
+      decoder.value.read(newPath, defaults(), data).map(gen.from)
     }
-  }
 
 }

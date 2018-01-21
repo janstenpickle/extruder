@@ -3,6 +3,7 @@ package extruder.core
 import java.net.URL
 
 import cats.Eq
+import cats.data.NonEmptyList
 import cats.syntax.either._
 import cats.instances.all._
 import cats.kernel.laws.discipline.MonoidTests
@@ -55,7 +56,7 @@ trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with 
   override def is: SpecStructure =
     s2"""
        Can decode and encode the following types
-        String ${testType(Gen.alphaNumStr)}
+        String ${testType(Gen.alphaNumStr.suchThat(_.nonEmpty))}
         Int ${testNumeric[Int]}
         Long ${testNumeric[Long]}
         Double ${testNumeric[Double]}
@@ -98,7 +99,8 @@ trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with 
   ): Prop =
     test(gen) ++
       test(Gen.option(gen)) ++
-      testList(Gen.listOf(gen).suchThat(_.nonEmpty))
+      testList(Gen.listOf(gen).suchThat(_.nonEmpty)) ++
+      testNonEmptyList(gen)
 
   def testList[T, F[T] <: TraversableOnce[T]](
     gen: Gen[F[T]]
@@ -110,11 +112,21 @@ trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with 
       } yield decoded) must beRight.which(_.toList === value.filter(_.toString.trim.nonEmpty).toList)
     }
 
+  def testNonEmptyList[T](
+    gen: Gen[T]
+  )(implicit encoder: Enc[Validation, NonEmptyList[T]], decoder: Dec[Validation, NonEmptyList[T]]): Prop =
+    Prop.forAllNoShrink(nonEmptyListGen(gen), namespaceGen) { (value, namespace) =>
+      (for {
+        encoded <- encode[NonEmptyList[T]](namespace, value)
+        decoded <- decode[NonEmptyList[T]](namespace, encoded)
+      } yield decoded) must beRight.which(_.toList === value.filter(_.toString.trim.nonEmpty))
+    }
+
   def test[T](
     gen: Gen[T]
   )(implicit encoder: Enc[Validation, T], decoder: Dec[Validation, T], teq: Eq[T], equals: Eq[Validation[T]]): Prop = {
     val F: Eff[Validation] = ExtruderMonadError[Validation]
-    Prop.forAll(gen, namespaceGen) { (value, namespace) =>
+    Prop.forAllNoShrink(gen, namespaceGen) { (value, namespace) =>
       def eqv(encoded: Validation[OutputData], decoded: InputData => Validation[T]): Boolean =
         equals.eqv(F.flatMap(encoded)(decoded), Right(value))
 

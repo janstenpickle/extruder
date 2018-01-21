@@ -77,12 +77,12 @@ trait MapSource extends MapEncoders with MapDecoders
 
 object MapSource extends MapSource
 
-trait MapHints extends Hints
+trait MapHints extends Hints {
+  override def pathToString(path: List[String]): String = path.mkString(".").toLowerCase
+}
 
 object MapHints extends HintsCompanion[MapHints] {
-  override implicit val default: MapHints = new MapHints {
-    override def pathToString(path: List[String]): String = path.mkString(".").toLowerCase
-  }
+  override implicit val default: MapHints = new MapHints {}
 }
 
 trait MapDataSource extends DataSource {

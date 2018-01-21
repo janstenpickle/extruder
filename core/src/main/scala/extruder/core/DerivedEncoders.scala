@@ -70,7 +70,8 @@ trait DerivedEncoders { self: Encoders with EncodeTypes =>
     implicit gen: LabelledGeneric.Aux[T, GenRepr],
     tag: TypeTag[T],
     F: Eff[F],
-    encoder: Lazy[DerivedEncoder[T, F, GenRepr]]
+    encoder: Lazy[DerivedEncoder[T, F, GenRepr]],
+    lp: LowPriority
   ): Enc[F, T] = {
     lazy val className: String = tag.tpe.typeSymbol.name.toString
     mkEncoder[F, T] { (path, value) =>
