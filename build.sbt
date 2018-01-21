@@ -44,7 +44,8 @@ val commonSettings = Seq(
   coverageMinimum := 85,
   releaseCrossBuild := true,
   scalafmtOnCompile := true,
-  scalafmtTestOnCompile := true
+  scalafmtTestOnCompile := true,
+  releaseIgnoreUntrackedFiles := true
 )
 
 lazy val core = (project in file("core")).settings(
