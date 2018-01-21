@@ -4,16 +4,14 @@ import java.net.URL
 
 import cats.data.EitherT
 import cats.effect.IO
-import extruder.core.MapSource._
-
-import scala.concurrent.Future
-import scala.concurrent.duration.{Duration, FiniteDuration}
 import cats.instances.all._
+import extruder.core.MapSource._
 import extruder.core.ValidationErrors
 
-import scala.util.Try
-
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.util.Try
 
 case class CC(
   a: String = "test",

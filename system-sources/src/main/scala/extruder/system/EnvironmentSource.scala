@@ -66,10 +66,10 @@ object EnvironmentSource extends EnvironmentDecoders
 
 object SafeEnvironmentSource extends SafeEnvironmentDecoders
 
-trait EnvironmentHints extends Hints
+trait EnvironmentHints extends Hints {
+  override def pathToString(path: List[String]): String = path.mkString("_").toUpperCase
+}
 
 object EnvironmentHints extends HintsCompanion[EnvironmentHints] {
-  override implicit val default: EnvironmentHints = new EnvironmentHints {
-    override def pathToString(path: List[String]): String = path.mkString("_").toUpperCase
-  }
+  override implicit val default: EnvironmentHints = new EnvironmentHints {}
 }

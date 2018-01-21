@@ -3,6 +3,7 @@ package extruder.core
 import java.net.URL
 
 import cats.Traverse
+import cats.data.NonEmptyList
 import cats.implicits._
 import mouse.string._
 import shapeless.syntax.typeable._
@@ -28,6 +29,23 @@ trait PrimitiveDecoders extends { self: Decoders with DecodeTypes =>
   ): Dec[F, T] =
     mkDecoder[F, T]((path, default, data) => resolveValue(formatParserError(parser, path)).apply(path, default, data))
 
+  implicit def nonEmptyListDecoder[F[_], T](
+    implicit decoder: Lazy[Dec[F, List[T]]],
+    F: Eff[F],
+    hints: Hint
+  ): Dec[F, NonEmptyList[T]] = mkDecoder[F, NonEmptyList[T]] { (path, default, data) =>
+    val decoded = decoder.value.read(path, default.map(_.toList), data)
+    decoded
+      .map(NonEmptyList.fromList)
+      .flatMap[NonEmptyList[T]](
+        _.fold[F[NonEmptyList[T]]](
+          F.validationFailure(
+            s"List at '${hints.pathToString(path)}' must contain data, but is empty, and no default available"
+          )
+        )(F.pure)
+      )
+  }
+
   implicit def optionalDecoder[F[_], T](implicit decoder: Lazy[Dec[F, T]], hints: Hint, F: Eff[F]): Dec[F, Option[T]] =
     mkDecoder[F, Option[T]] { (path, _, data) =>
       val decoded = decoder.value.read(path, None, data)
@@ -39,7 +57,11 @@ trait PrimitiveDecoders extends { self: Decoders with DecodeTypes =>
         case (_, false) => F.pure(None)
       }
 
-      F.flatMap(F.attempt(decoded))(att => F.flatMap(lookedUp)(lu => evaluateOptional(att, lu)))
+      for {
+        att <- F.attempt(decoded)
+        lu <- lookedUp
+        ret <- evaluateOptional(att, lu)
+      } yield ret
     }
 
   protected def resolveValue[F[_], E, T](

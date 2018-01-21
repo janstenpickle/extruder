@@ -2,13 +2,11 @@ package extruder.core
 
 import java.net.URL
 
-import cats.effect.IO
+import cats.Eq
+import cats.data.NonEmptyList
 import cats.instances.all.{catsStdEqForTry, _}
-import cats.{Eq, Eval}
 import org.scalacheck.{Arbitrary, Gen}
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.util.Try
 
@@ -29,18 +27,12 @@ object TestCommon {
   val durationGen: Gen[Duration] =
     Gen.oneOf(finiteDurationGen, Gen.const(Duration.Inf), Gen.const(Duration.MinusInf), Gen.const(Duration.Zero))
 
-//  implicit def futureEq[A](implicit e: Eq[A]): Eq[Future[A]] = Eq.by[Future[A], A](fut => IO.fromFuture(Eval.later(fut))) // ioEq[A].on(fut => IO.fromFuture(Eval.later(fut)))
+  def nonEmptyListGen[T](gen: Gen[T]): Gen[NonEmptyList[T]] =
+    for {
+      head <- gen
+      tail <- Gen.listOf(gen)
+    } yield NonEmptyList.of(head, tail: _*)
 
   implicit def tryEq[A](implicit e: Eq[A]): Eq[Try[A]] =
     catsStdEqForTry[A, Throwable](e, Eq.by[Throwable, String](_.toString))
-
-//  implicit def ioEq[A](implicit e: Eq[A]): Eq[IO[A]] = new Eq[IO[A]] {
-//
-//    override def eqv(a: IO[A], b: IO[A]): Boolean = {
-//      val a1 = Try(a.unsafeRunSync())
-//      val b1 = Try(b.unsafeRunSync())
-//
-//      tryEq[A].eqv(a1, b1)
-//    }
-//  }
 }

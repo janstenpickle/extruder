@@ -7,6 +7,8 @@ trait Hints {
     pathToString(pathWithType(path))
 
   def pathToString(path: List[String]): String
+
+  val includeClassNameInPath: Boolean = true
 }
 
 trait HintsCompanion[T <: Hints] {
