@@ -83,7 +83,8 @@ trait DerivedDecoders { self: Decoders with DecodeTypes =>
     F: Eff[F],
     decoder: Lazy[DerivedDecoderWithDefault[T, F, GenRepr, DefaultOptsRepr]],
     hints: Hint,
-    lp: LowPriority
+    lp: LowPriority,
+    refute: Refute[Parser[T]]
   ): Dec[F, T] =
     mkDecoder { (path, _, data) =>
       val newPath =
