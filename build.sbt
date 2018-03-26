@@ -81,6 +81,21 @@ lazy val examples = (project in file("examples"))
   )
   .dependsOn(systemSources, typesafe, refined)
 
+lazy val avro = (project in file("avro"))
+  .settings(
+    commonSettings ++
+      Seq(
+        name := "extruder-avro",
+        libraryDependencies ++= Seq(
+          "org.apache.avro" % "avro"               % "1.8.2",
+          "org.specs2"      %% "specs2-core"       % specs2Ver % "test",
+          "org.specs2"      %% "specs2-scalacheck" % specs2Ver % "test"
+        ),
+        coverageEnabled.in(Test, test) := true
+      )
+  )
+  .dependsOn(core % "compile->compile;test->test")
+
 lazy val typesafe = (project in file("typesafe"))
   .settings(
     commonSettings ++

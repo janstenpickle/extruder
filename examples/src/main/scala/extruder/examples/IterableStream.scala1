@@ -1,0 +1,17 @@
+package extruder.examples
+
+import cats.syntax.list._
+import extruder.core.{Validation, ValidationErrors}
+import extruder.stream.StreamSource
+
+import scala.io.Source
+
+object IterableStream extends App {
+  case class Demo(a: Int, b: String, c: Float, d: Char)
+
+  val iter: Iterator[List[String]] = Source.fromResource("failing-example.csv").getLines().map(_.split(',').toList)
+  val decoder = StreamSource[Validation, Demo]
+  val decoded = iter.drop(1).map(decoder.decode)
+
+  println(decoded.toList)
+}

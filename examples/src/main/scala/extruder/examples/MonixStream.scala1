@@ -1,0 +1,32 @@
+package extruder.examples
+
+import java.io.{BufferedReader, InputStreamReader}
+
+import extruder.core.Validation
+import extruder.stream.StreamSource
+import monix.eval.Task
+import monix.execution.Scheduler.Implicits.global
+import monix.reactive.Observable
+
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+
+object MonixStream extends App {
+
+  case class Demo(a: Int, b: String, c: Float, d: Char)
+
+  val decoder = StreamSource[Validation, Demo]
+
+  val csv = Observable
+    .fromLinesReader(new BufferedReader(new InputStreamReader(this.getClass.getResourceAsStream("/example.csv"))))
+    .map(_.split(',').toList)
+
+  val res = csv
+    .drop(1)
+    .map(decoder.decode)
+    .mapTask(_.fold(errs => Task.raiseError(new Throwable(errs.toList.map(_.message).mkString("\n"))), Task.pure))
+    .foldLeftL(List.empty[Demo])((acc, v) => acc :+ v)
+    .runAsync
+
+  println(Await.result(res, Duration.Inf))
+}
