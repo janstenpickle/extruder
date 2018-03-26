@@ -1,15 +1,15 @@
 import microsites._
 
-val specs2Ver = "4.0.2"
-val catsVer = "1.0.1"
-val catsEffectVer = "0.8"
-val refinedVer = "0.8.6"
+val specs2Ver = "4.0.3"
+val catsVer = "1.1.0"
+val catsEffectVer = "0.10"
+val refinedVer = "0.8.7"
 
 val commonSettings = Seq(
   organization := "extruder",
   scalaVersion := "2.12.4",
   crossScalaVersions := Seq("2.11.12", "2.12.4"),
-  addCompilerPlugin(("org.spire-math" % "kind-projector" % "0.9.4").cross(CrossVersion.binary)),
+  addCompilerPlugin(("org.spire-math" % "kind-projector" % "0.9.6").cross(CrossVersion.binary)),
   scalacOptions ++= Seq(
     "-unchecked",
     "-feature",
@@ -40,7 +40,7 @@ val commonSettings = Seq(
   pomIncludeRepository := { _ =>
     false
   },
-  bintrayReleaseOnPublish := false,
+  bintrayReleaseOnPublish := true,
   coverageMinimum := 85,
   releaseCrossBuild := true,
   scalafmtOnCompile := true,
@@ -55,14 +55,14 @@ lazy val core = (project in file("core")).settings(
       libraryDependencies ++= Seq(
         ("org.typelevel" %% "cats-core"   % catsVer).exclude("org.scalacheck", "scalacheck"),
         ("org.typelevel" %% "cats-effect" % catsEffectVer).exclude("org.scalacheck", "scalacheck"),
-        ("org.typelevel" %% "mouse"       % "0.15").exclude("org.scalacheck", "scalacheck"),
+        ("org.typelevel" %% "mouse"       % "0.16").exclude("org.scalacheck", "scalacheck"),
         ("com.chuusai"   %% "shapeless"   % "2.3.3").exclude("org.scalacheck", "scalacheck"),
         "org.specs2" %% "specs2-core"       % specs2Ver % "test",
         "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test",
         ("org.typelevel" %% "cats-effect-laws" % catsEffectVer).exclude("org.scalacheck", "scalacheck"),
-        ("org.typelevel" %% "discipline"       % "0.8" % "test")
+        ("org.typelevel" %% "discipline"       % "0.9.0" % "test")
           .exclude("org.scalacheck", "scalacheck"),
-        ("com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % "1.1.7" % "test")
+        ("com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % "1.1.8" % "test")
           .exclude("org.scalacheck", "scalacheck")
       ),
       publishArtifact in Test := true,
@@ -87,7 +87,7 @@ lazy val typesafe = (project in file("typesafe"))
       Seq(
         name := "extruder-typesafe",
         libraryDependencies ++= Seq(
-          "com.typesafe" % "config"             % "1.3.2",
+          "com.typesafe" % "config"             % "1.3.3",
           "org.specs2"   %% "specs2-core"       % specs2Ver % "test",
           "org.specs2"   %% "specs2-scalacheck" % specs2Ver % "test"
         ),
