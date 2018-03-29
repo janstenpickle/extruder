@@ -18,7 +18,7 @@ import scala.collection.generic.CanBuildFrom
 import scala.concurrent.duration.Duration
 import scala.reflect.ClassTag
 
-trait PrimitiveDecoders extends { self: Decoders with DecodeTypes =>
+trait PrimitiveDecoders { self: Decoders with DecodeTypes =>
   protected def hasValue[F[_]](path: List[String], data: DecodeData)(implicit hints: Hint, F: Eff[F]): F[Boolean]
 
   protected def lookupValue[F[_]](path: List[String], data: DecodeData)(
@@ -141,15 +141,6 @@ trait PrimitiveDecoders extends { self: Decoders with DecodeTypes =>
   protected def formatParserError1[F[_], T](parseResult: Either[String, T])(implicit hints: Hint, F: Eff[F]): F[T] =
     parseResult.fold[F[T]](err => F.validationFailure(err), F.pure)
 
-  def selectOption[F[_], A](path: List[String], primary: Option[A], secondary: Option[A])(
-    implicit F: Eff[F],
-    hints: Hint
-  ): F[A] =
-    (primary, secondary) match {
-      case (None, None) => F.missing(s"Could not find value at '${hints.pathToString(path)}' and no default available")
-      case (None, Some(value)) => F.pure(value)
-      case (Some(value), _) => F.pure(value)
-    }
 }
 
 trait MultiParser[T] extends {

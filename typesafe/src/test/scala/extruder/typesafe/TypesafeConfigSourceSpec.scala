@@ -18,7 +18,7 @@ import org.specs2.specification.core.SpecStructure
 
 import scala.collection.JavaConverters._
 
-class TypesafeConfigSourceSpec extends SourceSpec with TypesafeConfigDecoders with TypesafeConfigEncoders {
+class TypesafeConfigSourceSpec extends StringMapSourceSpec with TypesafeConfigDecoders with TypesafeConfigEncoders {
   import TypesafeConfigSourceSpec._
 
   implicit val configValueEq: Eq[ConfigValue] = Eq.fromUniversalEquals

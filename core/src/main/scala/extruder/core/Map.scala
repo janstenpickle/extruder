@@ -3,7 +3,12 @@ package extruder.core
 import cats.Monoid
 import extruder.effect.ExtruderMonadError
 
-trait BaseMapEncoders extends Encoders with PrimitiveEncoders with DerivedEncoders with EncodeTypes {
+trait BaseMapEncoders
+    extends Encoders
+    with PrimitiveEncoders
+    with StringMapEncoders
+    with DerivedEncoders
+    with EncodeTypes {
   override type EncodeData = Map[String, String]
   override type Enc[F[_], T] = MapEncoder[F, T]
 
@@ -24,7 +29,12 @@ trait BaseMapEncoders extends Encoders with PrimitiveEncoders with DerivedEncode
     }
 }
 
-trait BaseMapDecoders extends Decoders with PrimitiveDecoders with DerivedDecoders with DecodeTypes {
+trait BaseMapDecoders
+    extends Decoders
+    with PrimitiveDecoders
+    with StringMapDecoders
+    with DerivedDecoders
+    with DecodeTypes {
   override type DecodeData = Map[String, String]
   override type Dec[F[_], T] = MapDecoder[F, T]
 
@@ -39,6 +49,18 @@ trait BaseMapDecoders extends Decoders with PrimitiveDecoders with DerivedDecode
     data: Map[String, String]
   )(implicit hints: Hint, F: Eff[F]): F[Option[String]] =
     F.pure(data.get(hints.pathToString(path)))
+
+  override protected def prune[F[_]](
+    path: List[String],
+    data: Map[String, String]
+  )(implicit F: Eff[F], hints: Hint): F[Option[(List[String], Map[String, String])]] = {
+    val basePath = s"${hints.pathToString(path)}."
+    val pruned = data.filterKeys(_.startsWith(basePath))
+    F.pure(
+      if (pruned.isEmpty) None
+      else Some(pruned.keys.map(_.replace(basePath, "")).toList -> pruned)
+    )
+  }
 
   override protected def mkDecoder[F[_], T](
     f: (List[String], Option[T], Map[String, String]) => F[T]

@@ -3,6 +3,16 @@ package extruder.core
 trait Decoders { self: DecodeTypes =>
   protected def mkDecoder[F[_], T](f: (List[String], Option[T], DecodeData) => F[T]): Dec[F, T]
 
+  protected def selectOption[F[_], A](path: List[String], primary: Option[A], secondary: Option[A])(
+    implicit F: Eff[F],
+    hints: Hint
+  ): F[A] =
+    (primary, secondary) match {
+      case (None, None) => F.missing(s"Could not find value at '${hints.pathToString(path)}' and no default available")
+      case (None, Some(value)) => F.pure(value)
+      case (Some(value), _) => F.pure(value)
+    }
+
   def apply[F[_], T](implicit decoder: Dec[F, T]): Dec[F, T] = decoder
 }
 

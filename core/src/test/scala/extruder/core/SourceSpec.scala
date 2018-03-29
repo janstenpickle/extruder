@@ -37,7 +37,8 @@ trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with 
   override type OutputData = InputData
 
   val supportsEmptyNamespace: Boolean = true
-  def ext: SpecStructure = s2""""""
+  def ext: SpecStructure = s2""
+  def ext2: SpecStructure = s2""
   def monoidTests: MonoidTests[EncodeData]#RuleSet
   implicit def hints: Hint
 
@@ -79,6 +80,7 @@ trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with 
 
       ${checkAll("Encoder monoid", monoidTests)}
       $ext
+      $ext2
       """
 
   def testNumeric[T: Numeric](

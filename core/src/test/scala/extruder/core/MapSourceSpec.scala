@@ -2,7 +2,7 @@ package extruder.core
 import cats.instances.all._
 import cats.kernel.laws.discipline.MonoidTests
 
-class MapSourceSpec extends SourceSpec with MapEncoders with MapDecoders with DecodeFromDefaultSource {
+class MapSourceSpec extends StringMapSourceSpec with MapEncoders with MapDecoders with DecodeFromDefaultSource {
   override def convertData(map: Map[List[String], String])(implicit hints: Hint): Map[String, String] =
     map.map { case (k, v) => hints.pathToString(k) -> v }
 

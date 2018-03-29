@@ -26,7 +26,7 @@ trait PrimitiveEncoders { self: Encoders with EncodeTypes =>
   ): Enc[F, T] = mkEncoder[F, T] { (path, value) =>
     Traverse[List]
       .traverse(shows.show(path, value).toList) { case (p, v) => writeValue[F](p, v) }
-      .map(_.foldLeft(monoid.empty)(monoid.combine))
+      .map(monoid.combineAll)
   }
 
   implicit def nonEmptyListEncoder[F[_], T](implicit encoder: Lazy[Enc[F, List[T]]]): Enc[F, NonEmptyList[T]] =

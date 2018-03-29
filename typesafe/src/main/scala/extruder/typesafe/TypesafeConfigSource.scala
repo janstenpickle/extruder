@@ -1,10 +1,13 @@
 package extruder.typesafe
 
-import cats.instances.all._
 import cats.{Monoid, Traverse}
+import cats.instances.either._
+import cats.instances.list._
+import cats.instances.option._
 import cats.syntax.either._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
+import com.typesafe.config
 import com.typesafe.config.ConfigException.Missing
 import com.typesafe.config.{ConfigFactory, ConfigList, ConfigObject, ConfigValue, Config => TConfig}
 import extruder.core._
@@ -31,6 +34,7 @@ trait BaseTypesafeConfigDecoders
     with DecodeFromDefaultSource
     with Decoders
     with PrimitiveDecoders
+    with StringMapDecoders
     with DerivedDecoders
     with DecodeTypes {
   override type InputData = TConfig
@@ -60,6 +64,17 @@ trait BaseTypesafeConfigDecoders
     data: TConfig
   )(implicit hints: Hint, F: Eff[F]): F[Option[String]] =
     lookup(_.getString(hints.pathToString(path)), data)
+
+  override protected def prune[F[_]](
+    path: List[String],
+    data: TConfig
+  )(implicit F: Eff[F], hints: Hint): F[Option[(List[String], config.Config)]] =
+    lookup[ConfigObject, F](_.getObject(hints.pathToString(path)), data).map(_.map { co =>
+      val pruned =
+        co.asScala.map { case (k, v) => s"${hints.pathToString(path)}.$k" -> v }
+
+      co.asScala.keys.toList -> ConfigFactory.parseMap(pruned.asJava)
+    })
 
   private def resolve[F[_], T](
     lookup: (List[String], TConfig) => F[Option[T]]
@@ -111,7 +126,7 @@ trait BaseTypesafeConfigDecoders
                       F.validationFailure(
                         s"Could not parse value '${li.mkString(", ")}' at '${hints.pathToString(path)}': $err"
                     ),
-                    F.pure
+                    F.pure(_)
                   )
           }
       )
@@ -150,6 +165,7 @@ trait BaseTypesafeConfigEncoders
     extends Encode
     with Encoders
     with PrimitiveEncoders
+    with StringMapEncoders
     with DerivedEncoders
     with EncodeTypes {
   override type OutputData = TConfig
