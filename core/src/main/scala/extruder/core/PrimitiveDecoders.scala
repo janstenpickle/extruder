@@ -2,18 +2,23 @@ package extruder.core
 
 import java.net.URL
 
-import cats.Traverse
-import cats.data.NonEmptyList
-import cats.implicits._
+import cats.{Monad, Traverse}
+import cats.data.{NonEmptyList, OptionT, ValidatedNel}
+import cats.instances.either._
+import cats.instances.list._
+import cats.instances.option._
+import cats.syntax.either._
+import cats.syntax.flatMap._
+import cats.syntax.functor._
 import mouse.string._
 import shapeless.syntax.typeable._
-import shapeless.{Lazy, LowPriority, Typeable}
+import shapeless.{Lazy, LowPriority, Refute, Typeable}
 
 import scala.collection.generic.CanBuildFrom
 import scala.concurrent.duration.Duration
 import scala.reflect.ClassTag
 
-trait PrimitiveDecoders extends { self: Decoders with DecodeTypes =>
+trait PrimitiveDecoders { self: Decoders with DecodeTypes =>
   protected def hasValue[F[_]](path: List[String], data: DecodeData)(implicit hints: Hint, F: Eff[F]): F[Boolean]
 
   protected def lookupValue[F[_]](path: List[String], data: DecodeData)(
@@ -21,13 +26,50 @@ trait PrimitiveDecoders extends { self: Decoders with DecodeTypes =>
     F: Eff[F]
   ): F[Option[String]]
 
-  implicit def primitiveDecoder[F[_], T](
-    implicit parser: Parser[T],
+  implicit def parserDecoder[F[_], T](implicit parser: Parser[T], hints: Hint, F: Eff[F], lp: LowPriority): Dec[F, T] =
+    mkDecoder[F, T]((path, default, data) => resolveValue(formatParserError(parser, path)).apply(path, default, data))
+
+  implicit def optionalMultiParserDecoder[F[_], T](
+    implicit parser: MultiParser[T],
+    hints: Hint,
+    F: Eff[F]
+  ): Dec[F, Option[T]] =
+    mkDecoder[F, Option[T]]((path, _, data) => multiParse(parser, path, data))
+
+  implicit def multiParserDecoder[F[_], T](
+    implicit parser: MultiParser[T],
     hints: Hint,
     F: Eff[F],
     lp: LowPriority
   ): Dec[F, T] =
-    mkDecoder[F, T]((path, default, data) => resolveValue(formatParserError(parser, path)).apply(path, default, data))
+    mkDecoder[F, T](
+      (path, default, data) =>
+        for {
+          parsed <- multiParse(parser, path, data)
+          result <- selectOption(path, parsed, default)
+        } yield result
+    )
+
+  private def multiParse[F[_], T](parser: MultiParser[T], path: List[String], data: DecodeData)(
+    implicit F: Eff[F],
+    hints: Hint
+  ): F[Option[T]] =
+    parser
+      .parse(path, p => OptionT(lookupValue[F](p, data)))
+      .value
+      .flatMap(
+        v =>
+          Traverse[Option]
+            .sequence[ValidatedNel[String, ?], T](v)
+            .fold[F[Option[T]]](
+              errs =>
+                errs.tail
+                  .foldLeft(F.validationFailure[Option[T]](errs.head))(
+                    (acc, v) => F.ap2[Option[T], Option[T], Option[T]](F.pure((l, _) => l))(acc, F.validationFailure(v))
+                ),
+              F.pure
+          )
+      )
 
   implicit def nonEmptyListDecoder[F[_], T](
     implicit decoder: Lazy[Dec[F, List[T]]],
@@ -46,7 +88,12 @@ trait PrimitiveDecoders extends { self: Decoders with DecodeTypes =>
       )
   }
 
-  implicit def optionalDecoder[F[_], T](implicit decoder: Lazy[Dec[F, T]], hints: Hint, F: Eff[F]): Dec[F, Option[T]] =
+  implicit def optionalDecoder[F[_], T](
+    implicit decoder: Lazy[Dec[F, T]],
+    hints: Hint,
+    F: Eff[F],
+    refute: Refute[MultiParser[T]]
+  ): Dec[F, Option[T]] =
     mkDecoder[F, Option[T]] { (path, _, data) =>
       val decoded = decoder.value.read(path, None, data)
       val lookedUp = hasValue[F](path, data)
@@ -73,14 +120,11 @@ trait PrimitiveDecoders extends { self: Decoders with DecodeTypes =>
     parser: V => F[T],
     lookup: (List[String], DecodeData) => F[Option[V]]
   )(path: List[String], default: Option[T], data: DecodeData)(implicit hints: Hint, F: Eff[F]): F[T] =
-    F.flatMap(lookup(path, data)) { v =>
-      (v, default) match {
-        case (None, None) =>
-          F.missing(s"Could not find value at '${hints.pathToString(path)}' and no default available")
-        case (None, Some(value)) => F.pure(value)
-        case (Some(value), _) => parser(value)
-      }
-    }
+    for {
+      v <- lookup(path, data)
+      parsed <- Traverse[Option].sequence(v.map(parser))
+      result <- selectOption(path, parsed, default)
+    } yield result
 
   protected def formatParserError[F[_], T](
     parser: Parser[T],
@@ -93,6 +137,21 @@ trait PrimitiveDecoders extends { self: Decoders with DecodeTypes =>
           err => F.validationFailure(s"Could not parse value '$value' at '${hints.pathToString(path)}': $err"),
           F.pure
       )
+
+  protected def formatParserError1[F[_], T](parseResult: Either[String, T])(implicit hints: Hint, F: Eff[F]): F[T] =
+    parseResult.fold[F[T]](err => F.validationFailure(err), F.pure)
+
+}
+
+trait MultiParser[T] extends {
+  def parse[F[_]: Monad](
+    path: List[String],
+    lookup: List[String] => OptionT[F, String]
+  ): OptionT[F, ValidatedNel[String, T]]
+}
+
+object MultiParser {
+  def apply[T](implicit multiParser: MultiParser[T]): MultiParser[T] = multiParser
 }
 
 trait Parsers {
@@ -146,7 +205,9 @@ trait Parsers {
     traversableBuilder[T, F](_.split(',').toList)
 }
 
-case class Parser[T](parse: String => Either[String, T])
+case class Parser[T](parse: String => Either[String, T]) {
+  def parseNel: String => ValidatedNel[String, T] = parse.andThen(_.toValidatedNel)
+}
 
 object Parser extends Parsers {
   def apply[T](implicit parser: Parser[T]): Parser[T] = parser

@@ -35,7 +35,8 @@ trait DerivedEncoders { self: Encoders with EncodeTypes =>
     underlying: Lazy[Enc[F, O]],
     F: Eff[F],
     lp: LowPriority,
-    refute: Refute[Show[T]],
+    refuteShow: Refute[Show[T]],
+    refuteMultiShow: Refute[MultiShow[T]],
     neOpt: T <:!< Option[_],
     neCol: T <:!< TraversableOnce[_]
   ): Enc[F, T] =
@@ -73,7 +74,8 @@ trait DerivedEncoders { self: Encoders with EncodeTypes =>
     F: Eff[F],
     encoder: Lazy[DerivedEncoder[T, F, GenRepr]],
     lp: LowPriority,
-    refute: Refute[Show[T]]
+    refuteShow: Refute[Show[T]],
+    refuteMultiShow: Refute[MultiShow[T]]
   ): Enc[F, T] = {
     lazy val className: String = tag.tpe.typeSymbol.name.toString
     mkEncoder[F, T] { (path, value) =>

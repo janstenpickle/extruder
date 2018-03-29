@@ -2,8 +2,8 @@ package extruder.core
 
 import java.net.URL
 
-import cats.Eq
-import cats.data.NonEmptyList
+import cats.{Eq, Monad}
+import cats.data.{NonEmptyList, OptionT, ValidatedNel}
 import cats.syntax.either._
 import cats.instances.all._
 import cats.kernel.laws.discipline.MonoidTests
@@ -12,7 +12,7 @@ import extruder.core.ValidationCatsInstances._
 import extruder.effect.ExtruderMonadError
 import org.scalacheck.Gen.Choose
 import org.scalacheck.ScalacheckShapeless._
-import org.scalacheck.{Gen, Prop}
+import org.scalacheck.{Arbitrary, Gen, Prop}
 import org.specs2.matcher.{EitherMatchers, MatchResult}
 import org.specs2.specification.core.SpecStructure
 import org.specs2.{ScalaCheck, Specification}
@@ -37,7 +37,8 @@ trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with 
   override type OutputData = InputData
 
   val supportsEmptyNamespace: Boolean = true
-  def ext: SpecStructure = s2""""""
+  def ext: SpecStructure = s2""
+  def ext2: SpecStructure = s2""
   def monoidTests: MonoidTests[EncodeData]#RuleSet
   implicit def hints: Hint
 
@@ -69,6 +70,8 @@ trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with 
         FiniteDuration ${testType(finiteDurationGen)}
         Case class tree ${test(Gen.resultOf(CaseClass))}
         Case class with defaults set $testDefaults
+        Tuple ${test(implicitly[Arbitrary[(Int, Long)]].arbitrary)}
+        Optional Tuple ${test(Gen.option(implicitly[Arbitrary[(Int, Long)]].arbitrary))}
 
       Can load data defaults with
         Standard sync decode $testDefaultDecode
@@ -77,6 +80,7 @@ trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with 
 
       ${checkAll("Encoder monoid", monoidTests)}
       $ext
+      $ext2
       """
 
   def testNumeric[T: Numeric](
@@ -150,4 +154,20 @@ trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with 
       cvEq.eqv(decode[CaseClass](List.empty), Right(expectedCaseClass))
 
   def testCaseClassParams(implicit hints: Hint): MatchResult[String] = parameters[CaseClass] !== ""
+
+  implicit def tuple2Parser[A, B](implicit A: Parser[A], B: Parser[B]): MultiParser[(A, B)] = new MultiParser[(A, B)] {
+    override def parse[F[_]: Monad](
+      path: List[String],
+      lookup: List[String] => OptionT[F, String]
+    ): OptionT[F, ValidatedNel[String, (A, B)]] =
+      for {
+        _1 <- lookup(path :+ "_1").map(A.parseNel)
+        _2 <- lookup(path :+ "_2").map(B.parseNel)
+      } yield _1.ap(_2.map(b => (a: A) => (a, b)))
+  }
+
+  implicit def tuple2Show[A, B](implicit A: Show[A], B: Show[B]): MultiShow[(A, B)] = new MultiShow[(A, B)] {
+    override def show(path: List[String], v: (A, B)): Map[List[String], String] =
+      Map((path :+ "_1") -> A.show(v._1), (path :+ "_2") -> B.show(v._2))
+  }
 }

@@ -4,7 +4,8 @@ import java.net.URL
 
 import cats.data.NonEmptyList
 import cats.instances.all._
-import cats.{Show => CatsShow}
+import cats.syntax.functor._
+import cats.{Traverse, Show => CatsShow}
 import shapeless._
 
 import scala.concurrent.duration.Duration
@@ -12,10 +13,21 @@ import scala.concurrent.duration.Duration
 trait PrimitiveEncoders { self: Encoders with EncodeTypes =>
   protected def writeValue[F[_]](path: List[String], value: String)(implicit hints: Hint, F: Eff[F]): F[EncodeData]
 
-  implicit def primitiveEncoder[F[_], T](implicit shows: Show[T], hints: Hint, F: Eff[F], lp: LowPriority): Enc[F, T] =
+  implicit def showEncoder[F[_], T](implicit shows: Show[T], hints: Hint, F: Eff[F], lp: LowPriority): Enc[F, T] =
     mkEncoder[F, T] { (path, value) =>
       writeValue(path, shows.show(value))
     }
+
+  implicit def multiShowEncoder[F[_], T](
+    implicit shows: MultiShow[T],
+    hints: Hint,
+    F: Eff[F],
+    lp: LowPriority
+  ): Enc[F, T] = mkEncoder[F, T] { (path, value) =>
+    Traverse[List]
+      .traverse(shows.show(path, value).toList) { case (p, v) => writeValue[F](p, v) }
+      .map(monoid.combineAll)
+  }
 
   implicit def nonEmptyListEncoder[F[_], T](implicit encoder: Lazy[Enc[F, List[T]]]): Enc[F, NonEmptyList[T]] =
     mkEncoder { (path, value) =>
@@ -26,6 +38,14 @@ trait PrimitiveEncoders { self: Encoders with EncodeTypes =>
     mkEncoder[F, Option[T]] { (path, value) =>
       value.fold[F[EncodeData]](F.pure(monoid.empty))(encoder.value.write(path, _))
     }
+}
+
+trait MultiShow[T] {
+  def show(path: List[String], v: T): Map[List[String], String]
+}
+
+object MultiShow {
+  def apply[T](implicit multiShow: MultiShow[T]): MultiShow[T] = multiShow
 }
 
 trait Shows {
