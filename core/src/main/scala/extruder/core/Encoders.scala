@@ -85,7 +85,10 @@ trait Encoder[F[_], T, O] {
   def write(path: List[String], in: T): F[O]
 }
 
+trait EncoderRefute[T]
+
 trait EncodeTypes extends DataSource {
   type EncodeData
   type Enc[F[_], T] <: Encoder[F, T, EncodeData]
+  type EncRefute[T] <: EncoderRefute[T]
 }

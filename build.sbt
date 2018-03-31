@@ -3,7 +3,9 @@ import microsites._
 val specs2Ver = "4.0.3"
 val catsVer = "1.1.0"
 val catsEffectVer = "0.10.1"
+val prometheusVer = "0.3.0"
 val refinedVer = "0.8.7"
+val scalaCheckShapelessVer = "1.1.8"
 
 val commonSettings = Seq(
   organization := "extruder",
@@ -15,7 +17,6 @@ val commonSettings = Seq(
     "-feature",
     "-deprecation:false",
     "-Xcheckinit",
-    //  "-Xlog-implicits",
     "-Xlint:-nullary-unit",
     "-Ywarn-numeric-widen",
     "-Ywarn-dead-code",
@@ -62,7 +63,7 @@ lazy val core = (project in file("core")).settings(
         ("org.typelevel" %% "cats-effect-laws" % catsEffectVer).exclude("org.scalacheck", "scalacheck"),
         ("org.typelevel" %% "discipline"       % "0.9.0" % "test")
           .exclude("org.scalacheck", "scalacheck"),
-        ("com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % "1.1.8" % "test")
+        ("com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % scalaCheckShapelessVer % "test")
           .exclude("org.scalacheck", "scalacheck")
       ),
       publishArtifact in Test := true,
@@ -96,6 +97,75 @@ lazy val typesafe = (project in file("typesafe"))
   )
   .dependsOn(core % "compile->compile;test->test")
 
+lazy val metricsCore = (project in file("metrics/core"))
+  .settings(
+    commonSettings ++
+      Seq(
+        name := "extruder-metrics-core",
+        libraryDependencies ++= Seq(
+          "org.specs2"                 %% "specs2-core"               % specs2Ver              % "test",
+          "org.specs2"                 %% "specs2-scalacheck"         % specs2Ver              % "test",
+          "com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % scalaCheckShapelessVer % "test",
+          "com.lihaoyi"                %% "utest"                     % "0.6.3"                % "test",
+          ("org.typelevel" %% "discipline" % "0.9.0" % "test")
+            .exclude("org.scalacheck", "scalacheck")
+        ),
+        coverageEnabled.in(Test, test) := true
+      )
+  )
+  .dependsOn(core)
+
+lazy val prometheus = (project in file("metrics/prometheus"))
+  .settings(
+    commonSettings ++
+      Seq(
+        name := "extruder-metrics-prometheus",
+        libraryDependencies ++= Seq(
+          "io.prometheus"              % "simpleclient"               % prometheusVer,
+          "io.prometheus"              % "simpleclient_pushgateway"   % prometheusVer,
+          "org.specs2"                 %% "specs2-core"               % specs2Ver % "test",
+          "org.specs2"                 %% "specs2-scalacheck"         % specs2Ver % "test",
+          "org.specs2"                 %% "specs2-mock"               % specs2Ver % "test",
+          "com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % scalaCheckShapelessVer % "test"
+        ),
+        coverageEnabled.in(Test, test) := true
+      )
+  )
+  .dependsOn(metricsCore)
+
+lazy val spectator = (project in file("metrics/spectator"))
+  .settings(
+    commonSettings ++
+      Seq(
+        name := "extruder-metrics-spectator",
+        libraryDependencies ++= Seq(
+          "com.netflix.spectator"      % "spectator-api"              % "0.62.0",
+          "com.netflix.spectator"      % "spectator-reg-servo"        % "0.62.0" % "test",
+          "org.specs2"                 %% "specs2-core"               % specs2Ver % "test",
+          "org.specs2"                 %% "specs2-scalacheck"         % specs2Ver % "test",
+          "com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % scalaCheckShapelessVer % "test"
+        ),
+        coverageEnabled.in(Test, test) := true
+      )
+  )
+  .dependsOn(metricsCore)
+
+lazy val dropwizard = (project in file("metrics/dropwizard"))
+  .settings(
+    commonSettings ++
+      Seq(
+        name := "extruder-metrics-dropwizard",
+        libraryDependencies ++= Seq(
+          "io.dropwizard.metrics"      % "metrics-core"               % "4.0.2",
+          "org.specs2"                 %% "specs2-core"               % specs2Ver % "test",
+          "org.specs2"                 %% "specs2-scalacheck"         % specs2Ver % "test",
+          "com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % scalaCheckShapelessVer % "test"
+        ),
+        coverageEnabled.in(Test, test) := true
+      )
+  )
+  .dependsOn(metricsCore)
+
 lazy val refined = (project in file("refined"))
   .settings(
     commonSettings ++
@@ -103,7 +173,7 @@ lazy val refined = (project in file("refined"))
         name := "extruder-refined",
         libraryDependencies ++= Seq(
           "eu.timepit" %% "refined"            % refinedVer,
-          "eu.timepit" %% "refined-scalacheck" % refinedVer,
+          "eu.timepit" %% "refined-scalacheck" % refinedVer % "test",
           "org.specs2" %% "specs2-core"        % specs2Ver % "test",
           "org.specs2" %% "specs2-scalacheck"  % specs2Ver % "test"
         ),
@@ -122,7 +192,7 @@ lazy val root = (project in file("."))
         libraryDependencies := libraryDependencies.all(aggregateCompile).value.flatten
       )
   )
-  .aggregate(core, typesafe, refined)
+  .aggregate(core, typesafe, refined, prometheus, spectator)
 
 lazy val aggregateCompile =
   ScopeFilter(inProjects(core, systemSources), inConfigurations(Compile))
@@ -171,9 +241,8 @@ lazy val docSettings = commonSettings ++ Seq(
     "-doc-root-content",
     (resourceDirectory.in(Compile).value / "rootdoc.txt").getAbsolutePath
   ),
-  scalacOptions ~= {
-    _.filterNot(Set("-Yno-predef"))
-  },
+//  scalacOptions ~=
+//    _.filterNot(Set("-Yno-predef")),
   git.remoteRepo := "git@github.com:janstenpickle/extruder.git",
   unidocProjectFilter in (ScalaUnidoc, unidoc) :=
     inAnyProject -- inProjects(root, examples),
@@ -181,7 +250,7 @@ lazy val docSettings = commonSettings ++ Seq(
 )
 
 lazy val docs = project
-  .dependsOn(core, systemSources, typesafe, refined)
+  .dependsOn(core, systemSources, typesafe, refined, metricsCore)
   .settings(
     moduleName := "extruder-docs",
     name := "Extruder docs",

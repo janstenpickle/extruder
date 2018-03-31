@@ -35,6 +35,7 @@ trait DerivedEncoders { self: Encoders with EncodeTypes =>
     underlying: Lazy[Enc[F, O]],
     F: Eff[F],
     lp: LowPriority,
+    refute: Refute[EncoderRefute[T]],
     refuteShow: Refute[Show[T]],
     refuteMultiShow: Refute[MultiShow[T]],
     neOpt: T <:!< Option[_],
@@ -74,6 +75,7 @@ trait DerivedEncoders { self: Encoders with EncodeTypes =>
     F: Eff[F],
     encoder: Lazy[DerivedEncoder[T, F, GenRepr]],
     lp: LowPriority,
+    refute: Refute[EncRefute[T]],
     refuteShow: Refute[Show[T]],
     refuteMultiShow: Refute[MultiShow[T]]
   ): Enc[F, T] = {
