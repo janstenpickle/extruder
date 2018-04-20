@@ -2,7 +2,7 @@ import microsites._
 
 val specs2Ver = "4.0.3"
 val catsVer = "1.1.0"
-val catsEffectVer = "0.10"
+val catsEffectVer = "0.10.1"
 val refinedVer = "0.8.7"
 
 val commonSettings = Seq(
