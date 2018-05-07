@@ -9,3 +9,5 @@ options:
     url: extending.html
   - title: Implementing a Data Source
     url: config.html
+  - title: Extruder Metrics
+    url: metrics.html

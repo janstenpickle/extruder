@@ -169,7 +169,10 @@ trait Decoder[F[_], T, C] {
   def read(path: List[String], default: Option[T], input: C): F[T]
 }
 
+trait DecoderRefute[T]
+
 trait DecodeTypes extends DataSource {
   type DecodeData
   type Dec[F[_], T] <: Decoder[F, T, DecodeData]
+  type DecRefute[T] <: DecoderRefute[T]
 }
