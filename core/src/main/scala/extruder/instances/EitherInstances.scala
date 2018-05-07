@@ -1,6 +1,8 @@
 package extruder.instances
 
 import cats.data.{EitherT, NonEmptyList}
+import cats.effect.ExitCase
+import cats.effect.ExitCase.{Completed, Error}
 import cats.instances.all._
 import cats.syntax.either._
 import cats.{Apply, Eval, Monad, MonadError}
@@ -144,6 +146,25 @@ trait EitherInstances {
           fb0 <- fb.value
           ff0 <- ff.value
         } yield eitherApply.ap2(ff0)(fa0, fb0))
+
+      override def bracketCase[A, B](
+        acquire: EitherT[Eval, ValidationErrors, A]
+      )(use: A => EitherT[Eval, ValidationErrors, B])(
+        release: (A, ExitCase[Throwable]) => EitherT[Eval, ValidationErrors, Unit]
+      ): EitherT[Eval, ValidationErrors, B] =
+        acquire.value.value match {
+          case Right(a) =>
+            val res = use(a)
+            res.value.value match {
+              case Right(b) => release(a, Completed).map(_ => b)
+              case Left(th) =>
+                release(a, Error(errorsToThrowable(th))).value.value match {
+                  case Right(_) => res
+                  case Left(_) => res
+                }
+            }
+          case e @ Left(_) => EitherT(Eval.now(e.rightCast[B]))
+        }
     }
 
   protected val eitherApply: Apply[Either[ValidationErrors, ?]] = new Apply[Either[ValidationErrors, ?]] {
