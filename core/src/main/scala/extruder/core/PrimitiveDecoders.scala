@@ -55,7 +55,7 @@ trait PrimitiveDecoders { self: Decoders with DecodeTypes =>
     hints: Hint
   ): F[Option[T]] =
     parser
-      .parse(path, p => OptionT(lookupValue[F](p, data)))
+      .parse(p => OptionT(lookupValue[F](path ++ p, data)))
       .value
       .flatMap(
         v =>
@@ -144,10 +144,7 @@ trait PrimitiveDecoders { self: Decoders with DecodeTypes =>
 }
 
 trait MultiParser[T] extends {
-  def parse[F[_]: Monad](
-    path: List[String],
-    lookup: List[String] => OptionT[F, String]
-  ): OptionT[F, ValidatedNel[String, T]]
+  def parse[F[_]: Monad](lookup: List[String] => OptionT[F, String]): OptionT[F, ValidatedNel[String, T]]
 }
 
 object MultiParser {
@@ -214,4 +211,7 @@ object Parser extends Parsers {
 
   def fromEitherException[T](parse: String => Either[Throwable, T]): Parser[T] =
     Parser[T](parse.andThen(_.leftMap(_.getMessage)))
+
+  def catchNonFatal[T](parse: String => T): Parser[T] =
+    Parser.fromEitherException[T](str => Either.catchNonFatal(parse(str)))
 }

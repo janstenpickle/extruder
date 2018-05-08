@@ -1,0 +1,3 @@
+package extruder.aws
+
+trait AllAwsInstances extends AwsCredentialsInstances with AwsRegionInstances
