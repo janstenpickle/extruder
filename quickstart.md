@@ -34,11 +34,11 @@ type EitherTIO[A] = EitherT[IO, ValidationErrors, A]
 
 // Decode from configuration into different target monads
 val decoded: Either[ValidationErrors, ApplicationConfig] = decode[ApplicationConfig](config)
-val decodedIO: EitherTIO[ApplicationConfig] = decode[ApplicationConfig, EitherTIO](config)
+val decodedIO: EitherTIO[ApplicationConfig] = decode[EitherTIO, ApplicationConfig](config)
 
 // Encode to configuration into different target monads
 val encoded: Either[ValidationErrors, Map[String, String]] = encode(applicationConfig)
-val encodedIO: EitherTIO[Map[String, String]] = encode[ApplicationConfig, EitherTIO](applicationConfig)
+val encodedIO: EitherTIO[Map[String, String]] = encode[EitherTIO, ApplicationConfig](applicationConfig)
 ```
 
 It is also possible to print parameters as a table, with keys formatted as they would be in the source data:
