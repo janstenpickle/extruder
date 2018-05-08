@@ -41,7 +41,7 @@ class KeyedMetricEnodersSpec
       """
 
   def testObject: Prop = prop { (req: RequestCount) =>
-    encode[RequestCount, Validation](req) must beRight.which {
+    encode[RequestCount](req) must beRight.which {
       _ must containTheSameElementsAs(
         List(
           KeyedMetric(

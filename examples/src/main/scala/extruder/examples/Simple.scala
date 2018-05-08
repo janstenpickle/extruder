@@ -50,8 +50,8 @@ object Simple extends App {
   type EitherIO[A] = EitherT[IO, ValidationErrors, A]
 
   println(decode[CC](config))
-  println(decode[CC, Try](config))
-  println(decode[CC, Future](config))
-  println(decode[CC, IO](config))
-  println(decode[CC, EitherIO](config))
+  println(decode[Try, CC](config))
+  println(decode[Future, CC](config))
+  println(decode[IO, CC](config))
+  println(decode[EitherIO, CC](config))
 }

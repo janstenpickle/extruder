@@ -18,12 +18,12 @@ class DropwizardEncodersSpec extends Specification with ScalaCheck {
       """
 
   def encodeNamespaced: Prop = prop { (value: Int, name: String) =>
-    val reg = new DropwizardRegistry().encode[Int, IO](List(name), value).unsafeRunSync()
+    val reg = new DropwizardRegistry().encode[IO, Int](List(name), value).unsafeRunSync()
     (reg.getGauges.size() === 1).and(reg.getGauges().get(snakeCaseTransformation(name)).getValue === value.toDouble)
   }
 
   def encodeObject: Prop = prop { metrics: Metrics =>
-    val reg = new DropwizardRegistry().encode[Metrics, IO](metrics).unsafeRunSync()
+    val reg = new DropwizardRegistry().encode[IO, Metrics](metrics).unsafeRunSync()
     (reg.getGauges.size() === 2)
       .and(reg.getCounters.size() === 1)
       .and(reg.getGauges.get("metrics.timer").getValue === metrics.timer.value.toDouble)

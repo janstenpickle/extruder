@@ -18,13 +18,13 @@ class PrometheusRegistrySpec extends Specification with ScalaCheck {
       """
 
   def encodeNamespaced: Prop = prop { (value: Int, name: String) =>
-    val reg = new PrometheusRegistry().encode[Int, IO](List(name), value).unsafeRunSync()
+    val reg = new PrometheusRegistry().encode[IO, Int](List(name), value).unsafeRunSync()
     reg
       .getSampleValue(snakeCaseTransformation(name), Array("metric_type"), Array("gauge")) === value.toDouble
   }
 
   def encodeObject: Prop = prop { metrics: Metrics =>
-    val reg = new PrometheusRegistry().encode[Metrics, IO](metrics).unsafeRunSync
+    val reg = new PrometheusRegistry().encode[IO, Metrics](metrics).unsafeRunSync
     (reg
       .getSampleValue(snakeCaseTransformation("a"), Array("metric_type"), Array("counter")) === metrics.a.value.toDouble)
       .and(
@@ -36,7 +36,7 @@ class PrometheusRegistrySpec extends Specification with ScalaCheck {
   }
 
   def encodeDimensionalObject: Prop = prop { stats: Stats =>
-    val reg = new PrometheusRegistry().encode[Stats, IO](stats).unsafeRunSync()
+    val reg = new PrometheusRegistry().encode[IO, Stats](stats).unsafeRunSync()
     (reg
       .getSampleValue(snakeCaseTransformation("requests"), Array("metric_type", "metrics"), Array("counter", "a")) === stats.requests.a.value.toDouble)
       .and(

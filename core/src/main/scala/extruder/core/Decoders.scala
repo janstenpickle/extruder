@@ -29,13 +29,13 @@ trait Decode { self: DecodeTypes =>
     * @param decoder implicit [[Decoder]] instance
     * @param F       implicit [[Eff]] instance
     * @param hints   implicit [[Hints]] instance
-    * @tparam T type to be decoded
+    * @tparam A type to be decoded
     * @return Either the requested type or a non-empty list of validation errors
     */
-  def decode[T](
+  def decode[A](
     input: InputData
-  )(implicit decoder: Dec[Validation, T], F: Eff[Validation], hints: Hint): Validation[T] =
-    decode[T, Validation](input)
+  )(implicit decoder: Dec[Validation, A], F: Eff[Validation], hints: Hint): Validation[A] =
+    decode[Validation, A](input)
 
   /** Decode the specified type from given data source in a given namespace
     * If the data source is asynchronous by nature this method will wait for the duration specified in `hints` for decoding to timeout
@@ -45,14 +45,14 @@ trait Decode { self: DecodeTypes =>
     * @param decoder   implicit [[Decoder]] instance
     * @param F         implicit [[Eff]] instance
     * @param hints     implicit [[Hints]] instance
-    * @tparam T type to be decoded
+    * @tparam A type to be decoded
     * @return Either the requested type or a non-empty list of validation errors
     */
-  def decode[T](
+  def decode[A](
     namespace: List[String],
     input: InputData
-  )(implicit decoder: Dec[Validation, T], F: Eff[Validation], hints: Hint): Validation[T] =
-    decode[T, Validation](namespace, input)
+  )(implicit decoder: Dec[Validation, A], F: Eff[Validation], hints: Hint): Validation[A] =
+    decode[Validation, A](namespace, input)
 
   /** Decode the specified type from given data source, wrapping the result in specified target monad
     * If the data source is asynchronous by nature this method will wait for the duration specified in `hints` for decoding to timeout
@@ -61,12 +61,12 @@ trait Decode { self: DecodeTypes =>
     * @param decoder implicit [[Decoder]] instance
     * @param F       implicit [[Eff]] instance
     * @param hints   implicit [[Hints]] instance
-    * @tparam T type to be decoded
     * @tparam F target monad (e.g. [[scala.util.Try]])
+    * @tparam A type to be decoded
     * @return The requested type wrapped in the target monad
     */
-  def decode[T, F[_]](input: InputData)(implicit decoder: Dec[F, T], F: Eff[F], hints: Hint): F[T] =
-    decode(List.empty, input)
+  def decode[F[_], A](input: InputData)(implicit decoder: Dec[F, A], F: Eff[F], hints: Hint): F[A] =
+    decode[F, A](List.empty, input)
 
   /** Decode the specified type from given data source in a given namespace, wrapping the result in specified target monad
     * If the data source is asynchronous by nature this method will wait for the duration specified in `hints` for decoding to timeout
@@ -75,24 +75,24 @@ trait Decode { self: DecodeTypes =>
     * @param decoder implicit [[Decoder]] instance
     * @param F implicit [[Eff]] instance
     * @param hints implicit [[Hints]] instance
-    * @tparam T type to be decoded
     * @tparam F target monad (e.g. [[scala.util.Try]])
+    * @tparam A type to be decoded
     * @return The requested type wrapped in the target monad
     */
-  def decode[T, F[_]](
+  def decode[F[_], A](
     namespace: List[String],
     input: InputData
-  )(implicit decoder: Dec[F, T], F: Eff[F], hints: Hint): F[T] =
+  )(implicit decoder: Dec[F, A], F: Eff[F], hints: Hint): F[A] =
     F.flatMap(prepareInput(namespace, input))(decoder.read(namespace, None, _))
 
   /** Create a table of parameters as they should appear in the data source
     *
     * @param params implicit [[Parameters]] type class as a representation of `T`
     * @param hints implicit [[Hints]] instance for formatting parameter paths
-    * @tparam T type to be represented
+    * @tparam A type to be represented
     * @return a String table of parameters
     */
-  def parameters[T](implicit params: Parameters[T], hints: Hint): String =
+  def parameters[A](implicit params: Parameters[A], hints: Hint): String =
     parameters(List.empty[String])
 
   /** Create a table of parameters as they should appear in the data source in a given namespace
@@ -100,11 +100,11 @@ trait Decode { self: DecodeTypes =>
     * @param namespace namespace within the data source
     * @param params implicit [[Parameters]] type class as a representation of `T`
     * @param hints implicit [[Hints]] instance for formatting parameter paths
-    * @tparam T type to be represented
+    * @tparam A type to be represented
     * @return a String table of parameters
     */
-  def parameters[T](namespace: List[String])(implicit params: Parameters[T], hints: Hint): String =
-    FormatParameters.asTable[T](hints.pathToString, namespace)
+  def parameters[A](namespace: List[String])(implicit params: Parameters[A], hints: Hint): String =
+    FormatParameters.asTable[A](hints.pathToString, namespace)
 }
 
 trait DecodeFromDefaultSource { self: Decode with DecodeTypes =>
@@ -116,11 +116,11 @@ trait DecodeFromDefaultSource { self: Decode with DecodeTypes =>
     * @param decoder implicit [[Decoder]] instance
     * @param F       implicit [[Eff]] instance
     * @param hints   implicit [[Hints]] instance
-    * @tparam T type to be decoded
+    * @tparam A type to be decoded
     * @return Either the requested type or a non-empty list of validation errors
     */
-  def decode[T](implicit decoder: Dec[Validation, T], F: Eff[Validation], hints: Hint): Validation[T] =
-    decode[T, Validation]
+  def decode[A](implicit decoder: Dec[Validation, A], F: Eff[Validation], hints: Hint): Validation[A] =
+    decode[Validation, A]
 
   /** Decode the specified type from a default data source in a given namespace
     * If the data source is asynchronous by nature this method will wait for the duration specified in `hints` for decoding to timeout
@@ -129,13 +129,13 @@ trait DecodeFromDefaultSource { self: Decode with DecodeTypes =>
     * @param decoder   implicit [[Decoder]] instance
     * @param F         implicit [[Eff]] instance
     * @param hints     implicit [[Hints]] instance
-    * @tparam T type to be decoded
+    * @tparam A type to be decoded
     * @return Either the requested type or a non-empty list of validation errors
     */
-  def decode[T](
+  def decode[A](
     namespace: List[String]
-  )(implicit decoder: Dec[Validation, T], F: Eff[Validation], hints: Hint): Validation[T] =
-    decode[T, Validation](namespace)
+  )(implicit decoder: Dec[Validation, A], F: Eff[Validation], hints: Hint): Validation[A] =
+    decode[Validation, A](namespace)
 
   /** Decode the specified type from a default data source, wrapping the result in specified target monad
     * If the data source is asynchronous by nature this method will wait for the duration specified in `hints` for decoding to timeout
@@ -143,12 +143,12 @@ trait DecodeFromDefaultSource { self: Decode with DecodeTypes =>
     * @param decoder implicit [[Decoder]] instance
     * @param F       implicit [[Eff]] instance
     * @param hints   implicit [[Hints]] instance
-    * @tparam T type to be decoded
     * @tparam F target monad (e.g. [[scala.util.Try]])
+    * @tparam A type to be decoded
     * @return The requested type wrapped in the target monad
     */
-  def decode[T, F[_]](implicit decoder: Dec[F, T], F: Eff[F], hints: Hint): F[T] =
-    decode[T, F](List.empty)
+  def decode[F[_], A](implicit decoder: Dec[F, A], F: Eff[F], hints: Hint): F[A] =
+    decode[F, A](List.empty)
 
   /** Decode the specified type from a default data source in a given namespace, wrapping the result in specified target monad
     * If the data source is asynchronous by nature this method will wait for the duration specified in `hints` for decoding to timeout
@@ -157,12 +157,12 @@ trait DecodeFromDefaultSource { self: Decode with DecodeTypes =>
     * @param decoder implicit [[Decoder]] instance
     * @param F         implicit [[Eff]] instance
     * @param hints implicit [[Hints]] instance
-    * @tparam T type to be decoded
     * @tparam F target monad (e.g. [[scala.util.Try]])
+    * @tparam A type to be decoded
     * @return The requested type wrapped in the target monad
     */
-  def decode[T, F[_]](namespace: List[String])(implicit decoder: Dec[F, T], F: Eff[F], hints: Hint): F[T] =
-    F.flatMap(loadInput)(decode[T, F](namespace, _))
+  def decode[F[_], A](namespace: List[String])(implicit decoder: Dec[F, A], F: Eff[F], hints: Hint): F[A] =
+    F.flatMap(loadInput)(decode[F, A](namespace, _))
 }
 
 trait Decoder[F[_], T, C] {

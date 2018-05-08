@@ -55,20 +55,20 @@ class DimensionalMetricEncodersSpec
       """
 
   def testObject: Prop = prop { (c: Both) =>
-    encode[Both, Validation](c) must beRight[Iterable[DimensionalMetric]]
+    encode[Both](c) must beRight[Iterable[DimensionalMetric]]
       .which { metrics =>
         (metrics.size === 1).and(metrics.head.values.size === c.b.statusCode.values.size + 3)
       }
   }
 
   def noLabel: Prop = prop { (m: Map[String, Int]) =>
-    encode[Map[String, Int], Validation](m) must beRight.which { metrics =>
+    encode[Map[String, Int]](m) must beRight.which { metrics =>
       (metrics.size === m.size).and(metrics.forall(_.values.head._1.head.isEmpty))
     }
   }
 
   def withLabel: Prop = prop { (es: EncoderStats) =>
-    encode[EncoderStats, Validation](es) must beRight.which { metrics =>
+    encode[EncoderStats](es) must beRight.which { metrics =>
       (metrics.size === es.`type`.lastOption.fold(0)(_ => 1))
         .and(metrics.headOption.fold[MatchResult[_]](1 === 1) { metric =>
           metric.name === "encoder_stats"
@@ -77,7 +77,7 @@ class DimensionalMetricEncodersSpec
   }
 
   def status: Prop = prop { (a: All) =>
-    encode[All, Validation](a) must beRight.which { metrics =>
+    encode[All](a) must beRight.which { metrics =>
       val short: Short = 1
       val status = metrics.filter(_.metricType == MetricType.Status).head
       (metrics.size == 2)
@@ -89,13 +89,13 @@ class DimensionalMetricEncodersSpec
   }
 
   def testResetNamespace: Prop = prop { (rq: Reset) =>
-    encode[Reset, Validation](rq) must beRight.which { metrics =>
+    encode[Reset](rq) must beRight.which { metrics =>
       (metrics.size === 2).and(metrics.map(_.name) === List("a", "b"))
     }
   }
 
   def testStatus: Prop = prop { (stats: EncoderStats2) =>
-    encode[EncoderStats2, Validation](stats) must beRight.which { metrics =>
+    encode[EncoderStats2](stats) must beRight.which { metrics =>
       val short: Short = 1
       (metrics.size === 2)
         .and(metrics.map(_.name) must containTheSameElementsAs(List(labelTransform(stats.jobStatus), "http_requests")))
@@ -104,7 +104,7 @@ class DimensionalMetricEncodersSpec
   }
 
   def testErrors: Prop = prop { (stats: EncoderStats3) =>
-    encode[EncoderStats3, Validation](stats) must beRight.which { metrics =>
+    encode[EncoderStats3](stats) must beRight.which { metrics =>
       val errors = metrics.collectFirst { case m: DimensionalMetric if m.name == "errors" => m.values }.get
       (metrics.size === 2)
         .and(errors.size === 1)
@@ -113,7 +113,7 @@ class DimensionalMetricEncodersSpec
   }
 
   def testFailure: Prop = prop { (fail: Fail) =>
-    encode[Fail, Validation](fail) must beLeft(
+    encode[Fail](fail) must beLeft(
       NonEmptyList.of(
         ValidationFailure(
           "Multiple metric types for the following metrics, please ensure there is just one: 'a' -> 'Timer, Counter'"
@@ -124,7 +124,7 @@ class DimensionalMetricEncodersSpec
 
   def testDifferentNumericTypeFail: Prop = prop { (dt: DifferentTypes) =>
     Either.catchNonFatal(
-      compileError("encode[DifferentTypes, Validation](dt)").check(
+      compileError("encode[Validation, DifferentTypes](dt)").check(
         "",
         "could not find implicit value for parameter encoder: DimensionalMetricEncodersSpec.this.Enc" +
           "[extruder.core.Validation,extruder.metrics.dimensional.DimensionalMetricEncodersSpec.DifferentTypes]"
@@ -134,7 +134,7 @@ class DimensionalMetricEncodersSpec
 
   def testDifferentValueTypeFail: Prop = prop { (dt: DifferentTypes2) =>
     Either.catchNonFatal(
-      compileError("encode[DifferentTypes2, Validation](dt)").check(
+      compileError("encode[Validation, DifferentTypes2](dt)").check(
         "",
         "could not find implicit value for parameter encoder: DimensionalMetricEncodersSpec.this.Enc" +
           "[extruder.core.Validation,extruder.metrics.dimensional.DimensionalMetricEncodersSpec.DifferentTypes2]"
