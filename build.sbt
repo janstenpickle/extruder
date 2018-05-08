@@ -82,6 +82,22 @@ lazy val examples = (project in file("examples"))
   )
   .dependsOn(systemSources, typesafe, refined)
 
+lazy val aws = (project in file("aws"))
+  .settings(
+    commonSettings ++
+      Seq(
+        name := "extruder-aws",
+        libraryDependencies ++= Seq(
+          "com.amazonaws" % "aws-java-sdk-core"   % "1.11.323",
+          "org.specs2"    %% "specs2-core"        % specs2Ver % "test",
+          "org.specs2"    %% "specs2-scalacheck"  % specs2Ver % "test",
+          "eu.timepit"    %% "refined-scalacheck" % refinedVer % "test"
+        ),
+        coverageEnabled.in(Test, test) := true
+      )
+  )
+  .dependsOn(core, refined)
+
 lazy val typesafe = (project in file("typesafe"))
   .settings(
     commonSettings ++
@@ -192,7 +208,7 @@ lazy val root = (project in file("."))
         libraryDependencies := libraryDependencies.all(aggregateCompile).value.flatten
       )
   )
-  .aggregate(core, typesafe, refined, prometheus, spectator)
+  .aggregate(core, aws, typesafe, refined, prometheus, spectator)
 
 lazy val aggregateCompile =
   ScopeFilter(inProjects(core, systemSources), inConfigurations(Compile))

@@ -157,17 +157,16 @@ trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with 
 
   implicit def tuple2Parser[A, B](implicit A: Parser[A], B: Parser[B]): MultiParser[(A, B)] = new MultiParser[(A, B)] {
     override def parse[F[_]: Monad](
-      path: List[String],
       lookup: List[String] => OptionT[F, String]
     ): OptionT[F, ValidatedNel[String, (A, B)]] =
       for {
-        _1 <- lookup(path :+ "_1").map(A.parseNel)
-        _2 <- lookup(path :+ "_2").map(B.parseNel)
-      } yield _1.ap(_2.map(b => (a: A) => (a, b)))
+        _1 <- lookup(List("_1")).map(A.parseNel)
+        _2 <- lookup(List("_2")).map(B.parseNel)
+      } yield _1.product(_2)
   }
 
   implicit def tuple2Show[A, B](implicit A: Show[A], B: Show[B]): MultiShow[(A, B)] = new MultiShow[(A, B)] {
-    override def show(path: List[String], v: (A, B)): Map[List[String], String] =
-      Map((path :+ "_1") -> A.show(v._1), (path :+ "_2") -> B.show(v._2))
+    override def show(v: (A, B)): Map[List[String], String] =
+      Map(List("_1") -> A.show(v._1), List("_2") -> B.show(v._2))
   }
 }

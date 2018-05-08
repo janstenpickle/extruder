@@ -25,7 +25,7 @@ trait PrimitiveEncoders { self: Encoders with EncodeTypes =>
     lp: LowPriority
   ): Enc[F, T] = mkEncoder[F, T] { (path, value) =>
     Traverse[List]
-      .traverse(shows.show(path, value).toList) { case (p, v) => writeValue[F](p, v) }
+      .traverse(shows.show(value).toList) { case (p, v) => writeValue[F](path ++ p, v) }
       .map(monoid.combineAll)
   }
 
@@ -41,7 +41,7 @@ trait PrimitiveEncoders { self: Encoders with EncodeTypes =>
 }
 
 trait MultiShow[T] {
-  def show(path: List[String], v: T): Map[List[String], String]
+  def show(v: T): Map[List[String], String]
 }
 
 object MultiShow {

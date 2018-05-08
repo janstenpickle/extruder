@@ -2,7 +2,7 @@
 
 sbtcmd="sbt ++${TRAVIS_SCALA_VERSION} clean dependencyUpdates scalastyle scalafmt::test compile "
 
-for prj in "core" "refined" "typesafe" "prometheus" "spectator" "dropwizard" "metricsCore"; do
+for prj in "core" "aws" "refined" "typesafe" "prometheus" "spectator" "dropwizard" "metricsCore"; do
   sbtcmd="${sbtcmd} \"project ${prj}\" coverage test coverageReport"
 done
 
