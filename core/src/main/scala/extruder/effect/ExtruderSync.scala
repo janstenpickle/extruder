@@ -1,7 +1,7 @@
 package extruder.effect
 
 import cats.data.EitherT
-import cats.effect.Sync
+import cats.effect.{ExitCase, Sync}
 import cats.{Applicative, Monad, MonadError}
 import extruder.core.ValidationErrors
 import extruder.instances.EitherInstances
@@ -26,6 +26,10 @@ trait LowPrioritySyncInstances {
 
     override def suspend[A](thunk: => EitherT[F, ValidationErrors, A]): EitherT[F, ValidationErrors, A] =
       FFE.suspend(thunk)
+
+    override def bracketCase[A, B](acquire: EitherT[F, ValidationErrors, A])(use: A => EitherT[F, ValidationErrors, B])(
+      release: (A, ExitCase[Throwable]) => EitherT[F, ValidationErrors, Unit]
+    ): EitherT[F, ValidationErrors, B] = FFE.bracketCase(acquire)(use)(release)
   }
 }
 
@@ -33,6 +37,8 @@ trait SyncInstances {
   class FromSync[F[_]](implicit F: Sync[F]) extends ExtruderMonadError.FromMonadError[F]()(F) with ExtruderSync[F] {
     override def suspend[A](thunk: => F[A]): F[A] = F.suspend(thunk)
     override def delay[A](thunk: => A): F[A] = F.delay(thunk)
+    override def bracketCase[A, B](acquire: F[A])(use: A => F[B])(release: (A, ExitCase[Throwable]) => F[Unit]): F[B] =
+      F.bracketCase(acquire)(use)(release)
   }
 
   implicit def fromSync[F[_]](implicit F: Sync[F], lp: LowPriority): ExtruderSync[F] =

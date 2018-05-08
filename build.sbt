@@ -1,16 +1,16 @@
 import microsites._
 
-val specs2Ver = "4.0.3"
+val specs2Ver = "4.0.4"
 val catsVer = "1.1.0"
-val catsEffectVer = "0.10.1"
+val catsEffectVer = "1.0.0-RC"
 val prometheusVer = "0.3.0"
-val refinedVer = "0.8.7"
+val refinedVer = "0.9.0"
 val scalaCheckShapelessVer = "1.1.8"
 
 val commonSettings = Seq(
   organization := "extruder",
-  scalaVersion := "2.12.4",
-  crossScalaVersions := Seq("2.11.12", "2.12.4"),
+  scalaVersion := "2.12.6",
+  crossScalaVersions := Seq("2.11.12", "2.12.6"),
   addCompilerPlugin(("org.spire-math" % "kind-projector" % "0.9.6").cross(CrossVersion.binary)),
   scalacOptions ++= Seq(
     "-unchecked",
@@ -139,8 +139,8 @@ lazy val spectator = (project in file("metrics/spectator"))
       Seq(
         name := "extruder-metrics-spectator",
         libraryDependencies ++= Seq(
-          "com.netflix.spectator"      % "spectator-api"              % "0.62.0",
-          "com.netflix.spectator"      % "spectator-reg-servo"        % "0.62.0" % "test",
+          "com.netflix.spectator"      % "spectator-api"              % "0.65.1",
+          "com.netflix.spectator"      % "spectator-reg-servo"        % "0.65.1" % "test",
           "org.specs2"                 %% "specs2-core"               % specs2Ver % "test",
           "org.specs2"                 %% "specs2-scalacheck"         % specs2Ver % "test",
           "com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % scalaCheckShapelessVer % "test"
