@@ -56,7 +56,7 @@ lazy val core = (project in file("core")).settings(
       libraryDependencies ++= Seq(
         ("org.typelevel" %% "cats-core"   % catsVer).exclude("org.scalacheck", "scalacheck"),
         ("org.typelevel" %% "cats-effect" % catsEffectVer).exclude("org.scalacheck", "scalacheck"),
-        ("org.typelevel" %% "mouse"       % "0.16").exclude("org.scalacheck", "scalacheck"),
+        ("org.typelevel" %% "mouse"       % "0.17").exclude("org.scalacheck", "scalacheck"),
         ("com.chuusai"   %% "shapeless"   % "2.3.3").exclude("org.scalacheck", "scalacheck"),
         "org.specs2" %% "specs2-core"       % specs2Ver % "test",
         "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test",
