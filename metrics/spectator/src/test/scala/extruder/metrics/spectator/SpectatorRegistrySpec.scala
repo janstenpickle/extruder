@@ -23,7 +23,7 @@ class SpectatorRegistrySpec extends Specification with ScalaCheck {
       """
 
   def encodeNamespaced: Prop = prop { (value: Int, name: String) =>
-    val reg = new SpectatorRegistry(new ServoRegistry()).encode[Int, IO](List(name), value).unsafeRunSync()
+    val reg = new SpectatorRegistry(new ServoRegistry()).encode[IO, Int](List(name), value).unsafeRunSync()
     val id = reg.createId(snakeCaseTransformation(name)).withTags(Map("metric_type" -> "gauge").asJava)
     val metric = reg.get(id).measure().asScala
     (metric.head.value() === value.toDouble).and(metric.size === 1)
@@ -31,14 +31,14 @@ class SpectatorRegistrySpec extends Specification with ScalaCheck {
 
   def encodeCounter: Prop = prop { (value: Int, name: String) =>
     val reg = new SpectatorRegistry(new ServoRegistry())
-      .encode[CounterValue[Int], IO](List(name), CounterValue(value))
+      .encode[IO, CounterValue[Int]](List(name), CounterValue(value))
       .unsafeRunSync()
     val id = reg.createId(snakeCaseTransformation(name)).withTags(Map("metric_type" -> "counter").asJava)
     reg.get(id).measure().asScala.size === 1
   }
 
   def encodeObject: Prop = prop { metrics: Metrics =>
-    val reg = new SpectatorRegistry(new ServoRegistry()).encode[Metrics, IO](metrics).unsafeRunSync
+    val reg = new SpectatorRegistry(new ServoRegistry()).encode[IO, Metrics](metrics).unsafeRunSync
     def id(name: String) = reg.createId(name).withTags(Map("metric_type" -> "gauge").asJava)
 
     def testMetric(name: String, expected: GaugeValue[Long]) = {
@@ -50,7 +50,7 @@ class SpectatorRegistrySpec extends Specification with ScalaCheck {
   }
 
   def encodeDimensionalObject: Prop = prop { stats: Stats =>
-    val reg = new SpectatorRegistry(new ServoRegistry()).encode[Stats, IO](stats).unsafeRunSync()
+    val reg = new SpectatorRegistry(new ServoRegistry()).encode[IO, Stats](stats).unsafeRunSync()
 
     def id(name: String) = reg.createId("requests").withTags(Map("metric_type" -> "gauge", "metrics" -> name).asJava)
 

@@ -30,7 +30,7 @@ class PrometheusPushSpec extends Specification with ScalaCheck with Mockito {
     val jobNameCapture = new ArgumentCapture[String]
 
     PrometheusPush(push, jobName, jobInstance)
-      .encode[Int, IO](List(name), value)
+      .encode[IO, Int](List(name), value)
       .unsafeRunSync()
 
     lazy val metric = collectorCapture.value.collect().asScala.toList.head
@@ -53,7 +53,7 @@ class PrometheusPushSpec extends Specification with ScalaCheck with Mockito {
     val jobNameCapture = new ArgumentCapture[String]
 
     PrometheusPush(push, jobName, jobInstance)
-      .encode[Metrics, IO](metrics)
+      .encode[IO, Metrics](metrics)
       .unsafeRunSync()
 
     lazy val capturedMetrics = collectorCapture.values.asScala.flatMap(_.collect().asScala)
@@ -79,7 +79,7 @@ class PrometheusPushSpec extends Specification with ScalaCheck with Mockito {
     val jobNameCapture = new ArgumentCapture[String]
 
     PrometheusPush(push, jobName, jobInstance)
-      .encode[Stats, IO](stats)
+      .encode[IO, Stats](stats)
       .unsafeRunSync()
 
     lazy val capturedMetrics = collectorCapture.value.collect().asScala

@@ -208,7 +208,7 @@ lazy val root = (project in file("."))
         libraryDependencies := libraryDependencies.all(aggregateCompile).value.flatten
       )
   )
-  .aggregate(core, aws, typesafe, refined, prometheus, spectator)
+  .aggregate(core, aws, typesafe, refined, metricsCore, dropwizard, prometheus, spectator)
 
 lazy val aggregateCompile =
   ScopeFilter(inProjects(core, systemSources), inConfigurations(Compile))

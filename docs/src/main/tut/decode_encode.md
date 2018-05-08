@@ -22,12 +22,12 @@ import extruder.core.MapSource._
 import scala.util.Try
 import cats.instances.all._
 
-decode[String, IO](List("a"), Map("a" -> "b")) // returns IO("b")
-decode[String, Try](List("a"), Map("a" -> "b")) // returns Try("b")
+decode[IO, String](List("a"), Map("a" -> "b")) // returns IO("b")
+decode[Try, String](List("a"), Map("a" -> "b")) // returns Try("b")
 
 // Type alias for EitherT monad transformer
 type EitherTIO[A] = EitherT[IO, ValidationErrors, A]
-decode[String, EitherTIO](List("a"), Map("a" -> "b")) // returns EitherT[IO, ValidationErrors, String](IO(Right("b")))
+decode[EitherTIO, String](List("a"), Map("a" -> "b")) // returns EitherT[IO, ValidationErrors, String](IO(Right("b")))
 ```
 
 # Implementing Your Own Target Monads
