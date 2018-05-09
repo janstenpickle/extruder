@@ -1,6 +1,6 @@
 package extruder.aws
 
-import com.amazonaws.regions.{Region, Regions}
+import com.amazonaws.regions.{AwsRegionProvider, Region, Regions}
 import org.specs2.{ScalaCheck, Specification}
 import extruder.aws.region._
 import extruder.core.{Parser, Show}
@@ -18,15 +18,21 @@ class AwsRegionInstancesSpec extends Specification with ScalaCheck {
         Shows a region $shows
       """
 
-  def passes: Prop = prop { region: Region =>
+  def passes = passesTest[Region] && passesTest[AwsRegionProvider]
+
+  def passesTest[A: Parser]: Prop = prop { region: Region =>
     Parser[Region].parse(region.getName) must beRight(region)
   }
 
-  def fails: Prop = prop { str: String =>
+  def fails = failsTest[Region] && passesTest[AwsRegionProvider]
+
+  def failsTest[A: Parser]: Prop = prop { str: String =>
     Parser[Region].parse(str) must beLeft(s"Cannot create enum from $str value!")
   }
 
-  def shows: Prop = prop { region: Region =>
+  def shows = showsTest[Region] && showsTest[AwsRegionProvider]
+
+  def showsTest[A: Show]: Prop = prop { region: Region =>
     Show[Region].show(region) === region.getName
   }
 }

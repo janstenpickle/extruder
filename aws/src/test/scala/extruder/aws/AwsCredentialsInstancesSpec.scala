@@ -2,7 +2,7 @@ package extruder.aws
 
 import cats.Id
 import cats.data.{NonEmptyList, OptionT}
-import com.amazonaws.auth.{AWSCredentials, BasicAWSCredentials}
+import com.amazonaws.auth.{AWSCredentials, AWSCredentialsProvider, BasicAWSCredentials}
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.boolean.Not
 import eu.timepit.refined.scalacheck.any._
@@ -28,34 +28,44 @@ class AwsCredentialsInstancesSpec extends Specification with ScalaCheck with Eit
        Shows credentials $shows
       """
 
-  def passes: MatchResult[Either[NonEmptyList[String], AWSCredentials]] =
-    MultiParser[AWSCredentials]
-      .parse[Id](path => OptionT.fromOption(validData.get(path)))
+  def passes =
+    testPasses[AWSCredentials](creds => creds.getAWSAccessKeyId == validId && creds.getAWSSecretKey == validSecret) &&
+      testPasses[AWSCredentialsProvider](
+        creds =>
+          creds.getCredentials.getAWSAccessKeyId == validId && creds.getCredentials.getAWSSecretKey == validSecret
+      )
+
+  def testPasses[A](
+    test: A => Boolean
+  )(implicit parser: MultiParser[Id, A]): MatchResult[Either[NonEmptyList[String], A]] =
+    parser
+      .parse(path => OptionT.fromOption(validData.get(path)))
       .value
       .get
-      .toEither must beRight.which { creds =>
-      creds.getAWSAccessKeyId === validId && creds.getAWSSecretKey === validSecret
-    }
+      .toEither must beRight.which(test)
 
   def isNoneNoData =
-    MultiParser[AWSCredentials]
-      .parse[Id](_ => OptionT.none)
+    MultiParser[Id, AWSCredentials]
+      .parse(_ => OptionT.none)
       .value must beNone
 
   def isNoneIdData =
-    MultiParser[AWSCredentials]
-      .parse[Id](path => OptionT.fromOption(Map(List(AwsId) -> validId).get(path)))
+    MultiParser[Id, AWSCredentials]
+      .parse(path => OptionT.fromOption(Map(List(AwsId) -> validId).get(path)))
       .value must beNone
 
   def isNoneSecretData =
-    MultiParser[AWSCredentials]
-      .parse[Id](path => OptionT.fromOption(Map(List(AwsSecret) -> validSecret).get(path)))
+    MultiParser[Id, AWSCredentials]
+      .parse(path => OptionT.fromOption(Map(List(AwsSecret) -> validSecret).get(path)))
       .value must beNone
 
-  def fails: Prop = prop { (id: String, secret: String Refined Not[SizeIs[_40]]) =>
-    val data = Map(List(AwsId) -> id, List(AwsSecret) -> secret.value)
-    MultiParser[AWSCredentials].parse[Id](path => OptionT.fromOption(data.get(path))).value.get.toEither must beLeft
-      .which(_.size == 2)
+  def fails = testFails[AWSCredentials] && testFails[AWSCredentialsProvider]
+
+  def testFails[A](implicit parser: MultiParser[Id, A]): Prop = prop {
+    (id: String, secret: String Refined Not[SizeIs[_40]]) =>
+      val data = Map(List(AwsId) -> id, List(AwsSecret) -> secret.value)
+      parser.parse(path => OptionT.fromOption(data.get(path))).value.get.toEither must beLeft
+        .which(_.size == 2)
   }
 
   def shows: Prop = prop { (id: String, sec: String) =>

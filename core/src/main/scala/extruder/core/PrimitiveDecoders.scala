@@ -2,7 +2,7 @@ package extruder.core
 
 import java.net.URL
 
-import cats.{Monad, Traverse}
+import cats.{Functor, Traverse}
 import cats.data.{NonEmptyList, OptionT, ValidatedNel}
 import cats.instances.either._
 import cats.instances.list._
@@ -10,6 +10,7 @@ import cats.instances.option._
 import cats.syntax.either._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
+import extruder.instances.{MultiParserInstances, ParserInstances}
 import mouse.string._
 import shapeless.syntax.typeable._
 import shapeless.{Lazy, LowPriority, Refute, Typeable}
@@ -30,14 +31,14 @@ trait PrimitiveDecoders { self: Decoders with DecodeTypes =>
     mkDecoder[F, T]((path, default, data) => resolveValue(formatParserError(parser, path)).apply(path, default, data))
 
   implicit def optionalMultiParserDecoder[F[_], T](
-    implicit parser: MultiParser[T],
+    implicit parser: MultiParser[F, T],
     hints: Hint,
     F: Eff[F]
   ): Dec[F, Option[T]] =
     mkDecoder[F, Option[T]]((path, _, data) => multiParse(parser, path, data))
 
   implicit def multiParserDecoder[F[_], T](
-    implicit parser: MultiParser[T],
+    implicit parser: MultiParser[F, T],
     hints: Hint,
     F: Eff[F],
     lp: LowPriority
@@ -50,7 +51,7 @@ trait PrimitiveDecoders { self: Decoders with DecodeTypes =>
         } yield result
     )
 
-  private def multiParse[F[_], T](parser: MultiParser[T], path: List[String], data: DecodeData)(
+  private def multiParse[F[_], T](parser: MultiParser[F, T], path: List[String], data: DecodeData)(
     implicit F: Eff[F],
     hints: Hint
   ): F[Option[T]] =
@@ -92,7 +93,7 @@ trait PrimitiveDecoders { self: Decoders with DecodeTypes =>
     implicit decoder: Lazy[Dec[F, T]],
     hints: Hint,
     F: Eff[F],
-    refute: Refute[MultiParser[T]]
+    refute: Refute[MultiParser[F, T]]
   ): Dec[F, Option[T]] =
     mkDecoder[F, Option[T]] { (path, _, data) =>
       val decoded = decoder.value.read(path, None, data)
@@ -143,12 +144,21 @@ trait PrimitiveDecoders { self: Decoders with DecodeTypes =>
 
 }
 
-trait MultiParser[T] extends {
-  def parse[F[_]: Monad](lookup: List[String] => OptionT[F, String]): OptionT[F, ValidatedNel[String, T]]
+trait MultiParser[F[_], T] {
+  def parse(lookup: List[String] => OptionT[F, String]): OptionT[F, ValidatedNel[String, T]]
+  def map[A](f: T => A)(implicit F: Functor[F]): MultiParser[F, A] =
+    MultiParser.parser[F, A]((parse _).andThen(_.map(_.map(f))))
 }
 
-object MultiParser {
-  def apply[T](implicit multiParser: MultiParser[T]): MultiParser[T] = multiParser
+object MultiParser extends MultiParserInstances {
+  def apply[F[_], T](implicit multiParser: MultiParser[F, T]): MultiParser[F, T] = multiParser
+  def parser[F[_], T](
+    f: (List[String] => OptionT[F, String]) => OptionT[F, ValidatedNel[String, T]]
+  ): MultiParser[F, T] =
+    new MultiParser[F, T] {
+      override def parse(lookup: List[String] => OptionT[F, String]): OptionT[F, ValidatedNel[String, T]] =
+        f(lookup)
+    }
 }
 
 trait Parsers {
@@ -204,9 +214,11 @@ trait Parsers {
 
 case class Parser[T](parse: String => Either[String, T]) {
   def parseNel: String => ValidatedNel[String, T] = parse.andThen(_.toValidatedNel)
+  def map[A](f: T => A): Parser[A] = Parser[A](parse.andThen(_.map(f)))
+  def flatMapResult[A](f: T => Either[String, A]): Parser[A] = Parser(parse.andThen(_.flatMap(f)))
 }
 
-object Parser extends Parsers {
+object Parser extends Parsers with ParserInstances {
   def apply[T](implicit parser: Parser[T]): Parser[T] = parser
 
   def fromEitherException[T](parse: String => Either[Throwable, T]): Parser[T] =

@@ -1,0 +1,3 @@
+package extruder.instances
+
+trait AllInstances extends MultiParserInstances with MultiShowInstances with ParserInstances with ShowInstances

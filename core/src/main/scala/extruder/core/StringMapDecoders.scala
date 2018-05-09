@@ -17,7 +17,7 @@ trait StringMapDecoders { self: Decoders with DecodeTypes =>
     implicit F: Eff[F],
     decoder: Dec[F, T],
     hints: Hint,
-    refute: Refute[MultiParser[T]]
+    refute: Refute[MultiParser[F, T]]
   ): Dec[F, Map[String, T]] =
     mkDecoder(
       (path, default, data) =>
