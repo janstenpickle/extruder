@@ -2,8 +2,7 @@ package extruder.aws
 
 import cats.Monad
 import cats.data.{OptionT, ValidatedNel}
-import cats.syntax.either._
-import com.amazonaws.auth.{AWSCredentials, BasicAWSCredentials}
+import com.amazonaws.auth.{AWSCredentials, AWSCredentialsProvider, BasicAWSCredentials}
 import eu.timepit.refined._
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.boolean.And
@@ -11,38 +10,45 @@ import eu.timepit.refined.collection.Size
 import eu.timepit.refined.numeric.Interval
 import eu.timepit.refined.string.MatchesRegex
 import extruder.core.{MultiParser, MultiShow, Parser}
-import extruder.refined.RefinedInstances
+import extruder.refined._
 
-trait AwsCredentialsInstances extends RefinedInstances {
+trait AwsCredentialsInstances {
   import AwsCredentialsInstances._
 
-  implicit def credentialsParser(
-    implicit idParser: Parser[AwsId],
-    secretParser: Parser[AwsSecret]
-  ): MultiParser[AWSCredentials] =
-    new MultiParser[AWSCredentials] {
-      override def parse[F[_]: Monad](
-        lookup: List[String] => OptionT[F, String]
-      ): OptionT[F, ValidatedNel[String, AWSCredentials]] =
+  implicit def credentialsParser[F[_]: Monad]: MultiParser[F, AWSCredentials] =
+    new MultiParser[F, AWSCredentials] {
+      private val idParser: Parser[AwsId] = Parser[AwsId]
+      private val secretParser: Parser[AwsSecret] = Parser[AwsSecret]
+
+      override def parse(lookup: List[String] => OptionT[F, String]): OptionT[F, ValidatedNel[String, AWSCredentials]] =
         for {
           id <- lookup(List(AwsId))
           secret <- lookup(List(AwsSecret))
         } yield
           idParser
-            .parse(id)
-            .toValidatedNel[String]
+            .parseNel(id)
             .product(
               secretParser
-                .parse(secret)
-                .toValidatedNel[String]
+                .parseNel(secret)
             )
             .map { case (i, s) => new BasicAWSCredentials(i.value, s.value) }
     }
 
-  implicit def credentialsShow: MultiShow[AWSCredentials] = new MultiShow[AWSCredentials] {
+  implicit def credentialsProviderParser[F[_]: Monad]: MultiParser[F, AWSCredentialsProvider] =
+    credentialsParser.map(
+      credentials =>
+        new AWSCredentialsProvider {
+          override def getCredentials: AWSCredentials = credentials
+          override def refresh(): Unit = ()
+      }
+    )
+
+  implicit val credentialsShow: MultiShow[AWSCredentials] = new MultiShow[AWSCredentials] {
     override def show(v: AWSCredentials): Map[List[String], String] =
       Map(List(AwsId) -> v.getAWSAccessKeyId, List(AwsSecret) -> v.getAWSSecretKey)
   }
+
+  implicit val credentialsProviderShow: MultiShow[AWSCredentialsProvider] = MultiShow.by(_.getCredentials)
 }
 
 object AwsCredentialsInstances {

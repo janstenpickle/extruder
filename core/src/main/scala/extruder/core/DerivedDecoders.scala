@@ -40,7 +40,7 @@ trait DerivedDecoders { self: Decoders with DecodeTypes =>
     lp: LowPriority,
     refute: Refute[DecoderRefute[T]],
     refuteParser: Refute[Parser[T]],
-    refuteMultiParser: Refute[MultiParser[T]],
+    refuteMultiParser: Refute[MultiParser[F, T]],
     neOpt: T <:!< Option[_],
     neCol: T <:!< TraversableOnce[_]
   ): Dec[F, T] =
@@ -88,7 +88,7 @@ trait DerivedDecoders { self: Decoders with DecodeTypes =>
     lp: LowPriority,
     refute: Refute[DecRefute[T]],
     refuteParser: Refute[Parser[T]],
-    refuteMultiParser: Refute[MultiParser[T]]
+    refuteMultiParser: Refute[MultiParser[F, T]]
   ): Dec[F, T] =
     mkDecoder { (path, _, data) =>
       val newPath =

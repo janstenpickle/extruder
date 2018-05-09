@@ -5,7 +5,8 @@ import java.net.URL
 import cats.data.NonEmptyList
 import cats.instances.all._
 import cats.syntax.functor._
-import cats.{Traverse, Show => CatsShow}
+import cats.{Contravariant, Traverse, Show => CatsShow}
+import extruder.instances.{MultiShowInstances, ShowInstances}
 import shapeless._
 
 import scala.concurrent.duration.Duration
@@ -44,8 +45,10 @@ trait MultiShow[T] {
   def show(v: T): Map[List[String], String]
 }
 
-object MultiShow {
+object MultiShow extends MultiShowInstances {
   def apply[T](implicit multiShow: MultiShow[T]): MultiShow[T] = multiShow
+  def by[T, V](f: V => T)(implicit ev: MultiShow[T]): MultiShow[V] =
+    Contravariant[MultiShow].contramap(ev)(f)
 }
 
 trait Shows {
@@ -77,7 +80,9 @@ trait Shows {
 
 case class Show[T](show: T => String)
 
-object Show extends Shows {
+object Show extends Shows with ShowInstances {
   def apply[T](implicit showWrapper: Show[T]): Show[T] = showWrapper
   def apply[T](show: CatsShow[T]): Show[T] = new Show(show.show)
+  def by[T, V](f: V => T)(implicit ev: Show[T]): Show[V] =
+    Contravariant[Show].contramap(ev)(f)
 }

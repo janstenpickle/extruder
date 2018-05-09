@@ -1,13 +1,24 @@
 package extruder.aws
 
-import com.amazonaws.regions.{Region, Regions}
+import com.amazonaws.regions.{AwsRegionProvider, Region, Regions}
 import extruder.core.{Parser, Show}
 
 trait AwsRegionInstances {
-  implicit def awsRegionParser: Parser[Region] =
+  implicit val awsRegionParser: Parser[Region] =
     Parser.catchNonFatal(region => Region.getRegion(Regions.fromName(region)))
 
-  implicit def awsRegionShow: Show[Region] = Show { r: Region =>
+  implicit val awsRegionProviderParser: Parser[AwsRegionProvider] = awsRegionParser.map(
+    region =>
+      new AwsRegionProvider {
+        override def getRegion: String = region.getName
+    }
+  )
+
+  implicit val awsRegionShow: Show[Region] = Show { r: Region =>
     r.getName
+  }
+
+  implicit val awsRegionProviderShow: Show[AwsRegionProvider] = Show { rp: AwsRegionProvider =>
+    rp.getRegion
   }
 }
