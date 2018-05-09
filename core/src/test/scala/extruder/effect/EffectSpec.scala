@@ -3,14 +3,10 @@ package extruder.effect
 import cats.Eq
 import cats.instances.all._
 import org.scalacheck.{Arbitrary, Prop}
+import org.specs2.ScalaCheck
 import org.specs2.specification.core.{Fragments, SpecStructure}
-import org.specs2.{ScalaCheck, Specification}
-import org.typelevel.discipline.specs2.Discipline
 
-abstract class EffectSpec[F[_], E](implicit F: ExtruderMonadError[F])
-    extends Specification
-    with ScalaCheck
-    with Discipline {
+abstract class EffectSpec[F[_], E](implicit F: ExtruderMonadError[F]) extends TestBase with ScalaCheck {
 
   override def is: SpecStructure =
     s2"""

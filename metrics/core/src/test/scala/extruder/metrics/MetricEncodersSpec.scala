@@ -3,7 +3,8 @@ package extruder.metrics
 import java.util.concurrent.TimeUnit
 
 import cats.Eq
-import cats.instances.string._
+import cats.instances.map._
+import cats.instances.long._
 import cats.kernel.laws.discipline.MonoidTests
 import extruder.core.Validation
 import extruder.effect.ExtruderMonadError
@@ -207,5 +208,8 @@ object MetricEncodersSpec {
     Gen.oneOf(MetricType.Counter, MetricType.Gauge, MetricType.Status, MetricType.Timer)
   )
 
-  implicit val metricsEq: Eq[Metrics] = Eq.by(_.mapValues(Numbers.toDouble).toString)
+  implicit val metricsEq: Eq[Metrics] = Eq.by(_.mapValues(Numbers.toLong))
+
+  implicit def numArb(implicit ev: Arbitrary[Long]): Arbitrary[Numbers] =
+    Arbitrary(ev.arbitrary.map(Coproduct[Numbers](_)))
 }
