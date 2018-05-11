@@ -9,6 +9,7 @@ import eu.timepit.refined.scalacheck.any._
 import extruder.aws.AwsCredentialsInstances._
 import extruder.aws.credentials._
 import extruder.core.{MultiParser, MultiShow}
+import extruder.effect.ExtruderMonadError
 import org.scalacheck.Prop
 import org.specs2.matcher.{EitherMatchers, MatchResult}
 import org.specs2.specification.core.SpecStructure
@@ -79,4 +80,17 @@ object AwsCredentialsInstancesSpec {
   val validId = "AKIAIOSFODNN7EXAMPLE"
   val validSecret = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
   val validData = Map(List(AwsId) -> validId, List(AwsSecret) -> validSecret)
+
+  implicit val idMonadError: ExtruderMonadError[Id] = new ExtruderMonadError[Id] {
+    override def missing[A](message: String): Id[A] = ???
+    override def validationFailure[A](message: String): Id[A] = ???
+    override def validationException[A](message: String, ex: Throwable): Id[A] = ???
+    override def flatMap[A, B](fa: Id[A])(f: A => Id[B]): Id[B] =
+      cats.catsInstancesForId.flatMap(fa)(f)
+    override def tailRecM[A, B](a: A)(f: A => Id[Either[A, B]]): Id[B] =
+      cats.catsInstancesForId.tailRecM(a)(f)
+    override def raiseError[A](e: Throwable): Id[A] = ???
+    override def handleErrorWith[A](fa: Id[A])(f: Throwable => Id[A]): Id[A] = ???
+    override def pure[A](x: A): Id[A] = cats.catsInstancesForId.pure(x)
+  }
 }
