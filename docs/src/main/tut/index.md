@@ -29,12 +29,15 @@ This is where Extruder comes in, you can load your configuration from a [data so
 
 # Modules
 
-|---+---+---|
-| Module|Description|Download|
-|---+---+---|
+|Module|Description|Download|
+|---|---|---|
 | **Extruder**|Main module, includes core functionality and basic resolvers.|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder/_latestVersion)|
-| **Typesafe Config**|Support for resolution from [Typesafe Config][typesafe].|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder-typesafe/_latestVersion)|
-| **Refined**|Support for [Refined][refined] types.|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder-refined/_latestVersion)|
+| **Typesafe Config**|Support for resolution from [Typesafe Config](https://github.com/typesafehub/config).|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder-typesafe/_latestVersion)|
+| **Refined**|Support for [Refined](https://github.com/fthomas/refined) types.|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder-refined/_latestVersion)|
+| **AWS**|Support for [AWS](https://aws.amazon.com/sdk-for-java/) types.|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder-aws/_latestVersion)|
+| **Prometheus**|Support for encoding data as [Prometheus](https://prometheus.io) metrics.|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder-metrics-prometheus/_latestVersion)|
+| **Dropwizard**|Support for encoding data as [Dropwizard](https://metrics.dropwizard.io) metrics.|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder-metrics-dropwizard/_latestVersion)|
+| **Spectator**|Support for encoding data as [Spectator](https://github.com/Netflix/spectator) metrics.|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder-metrics-spectator/_latestVersion)|
 
 # Supported Functionality
 

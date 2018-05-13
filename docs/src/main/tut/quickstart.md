@@ -10,6 +10,18 @@ libraryDependencies += "extruder" %% "extruder-typesafe" % "0.8.1"
 
 // only if you require support for refined types
 libraryDependencies += "extruder" %% "extruder-refined" % "0.8.1"
+
+// only if you require support for AWS config
+libraryDependencies += "extruder" %% "extruder-aws" % "0.8.1"
+
+// only if you require support for prometheus encoders
+libraryDependencies += "extruder" %% "extruder-metrics-prometheus" % "0.8.1"
+
+// only if you require support for dropwizard encoders
+libraryDependencies += "extruder" %% "extruder-metrics-dropwizard" % "0.8.1"
+
+// only if you require support for spectator encoders
+libraryDependencies += "extruder" %% "extruder-metrics-spectator" % "0.8.1"
 ```
 
 **Rules for resolution are specified in the declaration of the case class itself:**

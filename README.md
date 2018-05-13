@@ -14,7 +14,10 @@ This library uses [shapeless](https://github.com/milessabin/shapeless) and [cats
 | **Extruder**|Main module, includes core functionality and basic resolvers.|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder/_latestVersion)|
 | **Typesafe Config**|Support for resolution from [Typesafe Config](https://github.com/typesafehub/config).|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder-typesafe/_latestVersion)|
 | **Refined**|Support for [Refined](https://github.com/fthomas/refined) types.|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder-refined/_latestVersion)|
-
+| **AWS**|Support for [AWS](https://aws.amazon.com/sdk-for-java/) types.|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder-aws/_latestVersion)|
+| **Prometheus**|Support for encoding data as [Prometheus](https://prometheus.io) metrics.|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder-metrics-prometheus/_latestVersion)|
+| **Dropwizard**|Support for encoding data as [Dropwizard](https://metrics.dropwizard.io) metrics.|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder-metrics-dropwizard/_latestVersion)|
+| **Spectator**|Support for encoding data as [Spectator](https://github.com/Netflix/spectator) metrics.|[ ![Download](https://api.bintray.com/packages/janstenpickle/maven/extruder/images/download.svg) ](https://bintray.com/janstenpickle/maven/extruder-metrics-spectator/_latestVersion)|
 
 ## Install with SBT
 Add the following to your `build.sbt`:
@@ -27,6 +30,18 @@ libraryDependencies += "extruder" %% "extruder-typesafe" % "0.8.1"
 
 // only if you require support for refined types
 libraryDependencies += "extruder" %% "extruder-refined" % "0.8.1"
+
+// only if you require support for AWS config
+libraryDependencies += "extruder" %% "extruder-aws" % "0.8.1"
+
+// only if you require support for prometheus encoders
+libraryDependencies += "extruder" %% "extruder-metrics-prometheus" % "0.8.1"
+
+// only if you require support for dropwizard encoders
+libraryDependencies += "extruder" %% "extruder-metrics-dropwizard" % "0.8.1"
+
+// only if you require support for spectator encoders
+libraryDependencies += "extruder" %% "extruder-metrics-spectator" % "0.8.1"
 ```
 
 # Participation
