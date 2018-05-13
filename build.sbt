@@ -46,7 +46,9 @@ val commonSettings = Seq(
   releaseCrossBuild := true,
   scalafmtOnCompile := true,
   scalafmtTestOnCompile := true,
-  releaseIgnoreUntrackedFiles := true
+  releaseIgnoreUntrackedFiles := true,
+  parallelExecution in ThisBuild := true,
+  logBuffered in Test := false
 )
 
 lazy val core = (project in file("core")).settings(
