@@ -134,7 +134,7 @@ Extruder currently provides three types of encoders, although anyone is welcome 
 
 ## Dropwizard
 
-The [Dropwizard](http://metrics.dropwizard.io) package provides name-spaced metric encoder which records values in a Dropwizard metrics registry.
+The [Dropwizard](http://metrics.dropwizard.io) package provides both name-spaced and dimensional metric encoders which records values in a Dropwizard metrics registry.
 
 ```scala
 resolvers += Resolver.bintrayRepo("janstenpickle", "maven")

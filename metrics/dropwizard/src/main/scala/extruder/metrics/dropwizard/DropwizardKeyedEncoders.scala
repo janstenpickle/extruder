@@ -5,19 +5,18 @@ import cats.syntax.either._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.syntax.traverse._
-import com.codahale.metrics.MetricRegistry.MetricSupplier
-import com.codahale.metrics.{Gauge, MetricRegistry}
-import extruder.core.{Encode, HintsCompanion}
+import extruder.core.Encode
 import extruder.effect.ExtruderAsync
+import extruder.metrics.MetricEncoder
 import extruder.metrics.data.{MetricType, Metrics, Numbers}
 import extruder.metrics.keyed.{KeyedMetric, KeyedMetricEncoders}
-import extruder.metrics.{MetricEncoder, MetricsHints}
+import io.dropwizard.metrics5.{MetricName, MetricRegistry}
 
-trait DropwizardEncoders extends KeyedMetricEncoders {
+trait DropwizardKeyedEncoders extends KeyedMetricEncoders {
   override type Hint = DropwizardHints
 }
 
-trait DropwizardEncode extends DropwizardEncoders with Encode {
+trait DropwizardKeyedEncode extends DropwizardKeyedEncoders with Encode {
   protected def makeCounter[F[_]](metric: KeyedMetric)(implicit F: Eff[F]): F[Unit]
   protected def makeGauge[F[_]](metric: KeyedMetric)(implicit F: Eff[F]): F[Unit]
 
@@ -35,26 +34,26 @@ trait DropwizardEncode extends DropwizardEncoders with Encode {
     }
 }
 
-trait MetricRegistryEncoders extends DropwizardEncoders {
-  override type Enc[F[_], T] = DropwizardMetricsEncoder[F, T]
+trait DropwizardKeyedRegistryEncoders extends DropwizardKeyedEncoders {
+  override type Enc[F[_], T] = DropwizardKeyedMetricsEncoder[F, T]
   override type Eff[F[_]] = ExtruderAsync[F]
   override type OutputData = MetricRegistry
 
-  override protected def mkEncoder[F[_], T](f: (List[String], T) => F[Metrics]): DropwizardMetricsEncoder[F, T] =
-    new DropwizardMetricsEncoder[F, T] {
+  override protected def mkEncoder[F[_], T](f: (List[String], T) => F[Metrics]): DropwizardKeyedMetricsEncoder[F, T] =
+    new DropwizardKeyedMetricsEncoder[F, T] {
       override def write(path: List[String], in: T): F[Metrics] = f(path, in)
     }
 }
 
-trait DropwizardMetricsEncoder[F[_], T] extends MetricEncoder[F, T]
+trait DropwizardKeyedMetricsEncoder[F[_], T] extends MetricEncoder[F, T]
 
-object DropwizardMetricsEncoder extends MetricRegistryEncoders
+object DropwizardKeyedMetricsEncoder extends DropwizardKeyedRegistryEncoders
 
-class DropwizardRegistry(
+class DropwizardKeyedRegistry(
   registry: MetricRegistry = new MetricRegistry(),
   defaultMetricType: MetricType = MetricType.Gauge
-) extends MetricRegistryEncoders
-    with DropwizardEncode {
+) extends DropwizardKeyedRegistryEncoders
+    with DropwizardKeyedEncode {
 
   override protected def makeCounter[F[_]](metric: KeyedMetric)(implicit F: ExtruderAsync[F]): F[Unit] =
     F.async(
@@ -69,7 +68,7 @@ class DropwizardRegistry(
     F.async(
       cb =>
         cb(Either.catchNonFatal {
-          val gauge = registry.gauge(metric.name, new SimpleGaugeSupplier).asInstanceOf[SimpleGauge]
+          val gauge = registry.gauge(MetricName.build(metric.name), new SimpleGaugeSupplier).asInstanceOf[SimpleGauge]
           gauge.set(Numbers.toDouble(metric.value))
         })
     )
@@ -78,20 +77,4 @@ class DropwizardRegistry(
     implicit F: Eff[F],
     hints: DropwizardHints
   ): F[MetricRegistry] = buildMeters(namespace, inter, defaultMetricType).map(_ => registry)
-}
-
-trait DropwizardHints extends MetricsHints
-
-object DropwizardHints extends HintsCompanion[DropwizardHints] {
-  override implicit def default: DropwizardHints = new DropwizardHints {}
-}
-
-case class SimpleGauge(initial: Double) extends Gauge[Double] {
-  private var _value = initial
-  def set(value: Double): Unit = _value = value
-  override def getValue: Double = _value
-}
-
-class SimpleGaugeSupplier extends MetricSupplier[Gauge[_]] {
-  override def newMetric(): SimpleGauge = SimpleGauge(0.0)
 }
