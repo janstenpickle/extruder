@@ -174,7 +174,7 @@ lazy val dropwizard = (project in file("metrics/dropwizard"))
       Seq(
         name := "extruder-metrics-dropwizard",
         libraryDependencies ++= Seq(
-          "io.dropwizard.metrics"      % "metrics-core"               % "4.0.2",
+          "io.dropwizard.metrics5"     % "metrics-core"               % "5.0.0",
           "org.specs2"                 %% "specs2-core"               % specs2Ver % "test",
           "org.specs2"                 %% "specs2-scalacheck"         % specs2Ver % "test",
           "com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % scalaCheckShapelessVer % "test"
