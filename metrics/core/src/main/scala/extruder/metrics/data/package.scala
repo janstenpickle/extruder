@@ -8,5 +8,4 @@ package object data {
   type TimerValues = MetricValues[TimerValue, Long]
 
   type Numbers = Short :+: Int :+: Long :+: Float :+: Double :+: CNil
-  type Metrics = Map[MetricKey, Numbers]
 }

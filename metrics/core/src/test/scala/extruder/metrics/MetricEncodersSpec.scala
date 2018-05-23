@@ -4,7 +4,9 @@ import java.util.concurrent.TimeUnit
 
 import cats.Eq
 import cats.instances.map._
+import cats.instances.list._
 import cats.instances.long._
+import cats.instances.string._
 import cats.kernel.laws.discipline.MonoidTests
 import extruder.core.Validation
 import extruder.effect.ExtruderMonadError
@@ -62,39 +64,36 @@ class MetricEncodersSpec
       """
 
   def testInt(implicit enc: TestMetricEncoder[Validation, Int]): Prop = prop { (i: Int, name: String) =>
-    enc.write(List(name), i) must beRight(Map(MetricKey(List(name), None) -> Coproduct[Numbers](i)))
+    enc.write(List(name), i) must beRight(Metrics(Map(MetricKey(List(name), None) -> Coproduct[Numbers](i))))
   }
 
   def testLong(implicit enc: TestMetricEncoder[Validation, Long]): Prop = prop { (l: Long, name: String) =>
-    enc.write(List(name), l) must beRight(Map(MetricKey(List(name), None) -> Coproduct[Numbers](l)))
+    enc.write(List(name), l) must beRight(Metrics(Map(MetricKey(List(name), None) -> Coproduct[Numbers](l))))
   }
 
   def testDouble(implicit enc: TestMetricEncoder[Validation, Double]): Prop = prop { (d: Double, name: String) =>
-    enc.write(List(name), d) must beRight(Map(MetricKey(List(name), None) -> Coproduct[Numbers](d)))
+    enc.write(List(name), d) must beRight(Metrics(Map(MetricKey(List(name), None) -> Coproduct[Numbers](d))))
   }
 
   def testFloat(implicit enc: TestMetricEncoder[Validation, Float]): Prop = prop { (f: Float, name: String) =>
-    enc.write(List(name), f) must beRight(Map(MetricKey(List(name), None) -> Coproduct[Numbers](f)))
+    enc.write(List(name), f) must beRight(Metrics(Map(MetricKey(List(name), None) -> Coproduct[Numbers](f))))
   }
 
   def testMap(implicit enc: TestMetricEncoder[Validation, Map[String, Int]]): Prop = prop { (map: Map[String, Int]) =>
-    enc.write(List.empty, map) must beRight(map.map {
+    enc.write(List.empty, map) must beRight(Metrics(map.map {
       case (k, v) => MetricKey(List(k), None) -> Coproduct[Numbers](v)
-    })
+    }))
   }
 
   def testFiniteDuration(implicit enc: TestMetricEncoder[Validation, FiniteDuration]): Prop = prop {
     (dur: FiniteDuration, name: String) =>
       enc.write(List(name), dur) must beRight(
-        Map(MetricKey(List(name), Some(MetricType.Timer)) -> Coproduct[Numbers](dur.toMillis))
+        Metrics(Map(MetricKey(List(name), Some(MetricType.Timer)) -> Coproduct[Numbers](dur.toMillis)))
       )
   }
 
   def testNonNum(implicit enc: TestMetricEncoder[Validation, String]): Prop = prop { (s: String, name: String) =>
-    val short: Short = 1
-    enc.write(List(name), s) must beRight(
-      Map(MetricKey(List(name, s), Some(MetricType.Status)) -> Coproduct[Numbers](short))
-    )
+    enc.write(List(name), s) must beRight(Metrics.status(List(name), s))
   }
 
   def testNumList(implicit enc: TestMetricEncoder[Validation, List[Int]]): Prop = prop {
@@ -102,74 +101,86 @@ class MetricEncodersSpec
       val key = MetricKey(List(name), None)
 
       enc.write(List(name), li) must beRight(
-        li.foldLeft(Map.empty[MetricKey, Numbers])(
-          (acc, v) => acc + (key -> acc.get(key).fold(Coproduct[Numbers](v))(Numbers.add(_, Coproduct[Numbers](v))))
+        Metrics(
+          li.foldLeft(Map.empty[MetricKey, Numbers])(
+            (acc, v) => acc + (key -> acc.get(key).fold(Coproduct[Numbers](v))(Numbers.add(_, Coproduct[Numbers](v))))
+          )
         )
       )
   }
 
   def testNonNumList(implicit enc: TestMetricEncoder[Validation, List[String]]): Prop = prop {
     (li: List[String], name: String) =>
-      val short: Short = 1
-      enc.write(List(name), li) must beRight(li.foldLeft(Map.empty[MetricKey, Numbers]) { (acc, v) =>
-        val key = MetricKey(List(name, v), Some(MetricType.Status))
-        acc + (key -> acc.get(key).fold(Coproduct[Numbers](short))(Numbers.add(_, Coproduct[Numbers](short))))
-      })
+      enc.write(List(name), li) must beRight(Metrics.statuses(li.foldLeft(Map.empty[List[String], String]) { (acc, v) =>
+        acc + (List(name) -> v)
+      }))
   }
 
   def testThrowableList(implicit enc: TestMetricEncoder[Validation, List[Throwable]]): Prop = prop {
     (li: List[Throwable], name: String) =>
       enc.write(List(name), li) must beRight(
-        Map(MetricKey(List(name), Some(MetricType.Gauge)) -> Coproduct[Numbers](li.size))
+        Metrics(Map(MetricKey(List(name), Some(MetricType.Gauge)) -> Coproduct[Numbers](li.size)))
       )
   }
 
   def testMetricValue(implicit enc: TestMetricEncoder[Validation, MetricValue[Double]]): Prop = prop {
     (mv: MetricValue[Double], name: String) =>
       enc.write(List(name), mv) must beRight(
-        Map(MetricKey(List(name), Some(mv.metricType)) -> Coproduct[Numbers](mv.value))
+        Metrics(Map(MetricKey(List(name), Some(mv.metricType)) -> Coproduct[Numbers](mv.value)))
       )
   }
 
   def testTimer(implicit enc: TestMetricEncoder[Validation, TimerValue[Long]]): Prop = prop {
     (start: Long, finish: Long, name: String) =>
       enc.write(List(name), TimerValue(start, Some(finish))) must
-        beRight(Map(MetricKey(List(name), Some(MetricType.Timer)) -> Coproduct[Numbers](finish - start)))
+        beRight(Metrics(Map(MetricKey(List(name), Some(MetricType.Timer)) -> Coproduct[Numbers](finish - start))))
   }
 
   def testValues(implicit enc: TestMetricEncoder[Validation, MetricValues[MetricValue, Double]]): Prop = prop {
     (values: Map[String, Double]) =>
-      enc.write(List.empty, MetricValues(values.mapValues(GaugeValue[Double]))) must beRight(values.map {
+      enc.write(List.empty, MetricValues(values.mapValues(GaugeValue[Double]))) must beRight(Metrics(values.map {
         case (k, v) => MetricKey(List(k), Some(MetricType.Gauge)) -> Coproduct[Numbers](v)
-      })
+      }))
   }
 
   def testObject(implicit enc: TestMetricEncoder[Validation, RequestCount]): Prop = prop { (rq: RequestCount) =>
     enc.write(List.empty, rq) must beRight(
-      Map(
-        MetricKey(requestCountPath :+ "200", None) -> Coproduct[Numbers](rq.httpRequests.`200`),
-        MetricKey(requestCountPath :+ "500", None) -> Coproduct[Numbers](rq.httpRequests.`500`),
-        MetricKey(requestCountPath :+ "other", None) -> Coproduct[Numbers](rq.httpRequests.other)
+      Metrics(
+        Map(
+          MetricKey(requestCountPath :+ "200", None) -> Coproduct[Numbers](rq.httpRequests.`200`),
+          MetricKey(requestCountPath :+ "500", None) -> Coproduct[Numbers](rq.httpRequests.`500`),
+          MetricKey(requestCountPath :+ "other", None) -> Coproduct[Numbers](rq.httpRequests.other)
+        )
       )
     )
   }
 
   def testObjectMap(implicit enc: TestMetricEncoder[Validation, HttpRequests]): Prop = prop { (rq: HttpRequests) =>
-    enc.write(List.empty, rq) must beRight(rq.statusCode.values.map {
+    enc.write(List.empty, rq) must beRight(Metrics(rq.statusCode.values.map {
       case (k, v) => MetricKey(httpRequestsPath :+ k, Some(MetricType.Counter)) -> Coproduct[Numbers](v.value)
-    })
+    }))
   }
 
   def testBoth(implicit enc: TestMetricEncoder[Validation, Both]): Prop = prop { (rq: Both) =>
     enc.write(List.empty, rq) must beRight(
-      Map(
-        MetricKey(List("Both", "a") ++ requestCountPath :+ "200", None) -> Coproduct[Numbers](rq.a.httpRequests.`200`),
-        MetricKey(List("Both", "a") ++ requestCountPath :+ "500", None) -> Coproduct[Numbers](rq.a.httpRequests.`500`),
-        MetricKey(List("Both", "a") ++ requestCountPath :+ "other", None) -> Coproduct[Numbers](rq.a.httpRequests.other)
-      ) ++ rq.b.statusCode.values.map {
-        case (k, v) =>
-          MetricKey(List("Both", "b") ++ httpRequestsPath :+ k, Some(MetricType.Counter)) -> Coproduct[Numbers](v.value)
-      }
+      Metrics(
+        Map(
+          MetricKey(List("Both", "a") ++ requestCountPath :+ "200", None) -> Coproduct[Numbers](
+            rq.a.httpRequests.`200`
+          ),
+          MetricKey(List("Both", "a") ++ requestCountPath :+ "500", None) -> Coproduct[Numbers](
+            rq.a.httpRequests.`500`
+          ),
+          MetricKey(List("Both", "a") ++ requestCountPath :+ "other", None) -> Coproduct[Numbers](
+            rq.a.httpRequests.other
+          )
+        ) ++ rq.b.statusCode.values.map {
+          case (k, v) =>
+            MetricKey(List("Both", "b") ++ httpRequestsPath :+ k, Some(MetricType.Counter)) -> Coproduct[Numbers](
+              v.value
+            )
+        }
+      )
     )
   }
 
@@ -208,7 +219,10 @@ object MetricEncodersSpec {
     Gen.oneOf(MetricType.Counter, MetricType.Gauge, MetricType.Status, MetricType.Timer)
   )
 
-  implicit val metricsEq: Eq[Metrics] = Eq.by(_.mapValues(Numbers.toLong))
+  implicit val metricsEq: Eq[Metrics] = Eq.instance { (m1, m2) =>
+    Eq.eqv(m1.statuses, m2.statuses) && Eq
+      .eqv(m1.metrics.mapValues(Numbers.toLong), m2.metrics.mapValues(Numbers.toLong))
+  }
 
   implicit def numArb(implicit ev: Arbitrary[Long]): Arbitrary[Numbers] =
     Arbitrary(ev.arbitrary.map(Coproduct[Numbers](_)))

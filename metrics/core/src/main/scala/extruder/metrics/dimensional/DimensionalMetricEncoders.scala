@@ -32,20 +32,23 @@ trait DimensionalMetricEncoders extends MetricEncoders {
     val defaultDimensionValues = defaultLabels.values.toVector
 
     val metrics =
-      inter.flatMap { case (k, v) => calculateDimensions(namespace, defaultMetricType)(k, v) }.groupBy(_.key).map {
-        case ((name, metricType, labelName), ms) =>
-          val dimensions: Set[String] = defaultDimensionNames ++ labelName
+      inter.metrics
+        .flatMap { case (k, v) => calculateMetricDimensions(namespace, defaultMetricType)(k, v) }
+        .groupBy(_.key)
+        .map {
+          case ((name, metricType, labelName), ms) =>
+            val dimensions: Set[String] = defaultDimensionNames ++ labelName
 
-          val values = ms.foldLeft(Map.empty[Vector[String], Numbers]) {
-            case (acc, metric) =>
-              val dimensionValues = (defaultDimensionValues ++ namespaceName
-                .map(_ => metric.namespace.getOrElse("")) :+ metricType.name) ++ metric.labelVal
+            val values = ms.foldLeft(Map.empty[Vector[String], Numbers]) {
+              case (acc, metric) =>
+                val dimensionValues = (defaultDimensionValues ++ namespaceName
+                  .map(_ => metric.namespace.getOrElse("")) :+ metricType.name) ++ metric.labelVal
 
-              acc + (dimensionValues -> acc.get(dimensionValues).fold(metric.value)(Numbers.add(_, metric.value)))
-          }
+                acc + (dimensionValues -> acc.get(dimensionValues).fold(metric.value)(Numbers.add(_, metric.value)))
+            }
 
-          DimensionalMetric(name, dimensions, metricType, values)
-      }
+            DimensionalMetric(name, dimensions, metricType, values)
+        }
 
     val metricTypes = metrics
       .foldLeft(Map.empty[String, Set[MetricType]]) { (acc, m) =>
@@ -63,14 +66,12 @@ trait DimensionalMetricEncoders extends MetricEncoders {
   private def calculateDimensions(namespace: List[String], defaultMetricType: MetricType)(key: MetricKey, v: Numbers)(
     implicit hints: Hint
   ): Option[Metric] =
-    (key.metricType.getOrElse(defaultMetricType) match {
-      case MetricType.Status => calculateStatusDimensions(namespace) _
-      case _ => calculateMetricDimensions(namespace, defaultMetricType) _
-    })(key, v)
+    calculateMetricDimensions(namespace, defaultMetricType)(key, v)
+
 
   private def calculateStatusDimensions(
     namespace: List[String]
-  )(key: MetricKey, v: Numbers)(implicit hints: Hint): Option[Metric] =
+  )(key: List[String], v: String)(implicit hints: Hint): Option[Metric] =
     (namespace ++ key.name).reverse match {
       case name :: nameTail =>
         Some(SimpleMetric(labelTransform(name), calculateNameSpace(nameTail), MetricType.Status, v))

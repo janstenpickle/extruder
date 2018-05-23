@@ -21,11 +21,14 @@ trait MetricEncoders
   override type EncodeData = Metrics
 
   override protected def monoid: Monoid[EncodeData] = new Monoid[EncodeData] {
-    override def empty: EncodeData = Map.empty
-    override def combine(x: EncodeData, y: EncodeData): EncodeData =
-      y.foldLeft(x) {
+    override def empty: EncodeData = Metrics(Map.empty, Map.empty)
+    override def combine(x: EncodeData, y: EncodeData): EncodeData = {
+      val metrics = y.metrics.foldLeft(x.metrics) {
         case (acc, (k, v)) => acc + (k -> acc.get(k).fold(v)(Numbers.add(_, v)))
       }
+      val statuses = x.statuses ++ y.statuses
+      Metrics(statuses, metrics)
+    }
   }
 
   override protected def writeValue[F[_]](
@@ -48,22 +51,18 @@ trait MetricEncoders
 
   implicit def numericMapEncoder[F[_]: Eff, T](implicit inj: Inject[Numbers, T]): Enc[F, Map[String, T]] =
     mkEncoder[F, Map[String, T]] { (path, values) =>
-      monoid
-        .combineAll(values.map {
-          case (k, v) => Metrics.single(MetricKey(path :+ k, None), Coproduct[Numbers](v))
-        })
-        .pure[F]
+      Metrics(values.map {
+        case (k, v) => MetricKey(path :+ k, None) -> Coproduct[Numbers](v)
+      }).pure[F]
     }
 
   implicit def metricValuesEncoder[F[_]: Eff, T, V[A] <: MetricValue[A]](
     implicit inj: Inject[Numbers, T]
   ): Enc[F, MetricValues[V, T]] =
     mkEncoder[F, MetricValues[V, T]] { (path, mv) =>
-      monoid
-        .combineAll(mv.values.map {
-          case (k, v) => Metrics.single(MetricKey(path :+ k, Some(v.metricType)), Coproduct[Numbers](v.value))
-        })
-        .pure[F]
+      Metrics(mv.values.map {
+        case (k, v) => MetricKey(path :+ k, Some(v.metricType)) -> Coproduct[Numbers](v.value)
+      }).pure[F]
     }
 
   implicit def numericEncoder[F[_]: Eff, T](implicit inj: Inject[Numbers, T]): Enc[F, T] = mkEncoder[F, T] {

@@ -11,9 +11,6 @@ object MetricType {
   case object Gauge extends MetricType {
     override def name: String = "gauge"
   }
-  case object Status extends MetricType {
-    override def name: String = "status"
-  }
   case object Timer extends MetricType {
     override def name: String = "timer"
   }

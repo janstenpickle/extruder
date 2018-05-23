@@ -9,7 +9,7 @@ trait KeyedMetricEncoders extends MetricEncoders {
     defaultMetricType: MetricType
   )(implicit F: Eff[F], hints: Hint): F[Iterable[KeyedMetric]] =
     F.pure(
-      inter
+      inter.metrics
         .foldLeft(Map.empty[(String, MetricType), Numbers]) {
           case (acc, (k, v)) =>
             val key = (hints.pathToString(k.name), k.metricType.getOrElse(defaultMetricType))
