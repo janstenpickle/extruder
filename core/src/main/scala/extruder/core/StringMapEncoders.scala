@@ -10,7 +10,9 @@ trait StringMapEncoders { self: Encoders with EncodeTypes =>
     implicit F: Eff[F],
     encoder: Enc[F, T],
     refute: Refute[MultiShow[T]]
-  ): Enc[F, Map[String, T]] = mkEncoder { (path, value) =>
-    Traverse[List].traverse(value.toList) { case (k, v) => encoder.write(path :+ k, v) }.map(monoid.combineAll)
+  ): Enc[F, Map[String, T]] = mkEncoder { (path, settings, value) =>
+    Traverse[List]
+      .traverse(value.toList) { case (k, v) => encoder.write(path :+ k, settings, v) }
+      .map(monoid.combineAll)
   }
 }

@@ -5,7 +5,7 @@ import cats.syntax.functor._
 import extruder.effect.ExtruderAsync
 import extruder.metrics.MetricEncoder
 import extruder.metrics.data.{MetricType, Metrics, Numbers}
-import extruder.metrics.dimensional.DimensionalMetric
+import extruder.metrics.dimensional.{DimensionalMetric, DimensionalMetricSettings}
 import io.prometheus.client.{Collector, CollectorRegistry, Counter, Gauge}
 
 import scala.collection.concurrent.TrieMap
@@ -14,12 +14,12 @@ trait RegistryEncoders extends PrometheusEncoders {
   override type Enc[F[_], T] = RegistryMetricsEncoder[F, T]
   override type Eff[F[_]] = ExtruderAsync[F]
 
-  override protected def mkEncoder[F[_], T](f: (List[String], T) => F[Metrics]): RegistryMetricsEncoder[F, T] =
+  override protected def mkEncoder[F[_], T](f: (List[String], Sett, T) => F[Metrics]): RegistryMetricsEncoder[F, T] =
     new RegistryMetricsEncoder[F, T] {
-      override def write(path: List[String], in: T): F[Metrics] = f(path, in)
+      override def write(path: List[String], settings: Sett, in: T): F[Metrics] = f(path, settings, in)
     }
 }
-trait RegistryMetricsEncoder[F[_], T] extends MetricEncoder[F, T]
+trait RegistryMetricsEncoder[F[_], T] extends MetricEncoder[F, DimensionalMetricSettings, T]
 
 object RegistryMetricsEncoder extends RegistryEncoders
 
@@ -73,9 +73,8 @@ class PrometheusRegistry(
     F.async(cb => cb(setGauge))
   }
 
-  override protected def finalizeOutput[F[_]](
-    namespace: List[String],
-    inter: EncodeData
-  )(implicit F: Eff[F], hints: Hint): F[CollectorRegistry] =
-    buildCollectors(namespaceName, namespace, inter, defaultLabels, defaultMetricType).map(_ => registry)
+  override protected def finalizeOutput[F[_]](namespace: List[String], settings: Sett, inter: EncodeData)(
+    implicit F: Eff[F]
+  ): F[CollectorRegistry] =
+    buildCollectors(namespaceName, namespace, settings, inter, defaultLabels, defaultMetricType).map(_ => registry)
 }

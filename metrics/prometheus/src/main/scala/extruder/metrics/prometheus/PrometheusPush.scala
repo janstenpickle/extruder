@@ -8,7 +8,7 @@ import cats.syntax.functor._
 import extruder.effect.ExtruderAsync
 import extruder.metrics.MetricEncoder
 import extruder.metrics.data.{MetricType, Metrics, Numbers}
-import extruder.metrics.dimensional.DimensionalMetric
+import extruder.metrics.dimensional.{DimensionalMetric, DimensionalMetricSettings}
 import io.prometheus.client.exporter.PushGateway
 import io.prometheus.client.{Collector, Counter, Gauge}
 
@@ -16,13 +16,13 @@ trait PushEncoders extends PrometheusEncoders {
   override type Enc[F[_], T] = PushMetricsEncoder[F, T]
   override type Eff[F[_]] = ExtruderAsync[F]
 
-  override protected def mkEncoder[F[_], T](f: (List[String], T) => F[Metrics]): PushMetricsEncoder[F, T] =
+  override protected def mkEncoder[F[_], T](f: (List[String], Sett, T) => F[Metrics]): PushMetricsEncoder[F, T] =
     new PushMetricsEncoder[F, T] {
-      override def write(path: List[String], in: T): F[Metrics] = f(path, in)
+      override def write(path: List[String], settings: Sett, in: T): F[Metrics] = f(path, settings, in)
     }
 }
 
-trait PushMetricsEncoder[F[_], T] extends MetricEncoder[F, T]
+trait PushMetricsEncoder[F[_], T] extends MetricEncoder[F, DimensionalMetricSettings, T]
 
 object PushMetricsEncoder extends PushEncoders
 
@@ -55,14 +55,14 @@ case class PrometheusPush(
     F.pure(gauge)
   }
 
-  override protected def finalizeOutput[F[_]](
-    namespace: List[String],
-    inter: EncodeData
-  )(implicit F: ExtruderAsync[F], hints: Hint): F[Unit] =
+  override protected def finalizeOutput[F[_]](namespace: List[String], settings: Sett, inter: EncodeData)(
+    implicit F: ExtruderAsync[F]
+  ): F[Unit] =
     for {
       collectors <- buildCollectors(
         namespaceName,
         namespace,
+        settings,
         inter,
         defaultLabels + ("instance" -> jobInstance),
         defaultMetricType

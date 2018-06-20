@@ -12,9 +12,9 @@ class MetricValuesSpec extends Specification with Discipline {
   import MetricValuesSpec._
 
   override def is: SpecStructure =
-    checkAll("Metric values monoid", MonoidTests[MetricValues[CounterValue, Int]].monoid)
+    checkAll("Metric values monoid", MonoidTests[MetricValues[CounterValue, String, Int]].monoid)
 }
 
 object MetricValuesSpec {
-  implicit val metricValuesEq: Eq[MetricValues[CounterValue, Int]] = Eq.by(_.toString)
+  implicit def metricValuesEq[A]: Eq[MetricValues[CounterValue, A, Int]] = Eq.by(_.toString)
 }

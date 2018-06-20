@@ -113,15 +113,15 @@ As implied in the above examples the configuration keys are dot (`.`) separated 
 
 ```tut:silent
 import extruder.core.MapSource._
-import extruder.core.MapHints
+import extruder.core.Settings
 
-implicit val hints: MapHints = new MapHints {
+val settings: Settings = new Settings {
   override def pathToString(path: List[String]): String = path.mkString("_").toUpperCase
 }
 
 case class Example(defaultedString: String = "default", configuredString: String, optionalString: Option[String])
 
-println(parameters[Example])
+println(parameters[Example](settings))
 ```
 Changing the `pathToString` implementation will change the expected configuration keys:
 ```

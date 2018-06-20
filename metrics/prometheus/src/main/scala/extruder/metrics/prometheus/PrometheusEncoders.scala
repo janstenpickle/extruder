@@ -3,15 +3,14 @@ package extruder.metrics.prometheus
 import cats.instances.list._
 import cats.syntax.flatMap._
 import cats.syntax.traverse._
-import extruder.core.{Encode, HintsCompanion}
-import extruder.metrics._
+import extruder.core.Encode
 import extruder.metrics.data.{MetricType, Metrics}
-import extruder.metrics.dimensional.{DimensionalMetric, DimensionalMetricEncoders}
+import extruder.metrics.dimensional.{DimensionalMetric, DimensionalMetricEncoders, DimensionalMetricSettings}
 import io.prometheus.client.Collector
 
 trait PrometheusEncoders extends DimensionalMetricEncoders {
-  override type Hint = PrometheusHints
-  override def labelTransform(value: String): String = snakeCaseTransformation(value)
+  override type Sett = DimensionalMetricSettings
+  override def defaultSettings: DimensionalMetricSettings = new DimensionalMetricSettings {}
 }
 
 trait PrometheusEncode extends PrometheusEncoders with Encode {
@@ -23,11 +22,12 @@ trait PrometheusEncode extends PrometheusEncoders with Encode {
   protected def buildCollectors[F[_]](
     namespaceName: Option[String],
     namespace: List[String],
+    settings: Sett,
     inter: Metrics,
     defaultLabels: Map[String, String],
     defaultMetricType: MetricType
-  )(implicit F: Eff[F], hints: Hint): F[List[Collector]] = {
-    buildMetrics[F](namespaceName, namespace, inter, defaultLabels, defaultMetricType)
+  )(implicit F: Eff[F]): F[List[Collector]] = {
+    buildMetrics[F](namespaceName, namespace, settings, inter, defaultLabels, defaultMetricType)
       .flatMap { metrics =>
         metrics.toList.traverse { metric =>
           metric.metricType match {
@@ -37,10 +37,4 @@ trait PrometheusEncode extends PrometheusEncoders with Encode {
         }
       }
   }
-}
-
-trait PrometheusHints extends MetricsHints
-
-object PrometheusHints extends HintsCompanion[PrometheusHints] {
-  override implicit def default: PrometheusHints = new PrometheusHints {}
 }

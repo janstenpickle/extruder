@@ -8,15 +8,15 @@ import cats.syntax.traverse._
 import extruder.core.Encode
 import extruder.effect.ExtruderAsync
 import extruder.metrics.data.{MetricType, Metrics, Numbers}
-import extruder.metrics.dimensional.{DimensionalMetric, DimensionalMetricEncoders}
+import extruder.metrics.dimensional.{DimensionalMetric, DimensionalMetricEncoders, DimensionalMetricSettings}
 import extruder.metrics.{snakeCaseTransformation, MetricEncoder}
 import io.dropwizard.metrics5.{MetricName, MetricRegistry}
 
 import scala.collection.JavaConverters._
 
 trait DropwizardDimensionalEncoders extends DimensionalMetricEncoders {
-  override type Hint = DropwizardHints
-  override def labelTransform(value: String): String = snakeCaseTransformation(value)
+  override type Sett = DimensionalMetricSettings
+  override def defaultSettings: DimensionalMetricSettings = new DimensionalMetricSettings {}
 }
 
 trait DropwizardDimensionalEncode extends DropwizardDimensionalEncoders with Encode {
@@ -26,11 +26,12 @@ trait DropwizardDimensionalEncode extends DropwizardDimensionalEncoders with Enc
   protected def buildMeters[F[_]](
     namespaceName: Option[String],
     namespace: List[String],
+    settings: Sett,
     inter: Metrics,
     defaultLabels: Map[String, String],
     defaultMetricType: MetricType
-  )(implicit F: Eff[F], hints: Hint): F[List[Unit]] =
-    buildMetrics[F](namespaceName, namespace, inter, defaultLabels, defaultMetricType).flatMap { metrics =>
+  )(implicit F: Eff[F]): F[List[Unit]] =
+    buildMetrics[F](namespaceName, namespace, settings, inter, defaultLabels, defaultMetricType).flatMap { metrics =>
       metrics.toList.traverse { metric =>
         metric.metricType match {
           case MetricType.Counter => makeCounter[F](metric)
@@ -46,14 +47,14 @@ trait DropwizardDimensionalRegistryEncoders extends DropwizardDimensionalEncoder
   override type OutputData = MetricRegistry
 
   override protected def mkEncoder[F[_], T](
-    f: (List[String], T) => F[Metrics]
+    f: (List[String], Sett, T) => F[Metrics]
   ): DropwizardDimensionalMetricsEncoder[F, T] =
     new DropwizardDimensionalMetricsEncoder[F, T] {
-      override def write(path: List[String], in: T): F[Metrics] = f(path, in)
+      override def write(path: List[String], settings: Sett, in: T): F[Metrics] = f(path, settings, in)
     }
 }
 
-trait DropwizardDimensionalMetricsEncoder[F[_], T] extends MetricEncoder[F, T]
+trait DropwizardDimensionalMetricsEncoder[F[_], T] extends MetricEncoder[F, DimensionalMetricSettings, T]
 
 object DropwizardDimensionalMetricsEncoder extends DropwizardDimensionalRegistryEncoders
 
@@ -92,9 +93,8 @@ class DropwizardDimensionalRegistry(
         })
     )
 
-  override protected def finalizeOutput[F[_]](
-    namespace: List[String],
-    inter: Metrics
-  )(implicit F: ExtruderAsync[F], hints: DropwizardHints): F[MetricRegistry] =
-    buildMeters(namespaceName, namespace, inter, defaultLabels, defaultMetricType).map(_ => registry)
+  override protected def finalizeOutput[F[_]](namespace: List[String], settings: Sett, inter: Metrics)(
+    implicit F: ExtruderAsync[F]
+  ): F[MetricRegistry] =
+    buildMeters(namespaceName, namespace, settings, inter, defaultLabels, defaultMetricType).map(_ => registry)
 }

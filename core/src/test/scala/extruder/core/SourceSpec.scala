@@ -40,19 +40,22 @@ trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with 
   def ext: SpecStructure = s2""
   def ext2: SpecStructure = s2""
   def monoidTests: MonoidTests[EncodeData]#RuleSet
-  implicit def hints: Hint
 
   implicit val caseClassEq: Eq[CaseClass] = Eq.fromUniversalEquals
   implicit val urlEq: Eq[URL] = Eq.fromUniversalEquals
   implicit val durationEq: Eq[Duration] = Eq.fromUniversalEquals
   implicit val finiteDurationEq: Eq[FiniteDuration] = Eq.fromUniversalEquals
 
-  val caseClassData: Map[List[String], String] =
-    Map(List("CaseClass", "s") -> "string", List("CaseClass", "i") -> "1", List("CaseClass", "l") -> "1")
+  lazy val caseClassData: Map[List[String], String] =
+    Map(List("CaseClass", "s") -> "string", List("CaseClass", "i") -> "1", List("CaseClass", "l") -> "1").map {
+      case (k, v) =>
+        if (defaultSettings.includeClassNameInPath) k -> v
+        else k.filterNot(_ == "CaseClass") -> v
+    }
 
   val expectedCaseClass = CaseClass("string", 1, 1L, None)
 
-  def convertData(map: Map[List[String], String])(implicit hints: Hint): InputData
+  def convertData(map: Map[List[String], String]): InputData
 
   override def is: SpecStructure =
     s2"""
@@ -145,6 +148,11 @@ trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with 
         decode[CaseClass](
           convertData(
             Map(List("CaseClass", "s") -> s, List("CaseClass", "i") -> i.toString, List("CaseClass", "l") -> l.toString)
+              .map {
+                case (k, v) =>
+                  if (defaultSettings.includeClassNameInPath) k -> v
+                  else k.filterNot(_ == "CaseClass") -> v
+              }
           )
         ) must beRight(CaseClass(s, i, l, None))
     )
@@ -153,7 +161,7 @@ trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with 
     cvEq.eqv(decode[CaseClass], Right(expectedCaseClass)) &&
       cvEq.eqv(decode[CaseClass](List.empty), Right(expectedCaseClass))
 
-  def testCaseClassParams(implicit hints: Hint): MatchResult[String] = parameters[CaseClass] !== ""
+  def testCaseClassParams: MatchResult[String] = parameters[CaseClass] !== ""
 
   implicit def tuple2Parser[F[_]: Monad, A, B](implicit A: Parser[A], B: Parser[B]): MultiParser[F, (A, B)] =
     new MultiParser[F, (A, B)] {

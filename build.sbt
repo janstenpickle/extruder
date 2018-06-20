@@ -2,7 +2,7 @@ import microsites._
 
 val specs2Ver = "4.0.4"
 val catsVer = "1.1.0"
-val catsEffectVer = "1.0.0-RC"
+val catsEffectVer = "1.0.0-RC2"
 val prometheusVer = "0.3.0"
 val refinedVer = "0.9.0"
 val scalaCheckShapelessVer = "1.1.8"
@@ -42,7 +42,7 @@ val commonSettings = Seq(
     false
   },
   bintrayReleaseOnPublish := true,
-  coverageMinimum := 85,
+  coverageMinimum := 80,
   releaseCrossBuild := true,
   scalafmtOnCompile := true,
   scalafmtTestOnCompile := true,

@@ -17,6 +17,8 @@ class PrometheusRegistrySpec extends Specification with ScalaCheck {
         Can encode a dimensional object $encodeDimensionalObject
       """
 
+  case class X(a: String, b: Int)
+
   def encodeNamespaced: Prop = prop { (value: Int, name: String) =>
     val reg = new PrometheusRegistry().encode[IO, Int](List(name), value).unsafeRunSync()
     reg

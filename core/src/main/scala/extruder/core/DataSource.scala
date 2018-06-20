@@ -6,5 +6,7 @@ trait DataSource {
   type InputData
   type OutputData
   type Eff[F[_]] <: ExtruderMonadError[F]
-  type Hint <: Hints
+  type Sett <: Settings
+
+  def defaultSettings: Sett
 }

@@ -2,6 +2,7 @@ package extruder.metrics.keyed
 
 import extruder.core.{Encode, Validation}
 import extruder.effect.ExtruderMonadError
+import extruder.metrics.MetricSettings
 import extruder.metrics.data.{MetricType, Metrics, Numbers}
 import org.scalacheck.Prop
 import org.scalacheck.ScalacheckShapeless._
@@ -23,17 +24,18 @@ class KeyedMetricEnodersSpec
 
   override type OutputData = Iterable[KeyedMetric]
   override type Eff[F[_]] = ExtruderMonadError[F]
-  override type Hint = TestMetricsHints.type
+  override type Sett = MetricSettings
 
-  override protected def mkEncoder[F[_], T](f: (List[String], T) => F[Metrics]): TestMetricEncoder[F, T] =
+  override def defaultSettings: MetricSettings = new MetricSettings {}
+
+  override protected def mkEncoder[F[_], T](f: (List[String], Sett, T) => F[Metrics]): TestMetricEncoder[F, T] =
     new TestMetricEncoder[F, T] {
-      override def write(path: List[String], in: T): F[Metrics] = f(path, in)
+      override def write(path: List[String], settings: Sett, in: T): F[Metrics] = f(path, settings, in)
     }
 
-  override protected def finalizeOutput[F[_]](namespace: List[String], inter: Metrics)(
-    implicit F: ExtruderMonadError[F],
-    hints: TestMetricsHints.type
-  ): F[Iterable[KeyedMetric]] = buildMetrics(inter, MetricType.Gauge)
+  override protected def finalizeOutput[F[_]](namespace: List[String], settings: Sett, inter: Metrics)(
+    implicit F: ExtruderMonadError[F]
+  ): F[Iterable[KeyedMetric]] = buildMetrics(settings, inter, MetricType.Gauge)
 
   override def is: SpecStructure =
     s2"""

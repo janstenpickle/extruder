@@ -27,8 +27,12 @@ class TypesafeConfigSourceSpec extends StringMapSourceSpec with TypesafeConfigDe
 
   override val supportsEmptyNamespace: Boolean = false
 
-  override def convertData(map: Map[List[String], String])(implicit hints: Hint): TConfig = {
-    val config = map.map { case (k, v) => hints.pathToString(k) -> v }.asJava
+//  override val defaultSettings: Sett = new Sett {
+//    override def pathToString(path: List[String]): String = TypesafeConfigSource.defaultSettings.pathToString(path)
+//  }
+
+  override def convertData(map: Map[List[String], String]): TConfig = {
+    val config = map.map { case (k, v) => defaultSettings.pathToString(k) -> v }.asJava
     ConfigFactory.parseMap(config)
   }
 
@@ -74,8 +78,6 @@ class TypesafeConfigSourceSpec extends StringMapSourceSpec with TypesafeConfigDe
   }
 
   override def monoidTests: MonoidTests[Config]#RuleSet = MonoidTests[Config](monoid).monoid
-
-  override implicit def hints: TypesafeConfigHints = TypesafeConfigHints.default
 }
 
 object TypesafeConfigSourceSpec {

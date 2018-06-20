@@ -6,7 +6,7 @@ import shapeless.labelled.FieldType
 import scala.reflect.runtime.universe.TypeTag
 
 trait DerivedEncoders { self: Encoders with EncodeTypes =>
-  implicit def cnilEncoder[F[_]](implicit F: Eff[F]): Enc[F, CNil] = mkEncoder { (_, _) =>
+  implicit def cnilEncoder[F[_]](implicit F: Eff[F]): Enc[F, CNil] = mkEncoder { (_, _, _) =>
     F.validationFailure(s"Impossible!")
   }
 
@@ -15,17 +15,16 @@ trait DerivedEncoders { self: Encoders with EncodeTypes =>
     headEncode: Enc[F, H],
     tailEncode: Lazy[Enc[F, T]],
     typeEncode: Lazy[Enc[F, String]],
-    hints: Hint,
     F: Eff[F]
   ): Enc[F, FieldType[K, H] :+: T] =
-    mkEncoder { (path, value) =>
+    mkEncoder { (path, settings, value) =>
       val chooseEncoder: F[EncodeData] = value match {
-        case Inl(h) => headEncode.write(path, h)
-        case Inr(t) => tailEncode.value.write(path, t)
+        case Inl(h) => headEncode.write(path, settings, h)
+        case Inr(t) => tailEncode.value.write(path, settings, t)
       }
 
       F.ap2(F.pure[(EncodeData, EncodeData) => EncodeData](monoid.combine))(
-        typeEncode.value.write(hints.pathWithType(path), key.value.name),
+        typeEncode.value.write(settings.pathWithType(path), settings, key.value.name),
         chooseEncoder
       )
     }
@@ -41,15 +40,15 @@ trait DerivedEncoders { self: Encoders with EncodeTypes =>
     neOpt: T <:!< Option[_],
     neCol: T <:!< TraversableOnce[_]
   ): Enc[F, T] =
-    mkEncoder((path, value) => underlying.value.write(path, gen.to(value)))
+    mkEncoder((path, settings, value) => underlying.value.write(path, settings, gen.to(value)))
 
   trait DerivedEncoder[T, F[_], Repr <: HList] {
-    def write(path: List[String], value: Repr): F[EncodeData]
+    def write(path: List[String], settings: Sett, value: Repr): F[EncodeData]
   }
 
   implicit def hNilDerivedEncoder[T, F[_]](implicit F: Eff[F]): DerivedEncoder[T, F, HNil] =
     new DerivedEncoder[T, F, HNil] {
-      override def write(path: List[String], value: HNil): F[EncodeData] = F.pure(monoid.empty)
+      override def write(path: List[String], settings: Sett, value: HNil): F[EncodeData] = F.pure(monoid.empty)
     }
 
   implicit def hConsDerivedEncoder[T, F[_], K <: Symbol, V, TailRepr <: HList](
@@ -59,12 +58,12 @@ trait DerivedEncoders { self: Encoders with EncodeTypes =>
     tailEncoder: Lazy[DerivedEncoder[T, F, TailRepr]]
   ): DerivedEncoder[T, F, FieldType[K, V] :: TailRepr] =
     new DerivedEncoder[T, F, FieldType[K, V] :: TailRepr] {
-      override def write(path: List[String], value: FieldType[K, V] :: TailRepr): F[EncodeData] = {
+      override def write(path: List[String], settings: Sett, value: FieldType[K, V] :: TailRepr): F[EncodeData] = {
         val fieldName = key.value.name
 
         F.ap2(F.pure[(EncodeData, EncodeData) => EncodeData](monoid.combine))(
-          encoder.value.write(path :+ fieldName, value.head),
-          tailEncoder.value.write(path, value.tail)
+          encoder.value.write(path :+ fieldName, settings, value.head),
+          tailEncoder.value.write(path, settings, value.tail)
         )
       }
     }
@@ -80,8 +79,11 @@ trait DerivedEncoders { self: Encoders with EncodeTypes =>
     refuteMultiShow: Refute[MultiShow[T]]
   ): Enc[F, T] = {
     lazy val className: String = tag.tpe.typeSymbol.name.toString
-    mkEncoder[F, T] { (path, value) =>
-      encoder.value.write(path :+ className, gen.to(value))
+    mkEncoder[F, T] { (path, settings, value) =>
+      val newPath =
+        if (settings.includeClassNameInPath) path :+ className
+        else path
+      encoder.value.write(newPath, settings, gen.to(value))
     }
   }
 }
