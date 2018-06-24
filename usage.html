@@ -134,15 +134,15 @@
 <p>As implied in the above examples the configuration keys are dot (<code class="highlighter-rouge">.</code>) separated and all lowercase. This is configurable by creating a new implicit instance of <code class="highlighter-rouge">Hints</code> for the configuration source.</p>
 
 <div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">import</span> <span class="nn">extruder.core.MapSource._</span>
-<span class="k">import</span> <span class="nn">extruder.core.MapHints</span>
+<span class="k">import</span> <span class="nn">extruder.core.Settings</span>
 
-<span class="k">implicit</span> <span class="k">val</span> <span class="n">hints</span><span class="k">:</span> <span class="kt">MapHints</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">MapHints</span> <span class="o">{</span>
+<span class="k">val</span> <span class="n">settings</span><span class="k">:</span> <span class="kt">Settings</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Settings</span> <span class="o">{</span>
   <span class="k">override</span> <span class="k">def</span> <span class="n">pathToString</span><span class="o">(</span><span class="n">path</span><span class="k">:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">String</span><span class="o">])</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">mkString</span><span class="o">(</span><span class="s">"_"</span><span class="o">).</span><span class="n">toUpperCase</span>
 <span class="o">}</span>
 
 <span class="k">case</span> <span class="k">class</span> <span class="nc">Example</span><span class="o">(</span><span class="n">defaultedString</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">"default"</span><span class="o">,</span> <span class="n">configuredString</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">optionalString</span><span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">String</span><span class="o">])</span>
 
-<span class="n">println</span><span class="o">(</span><span class="n">parameters</span><span class="o">[</span><span class="kt">Example</span><span class="o">])</span>
+<span class="n">println</span><span class="o">(</span><span class="n">parameters</span><span class="o">[</span><span class="kt">Example</span><span class="o">](</span><span class="n">settings</span><span class="o">))</span>
 </code></pre>
 </div>
 <p>Changing the <code class="highlighter-rouge">pathToString</code> implementation will change the expected configuration keys:</p>
