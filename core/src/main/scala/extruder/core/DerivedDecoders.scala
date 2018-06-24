@@ -7,10 +7,10 @@ import shapeless.labelled.{field, FieldType}
 import scala.reflect.runtime.universe.TypeTag
 
 trait DerivedDecoders { self: Decoders with DecodeTypes =>
-  implicit def cnilDecoder[F[_]](implicit hints: Hint, F: Eff[F]): Dec[F, CNil] =
-    mkDecoder[F, CNil] { (path, _, _) =>
+  implicit def cnilDecoder[F[_]](implicit F: Eff[F]): Dec[F, CNil] =
+    mkDecoder[F, CNil] { (path, settings, _, _) =>
       F.validationFailure(
-        s"Could not find specified implementation of sealed type at path '${hints.pathToStringWithType(path)}'"
+        s"Could not find specified implementation of sealed type at path '${settings.pathToStringWithType(path)}'"
       )
     }
 
@@ -19,18 +19,17 @@ trait DerivedDecoders { self: Decoders with DecodeTypes =>
     headResolve: Dec[F, H],
     tailResolve: Lazy[Dec[F, T]],
     typeResolver: Lazy[Dec[F, Option[String]]],
-    hints: Hint,
     F: Eff[F]
   ): Dec[F, FieldType[K, H] :+: T] =
-    mkDecoder { (path, _, data) =>
+    mkDecoder { (path, settings, _, data) =>
       val onValidType: Option[String] => F[FieldType[K, H] :+: T] = {
         case None =>
-          F.missing(s"Could not type of sealed instance at path '${hints.pathToStringWithType(path)}'")
+          F.missing(s"Could not type of sealed instance at path '${settings.pathToStringWithType(path)}'")
         case Some(tpe) if tpe == key.value.name =>
-          headResolve.read(path, None, data).map(v => Inl(field[K](v)))
-        case _ => tailResolve.value.read(path, None, data).map(Inr(_))
+          headResolve.read(path, settings, None, data).map(v => Inl(field[K](v)))
+        case _ => tailResolve.value.read(path, settings, None, data).map(Inr(_))
       }
-      F.flatMap(typeResolver.value.read(hints.pathWithType(path), None, data))(onValidType)
+      F.flatMap(typeResolver.value.read(settings.pathWithType(path), settings, None, data))(onValidType)
     }
 
   implicit def unionDecoder[F[_], T, V <: Coproduct](
@@ -44,17 +43,17 @@ trait DerivedDecoders { self: Decoders with DecodeTypes =>
     neOpt: T <:!< Option[_],
     neCol: T <:!< TraversableOnce[_]
   ): Dec[F, T] =
-    mkDecoder { (path, _, data) =>
-      underlying.value.read(path, None, data).map(gen.from)
+    mkDecoder { (path, settings, _, data) =>
+      underlying.value.read(path, settings, None, data).map(gen.from)
     }
 
   trait DerivedDecoderWithDefault[T, F[_], Repr <: HList, DefaultRepr <: HList] {
-    def read(path: List[String], default: DefaultRepr, data: DecodeData): F[Repr]
+    def read(path: List[String], settings: Sett, default: DefaultRepr, data: DecodeData): F[Repr]
   }
 
   implicit def hNilDerivedDecoder[T, F[_]](implicit F: Eff[F]): DerivedDecoderWithDefault[T, F, HNil, HNil] =
     new DerivedDecoderWithDefault[T, F, HNil, HNil] {
-      override def read(path: List[String], default: HNil, data: DecodeData): F[HNil] = F.pure(HNil)
+      override def read(path: List[String], settings: Sett, default: HNil, data: DecodeData): F[HNil] = F.pure(HNil)
     }
 
   implicit def hConsDerivedDecoder[T, F[_], K <: Symbol, V, TailRepr <: HList, DefaultsTailRepr <: HList](
@@ -66,14 +65,15 @@ trait DerivedDecoders { self: Decoders with DecodeTypes =>
     new DerivedDecoderWithDefault[T, F, FieldType[K, V] :: TailRepr, Option[V] :: DefaultsTailRepr] {
       override def read(
         path: List[String],
+        settings: Sett,
         default: Option[V] :: DefaultsTailRepr,
         data: DecodeData
       ): F[::[FieldType[K, V], TailRepr]] = {
         val fieldName = key.value.name
 
         F.ap2(F.pure((h: V, t: TailRepr) => field[K](h) :: t))(
-          decoder.value.read(path :+ fieldName, default.head, data),
-          tailDecoder.value.read(path, default.tail, data)
+          decoder.value.read(path :+ fieldName, settings, default.head, data),
+          tailDecoder.value.read(path, settings, default.tail, data)
         )
       }
     }
@@ -84,17 +84,16 @@ trait DerivedDecoders { self: Decoders with DecodeTypes =>
     tag: TypeTag[T],
     F: Eff[F],
     decoder: Lazy[DerivedDecoderWithDefault[T, F, GenRepr, DefaultOptsRepr]],
-    hints: Hint,
     lp: LowPriority,
     refute: Refute[DecRefute[T]],
     refuteParser: Refute[Parser[T]],
     refuteMultiParser: Refute[MultiParser[F, T]]
   ): Dec[F, T] =
-    mkDecoder { (path, _, data) =>
+    mkDecoder { (path, settings, _, data) =>
       val newPath =
-        if (hints.includeClassNameInPath) path :+ tag.tpe.typeSymbol.name.toString
+        if (settings.includeClassNameInPath) path :+ tag.tpe.typeSymbol.name.toString
         else path
-      decoder.value.read(newPath, defaults(), data).map(gen.from)
+      decoder.value.read(newPath, settings, defaults(), data).map(gen.from)
     }
 
 }

@@ -2,50 +2,39 @@ package extruder.metrics.dimensional
 
 import cats.data.NonEmptyList
 import extruder.core.{EncoderRefute, Show}
-import extruder.metrics.MetricEncoders
+import extruder.metrics.{snakeCaseTransformation, MetricEncoders, MetricSettings}
 import extruder.metrics.data._
 import shapeless.ops.hlist.{Length, Mapper, Repeat, Take}
 import shapeless.{<:!<, =:!=, Generic, HList, Nat, Poly1, Refute}
 
+import scala.collection.SortedSet
 import scala.concurrent.duration.FiniteDuration
 
 trait DimensionalMetricEncoders extends MetricEncoders {
   val metricTypeName = "metric_type"
 
   override type EncRefute[T] = DimensionalMetricEncoderRefute[T]
-
-  def labelTransform(value: String): String
+  override type Sett <: DimensionalMetricSettings
 
   implicit def resetNamespaceEncoder[F[_]: Eff, T](implicit enc: Enc[F, T]): Enc[F, ResetNamespace[T]] =
-    mkEncoder[F, ResetNamespace[T]] { (path, v) =>
-      enc.write(path.lastOption.fold(path)(List(_)), v.value)
+    mkEncoder[F, ResetNamespace[T]] { (path, settings: Sett, v) =>
+      enc.write(path.lastOption.fold(path)(List(_)), settings, v.value)
     }
 
   protected def buildMetrics[F[_]](
     namespaceName: Option[String],
     namespace: List[String],
+    settings: Sett,
     inter: Metrics,
     defaultLabels: Map[String, String],
     defaultMetricType: MetricType
-  )(implicit F: Eff[F], hints: Hint): F[Iterable[DimensionalMetric]] = {
+  )(implicit F: Eff[F]): F[Iterable[DimensionalMetric]] = {
     val defaultDimensionNames = defaultLabels.keySet ++ namespaceName + metricTypeName
     val defaultDimensionValues = defaultLabels.values.toVector
 
-    val metrics =
-      inter.flatMap { case (k, v) => calculateDimensions(namespace, defaultMetricType)(k, v) }.groupBy(_.key).map {
-        case ((name, metricType, labelName), ms) =>
-          val dimensions: Set[String] = defaultDimensionNames ++ labelName
-
-          val values = ms.foldLeft(Map.empty[Vector[String], Numbers]) {
-            case (acc, metric) =>
-              val dimensionValues = (defaultDimensionValues ++ namespaceName
-                .map(_ => metric.namespace.getOrElse("")) :+ metricType.name) ++ metric.labelVal
-
-              acc + (dimensionValues -> acc.get(dimensionValues).fold(metric.value)(Numbers.add(_, metric.value)))
-          }
-
-          DimensionalMetric(name, dimensions, metricType, values)
-      }
+    val metrics = inter.toList
+      .groupBy(metricGrouping(settings, defaultMetricType))
+      .map(makeDimensional(namespaceName, namespace, settings, defaultDimensionNames, defaultDimensionValues))
 
     val metricTypes = metrics
       .foldLeft(Map.empty[String, Set[MetricType]]) { (acc, m) =>
@@ -60,53 +49,48 @@ trait DimensionalMetricEncoders extends MetricEncoders {
     }
   }
 
-  private def calculateDimensions(namespace: List[String], defaultMetricType: MetricType)(key: MetricKey, v: Numbers)(
-    implicit hints: Hint
-  ): Option[Metric] =
-    (key.metricType.getOrElse(defaultMetricType) match {
-      case MetricType.Status => calculateStatusDimensions(namespace) _
-      case _ => calculateMetricDimensions(namespace, defaultMetricType) _
-    })(key, v)
-
-  private def calculateStatusDimensions(
-    namespace: List[String]
-  )(key: MetricKey, v: Numbers)(implicit hints: Hint): Option[Metric] =
-    (namespace ++ key.name).reverse match {
-      case name :: nameTail =>
-        Some(SimpleMetric(labelTransform(name), calculateNameSpace(nameTail), MetricType.Status, v))
-      case _ => None
-    }
-
-  private def calculateMetricDimensions(
-    namespace: List[String],
+  private def metricGrouping(
+    settings: Sett,
     defaultMetricType: MetricType
-  )(key: MetricKey, v: Numbers)(implicit hints: Hint): Option[Metric] =
-    (namespace ++ key.name).reverse match {
-      case labelValue :: labelName :: name :: nameTail =>
-        Some(
-          LabelledMetric(
-            labelTransform(name),
-            calculateNameSpace(nameTail),
-            labelTransform(labelName),
-            labelValue,
-            key.metricType.getOrElse(defaultMetricType),
-            v
-          )
-        )
-      case name :: nameTail =>
-        Some(
-          SimpleMetric(
-            labelTransform(name),
-            calculateNameSpace(nameTail),
-            key.metricType.getOrElse(defaultMetricType),
-            v
-          )
-        )
-      case _ => None
-    }
+  ): ((MetricKey, Numbers)) => (String, MetricType, SortedSet[String]) = {
+    case (SimpleMetricKey(name, _, metricType), _) =>
+      (settings.labelTransform(name), metricType.getOrElse(defaultMetricType), SortedSet.empty[String])
+    case (DimensionalMetricKey(name, _, dimensions, metricType), _) =>
+      (
+        settings.labelTransform(name),
+        metricType.getOrElse(defaultMetricType),
+        SortedSet(dimensions.keys.map(settings.labelTransform).toSeq: _*)
+      )
+  }
 
-  private def calculateNameSpace(nameTail: List[String])(implicit hints: Hint): Option[String] =
-    NonEmptyList.fromList(nameTail).map(nel => hints.pathToString(nel.toList))
+  private def makeDimensional(
+    namespaceName: Option[String],
+    namespace: List[String],
+    settings: Sett,
+    defaultDimensionNames: Set[String],
+    defaultDimensionValues: Vector[String]
+  ): (((String, MetricType, SortedSet[String]), List[(MetricKey, Numbers)])) => DimensionalMetric = {
+    case ((name, metricType, dimensions), ms) =>
+      val allDimensions: Set[String] = defaultDimensionNames ++ dimensions
+
+      val values = ms.foldLeft(Map.empty[Vector[String], Numbers]) {
+        case (acc, (key, value)) =>
+          val baseDimensionValues: Vector[String] = (defaultDimensionValues ++ namespaceName
+            .map(_ => calculateNameSpace(namespace ++ key.path, settings).getOrElse(""))) :+ metricType.name
+
+          val dimensionValues: Vector[String] = key match {
+            case _: SimpleMetricKey => baseDimensionValues
+            case k: DimensionalMetricKey => baseDimensionValues ++ k.dimensions.toVector.sortBy(_._1).map(_._2)
+          }
+
+          acc + (dimensionValues -> acc.get(dimensionValues).fold(value)(Numbers.add(_, value)))
+      }
+
+      DimensionalMetric(name, allDimensions, metricType, values)
+  }
+
+  private def calculateNameSpace(nameTail: List[String], settings: Sett): Option[String] =
+    NonEmptyList.fromList(nameTail).map(nel => settings.pathToString(nel.toList))
 
 }
 
@@ -156,38 +140,13 @@ object UnRefute {
   implicit def unRefuteMetricValue[A](implicit ev: A <:< MetricValue[_]): UnRefute[A] = new UnRefute[A] {}
 }
 
-sealed trait Metric {
-  def name: String
-  def metricType: MetricType
-  def value: Numbers
-  def namespace: Option[String]
-  def labelPair: Option[(String, String)]
-  def labelVal: Option[String] = labelPair.map(_._2)
-
-  def key: (String, MetricType, Option[String]) = (name, metricType, labelPair.map(_._1))
-}
-case class LabelledMetric private[dimensional] (
-  name: String,
-  namespace: Option[String],
-  labelName: String,
-  labelValue: String,
-  metricType: MetricType,
-  value: Numbers
-) extends Metric {
-  override def labelPair: Option[(String, String)] = Some(labelName -> labelValue)
-}
-case class SimpleMetric private[dimensional] (
-  name: String,
-  namespace: Option[String],
-  metricType: MetricType,
-  value: Numbers
-) extends Metric {
-  override def labelPair: Option[(String, String)] = None
-}
-
 case class DimensionalMetric private[dimensional] (
   name: String,
   labelNames: Set[String],
   metricType: MetricType,
   values: Map[Vector[String], Numbers]
 )
+
+trait DimensionalMetricSettings extends MetricSettings {
+  def labelTransform(value: String): String = snakeCaseTransformation(value)
+}

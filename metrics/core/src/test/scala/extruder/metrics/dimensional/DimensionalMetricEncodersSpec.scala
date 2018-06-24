@@ -2,9 +2,9 @@ package extruder.metrics.dimensional
 
 import cats.data.NonEmptyList
 import cats.syntax.either._
-import extruder.core.{Encode, Validation, ValidationFailure}
+import extruder.core.{Encode, ValidationFailure}
 import extruder.effect.ExtruderMonadError
-import extruder.metrics.MetricEncodersSpec.{RequestCount, StatusCode}
+import extruder.metrics.MetricEncodersSpec.{Dimensions, RequestCount, StatusCode}
 import extruder.metrics._
 import extruder.metrics.data._
 import org.scalacheck.Prop
@@ -25,20 +25,24 @@ class DimensionalMetricEncodersSpec
   import DimensionalMetricEncodersSpec._
   import extruder.metrics.MetricEncodersSpec._
 
-  override type Enc[F[_], T] = TestMetricEncoder[F, T]
+  override type Enc[F[_], T] = TestDimensionalMetricEncoder[F, T]
   override type OutputData = Iterable[DimensionalMetric]
   override type Eff[F[_]] = ExtruderMonadError[F]
-  override type Hint = TestMetricsHints.type
+  override type Sett = DimensionalMetricSettings
 
-  override protected def mkEncoder[F[_], T](f: (List[String], T) => F[Metrics]): TestMetricEncoder[F, T] =
-    new TestMetricEncoder[F, T] {
-      override def write(path: List[String], in: T): F[Metrics] = f(path, in)
+  override def defaultSettings: DimensionalMetricSettings = new DimensionalMetricSettings {}
+
+  override protected def mkEncoder[F[_], T](
+    f: (List[String], Sett, T) => F[Metrics]
+  ): TestDimensionalMetricEncoder[F, T] =
+    new TestDimensionalMetricEncoder[F, T] {
+      override def write(path: List[String], settings: Sett, in: T): F[Metrics] = f(path, settings, in)
     }
 
-  override protected def finalizeOutput[F[_]](namespace: List[String], inter: Metrics)(
-    implicit F: ExtruderMonadError[F],
-    hints: TestMetricsHints.type
-  ): F[Iterable[DimensionalMetric]] = buildMetrics(Some("namespace"), namespace, inter, Map.empty, MetricType.Counter)
+  override protected def finalizeOutput[F[_]](namespace: List[String], settings: Sett, inter: Metrics)(
+    implicit F: ExtruderMonadError[F]
+  ): F[Iterable[DimensionalMetric]] =
+    buildMetrics(Some("namespace"), namespace, settings, inter, Map.empty, MetricType.Counter)
 
   override def is: SpecStructure =
     s2"""
@@ -46,6 +50,7 @@ class DimensionalMetricEncodersSpec
         Can encode a map where each key becomes a metric name and the namespace is empty $noLabel
         Can encode a map within a case class where the name of the case class is the metric name and the map keys become label values $withLabel
         Can encode statuses where the status value appears as the metric name $status
+        Can encode multidimensional data $testMultiDimensional
         Can reset the namespace at a lower level in the case class tree $testResetNamespace
         Can encode a status within a case class $testStatus
         Can encode error counts $testErrors
@@ -81,16 +86,28 @@ class DimensionalMetricEncodersSpec
       val short: Short = 1
       val status = metrics.filter(_.metricType == MetricType.Status).head
       (metrics.size == 2)
-        .and(status.name === labelTransform(a.someStatus))
+        .and(status.name === defaultSettings.labelTransform(a.someStatus))
         .and(status.values.size === 1)
         .and(status.values.head._2 === Coproduct[Numbers](short))
 
     }
   }
 
+  def testMultiDimensional: Prop = prop { data: DimensionalData =>
+    encode[DimensionalData](List("ns"), data) must beRight
+      .which { metrics =>
+        (metrics.size === data.data.headOption.fold(0)(_ => 1))
+          .and(
+            metrics.map(_.name).toSet.headOption === Some("data")
+              .filter(_ => data.data.nonEmpty)
+          )
+          .and(metrics.flatMap(_.values.values.flatMap(_.select[Int])).sum === data.data.values.sum)
+      }
+  }
+
   def testResetNamespace: Prop = prop { (rq: Reset) =>
     encode[Reset](rq) must beRight.which { metrics =>
-      (metrics.size === 2).and(metrics.map(_.name) === List("a", "b"))
+      (metrics.size === 2).and(metrics.map(_.name) === List("b", "a"))
     }
   }
 
@@ -98,7 +115,11 @@ class DimensionalMetricEncodersSpec
     encode[EncoderStats2](stats) must beRight.which { metrics =>
       val short: Short = 1
       (metrics.size === 2)
-        .and(metrics.map(_.name) must containTheSameElementsAs(List(labelTransform(stats.jobStatus), "http_requests")))
+        .and(
+          metrics.map(_.name) must containTheSameElementsAs(
+            List(defaultSettings.labelTransform(stats.jobStatus), "http_requests")
+          )
+        )
         .and(metrics.filter(_.metricType === MetricType.Status).head.values.head._2 === Coproduct[Numbers](short))
     }
   }
@@ -124,7 +145,7 @@ class DimensionalMetricEncodersSpec
 
   def testDifferentNumericTypeFail: Prop = prop { (dt: DifferentTypes) =>
     Either.catchNonFatal(
-      compileError("encode[Validation, DifferentTypes](dt)").check(
+      compileError("encode[extruder.core.Validation, DifferentTypes](dt)").check(
         "",
         "could not find implicit value for parameter encoder: DimensionalMetricEncodersSpec.this.Enc" +
           "[extruder.core.Validation,extruder.metrics.dimensional.DimensionalMetricEncodersSpec.DifferentTypes]"
@@ -134,15 +155,13 @@ class DimensionalMetricEncodersSpec
 
   def testDifferentValueTypeFail: Prop = prop { (dt: DifferentTypes2) =>
     Either.catchNonFatal(
-      compileError("encode[Validation, DifferentTypes2](dt)").check(
+      compileError("encode[extruder.core.Validation, DifferentTypes2](dt)").check(
         "",
         "could not find implicit value for parameter encoder: DimensionalMetricEncodersSpec.this.Enc" +
           "[extruder.core.Validation,extruder.metrics.dimensional.DimensionalMetricEncodersSpec.DifferentTypes2]"
       )
     ) must beRight
   }
-
-  override def labelTransform(value: String): String = snakeCaseTransformation(value)
 
 }
 
@@ -167,5 +186,9 @@ object DimensionalMetricEncodersSpec {
   case class Timer(a: ResetNamespace[TimerValue[Long]])
 
   case class Fail(one: Counter, two: Timer)
+
+  case class DimensionalData(data: Map[Dimensions, Int])
+
+  trait TestDimensionalMetricEncoder[F[_], T] extends MetricEncoder[F, DimensionalMetricSettings, T]
 
 }

@@ -6,17 +6,17 @@ import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.syntax.traverse._
 import com.netflix.spectator.api._
-import extruder.core.{Encode, HintsCompanion}
+import extruder.core.Encode
 import extruder.effect.ExtruderAsync
 import extruder.metrics._
 import extruder.metrics.data.{MetricType, Metrics, Numbers}
-import extruder.metrics.dimensional.{DimensionalMetric, DimensionalMetricEncoders}
+import extruder.metrics.dimensional.{DimensionalMetric, DimensionalMetricEncoders, DimensionalMetricSettings}
 
 import scala.collection.JavaConverters._
 
 trait SpectatorEncoders extends DimensionalMetricEncoders {
-  override type Hint = SpectatorHints
-  override def labelTransform(value: String): String = snakeCaseTransformation(value)
+  override type Sett = DimensionalMetricSettings
+  override def defaultSettings: DimensionalMetricSettings = new DimensionalMetricSettings {}
 }
 
 trait SpectatorEncode extends SpectatorEncoders with Encode {
@@ -26,11 +26,12 @@ trait SpectatorEncode extends SpectatorEncoders with Encode {
   protected def buildMeters[F[_]](
     namespaceName: Option[String],
     namespace: List[String],
+    settings: Sett,
     inter: Metrics,
     defaultLabels: Map[String, String],
     defaultMetricType: MetricType
-  )(implicit F: Eff[F], hints: Hint): F[List[Unit]] =
-    buildMetrics[F](namespaceName, namespace, inter, defaultLabels, defaultMetricType).flatMap { metrics =>
+  )(implicit F: Eff[F]): F[List[Unit]] =
+    buildMetrics[F](namespaceName, namespace, settings, inter, defaultLabels, defaultMetricType).flatMap { metrics =>
       metrics.toList.traverse { metric =>
         metric.metricType match {
           case MetricType.Counter => makeCounter(metric)
@@ -44,13 +45,13 @@ trait RegistryEncoders extends SpectatorEncoders {
   override type Enc[F[_], T] = RegistryMetricsEncoder[F, T]
   override type Eff[F[_]] = ExtruderAsync[F]
 
-  override protected def mkEncoder[F[_], T](f: (List[String], T) => F[Metrics]): RegistryMetricsEncoder[F, T] =
+  override protected def mkEncoder[F[_], T](f: (List[String], Sett, T) => F[Metrics]): RegistryMetricsEncoder[F, T] =
     new RegistryMetricsEncoder[F, T] {
-      override def write(path: List[String], in: T): F[Metrics] = f(path, in)
+      override def write(path: List[String], settings: Sett, in: T): F[Metrics] = f(path, settings, in)
     }
 }
 
-trait RegistryMetricsEncoder[F[_], T] extends MetricEncoder[F, T]
+trait RegistryMetricsEncoder[F[_], T] extends MetricEncoder[F, DimensionalMetricSettings, T]
 
 object RegistryMetricsEncoder extends RegistryEncoders
 
@@ -89,16 +90,9 @@ class SpectatorRegistry(
     F.async(cb => cb(setGauges))
   }
 
-  override protected def finalizeOutput[F[_]](
-    namespace: List[String],
-    inter: EncodeData
-  )(implicit F: Eff[F], hints: Hint): F[Registry] =
-    buildMeters(namespaceName, namespace, inter, defaultLabels, defaultMetricType).map(_ => registry)
+  override protected def finalizeOutput[F[_]](namespace: List[String], settings: Sett, inter: EncodeData)(
+    implicit F: Eff[F]
+  ): F[Registry] =
+    buildMeters(namespaceName, namespace, settings, inter, defaultLabels, defaultMetricType).map(_ => registry)
 
-}
-
-trait SpectatorHints extends MetricsHints
-
-object SpectatorHints extends HintsCompanion[SpectatorHints] {
-  override implicit def default: SpectatorHints = new SpectatorHints {}
 }

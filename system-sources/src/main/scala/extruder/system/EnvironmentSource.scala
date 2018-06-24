@@ -5,7 +5,7 @@ import extruder.effect.{ExtruderMonadError, ExtruderSync}
 
 import scala.collection.JavaConverters._
 
-trait EnvironmentDecoder[F[_], T] extends Decoder[F, T, Map[String, String]]
+trait EnvironmentDecoder[F[_], T] extends Decoder[F, Settings, T, Map[String, String]]
 
 trait EnvironmentDecoders extends BaseEnvironmentDecoders {
   override type Eff[F[_]] = ExtruderMonadError[F]
@@ -28,32 +28,35 @@ trait BaseEnvironmentDecoders
   override type InputData = java.util.Map[String, String]
   override type DecodeData = Map[String, String]
   override type Dec[F[_], T] = EnvironmentDecoder[F, T]
-  override type Hint = EnvironmentHints
+  override type Sett = Settings
 
-  override protected def hasValue[F[_]](
-    path: List[String],
-    data: Map[String, String]
-  )(implicit hints: Hint, F: Eff[F]): F[Boolean] =
-    F.map(lookupValue(path, data))(_.isDefined)
+  override val defaultSettings: Settings = new Settings {
+    override def pathToString(path: List[String]): String = path.mkString("_").toUpperCase
+  }
 
-  override protected def lookupValue[F[_]](
-    path: List[String],
-    data: Map[String, String]
-  )(implicit hints: Hint, F: Eff[F]): F[Option[String]] =
-    F.pure(data.get(hints.pathToString(path)))
+  override protected def hasValue[F[_]](path: List[String], settings: Settings, data: Map[String, String])(
+    implicit F: Eff[F]
+  ): F[Boolean] =
+    F.map(lookupValue(path, settings, data))(_.isDefined)
+
+  override protected def lookupValue[F[_]](path: List[String], settings: Settings, data: Map[String, String])(
+    implicit F: Eff[F]
+  ): F[Option[String]] =
+    F.pure(data.get(settings.pathToString(path)))
 
   override protected def mkDecoder[F[_], T](
-    f: (List[String], Option[T], Map[String, String]) => F[T]
+    f: (List[String], Settings, Option[T], Map[String, String]) => F[T]
   ): EnvironmentDecoder[F, T] =
     new EnvironmentDecoder[F, T] {
-      override def read(path: List[String], default: Option[T], data: Map[String, String]): F[T] =
-        f(path, default, data)
+      override def read(path: List[String], settings: Settings, default: Option[T], data: Map[String, String]): F[T] =
+        f(path, settings, default, data)
     }
 
   override protected def prepareInput[F[_]](
     namespace: List[String],
+    settings: Settings,
     data: java.util.Map[String, String]
-  )(implicit F: Eff[F], util: Hint): F[Map[String, String]] =
+  )(implicit F: Eff[F]): F[Map[String, String]] =
     F.pure(data.asScala.toMap)
 
   override def loadInput[F[_]](implicit F: Eff[F]): F[java.util.Map[String, String]] =
@@ -65,11 +68,3 @@ object EnvironmentDecoder extends EnvironmentDecoders
 object EnvironmentSource extends EnvironmentDecoders
 
 object SafeEnvironmentSource extends SafeEnvironmentDecoders
-
-trait EnvironmentHints extends Hints {
-  override def pathToString(path: List[String]): String = path.mkString("_").toUpperCase
-}
-
-object EnvironmentHints extends HintsCompanion[EnvironmentHints] {
-  override implicit val default: EnvironmentHints = new EnvironmentHints {}
-}

@@ -24,6 +24,10 @@ trait LowPriorityAsyncInstances {
     override def async[A](k: ((Either[Throwable, A]) => Unit) => Unit): EitherT[F, ValidationErrors, A] =
       FE.async(k)
 
+    override def asyncF[A](
+      k: (Either[Throwable, A] => Unit) => EitherT[F, ValidationErrors, Unit]
+    ): EitherT[F, ValidationErrors, A] = FE.asyncF(k)
+
     override def liftIO[A](ioa: IO[A]): EitherT[F, ValidationErrors, A] = FE.liftIO(ioa)
   }
 }
@@ -31,6 +35,7 @@ trait LowPriorityAsyncInstances {
 trait AsyncInstances {
   class FromAsync[F[_]](implicit F: Async[F]) extends ExtruderSync.FromSync[F]()(F) with ExtruderAsync[F] {
     override def async[A](k: (Either[Throwable, A] => Unit) => Unit): F[A] = F.async(k)
+    override def asyncF[A](k: (Either[Throwable, A] => Unit) => F[Unit]): F[A] = F.asyncF(k)
     override def liftIO[A](ioa: IO[A]): F[A] = F.liftIO(ioa)
   }
 

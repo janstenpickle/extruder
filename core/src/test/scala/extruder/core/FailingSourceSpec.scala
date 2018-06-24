@@ -26,33 +26,29 @@ class FailingSourceSpec extends Specification with ScalaCheck with EitherMatcher
         Finalization of the data sink fails $testFinalizeFail
       """
 
-  override protected def finalizeOutput[F[_]](
-    namespace: List[String],
-    data: Map[String, String]
-  )(implicit F: Eff[F], util: Hint): F[Map[String, String]] =
+  override protected def finalizeOutput[F[_]](namespace: List[String], settings: Sett, data: Map[String, String])(
+    implicit F: Eff[F]
+  ): F[Map[String, String]] =
     if (data.keys.forall(_.contains(finalizeFailKey))) F.validationFailure(finalizeFailMessage)
     else F.pure(data)
 
-  override protected def prepareInput[F[_]](
-    namespace: List[String],
-    data: Map[String, String]
-  )(implicit F: Eff[F], util: Hint): F[Map[String, String]] =
+  override protected def prepareInput[F[_]](namespace: List[String], settings: Sett, data: Map[String, String])(
+    implicit F: Eff[F]
+  ): F[Map[String, String]] =
     if (data.keys.forall(_.contains(prepareFailKey))) F.validationFailure(prepareFailMessage)
     else F.pure(data)
 
-  override protected def lookupValue[F[_]](
-    path: List[String],
-    data: Map[String, String]
-  )(implicit hints: MapHints, F: Eff[F]): F[Option[String]] =
-    if (path.contains(okNamespace)) F.pure(data.get(hints.pathToString(path)))
+  override protected def lookupValue[F[_]](path: List[String], settings: Sett, data: Map[String, String])(
+    implicit F: Eff[F]
+  ): F[Option[String]] =
+    if (path.contains(okNamespace)) F.pure(data.get(settings.pathToString(path)))
     else F.validationFailure(lookupFailMessage)
 
-  override protected def writeValue[F[_]](
-    path: List[String],
-    value: String
-  )(implicit hints: MapHints, F: Eff[F]): F[Map[String, String]] =
+  override protected def writeValue[F[_]](path: List[String], settings: Sett, value: String)(
+    implicit F: Eff[F]
+  ): F[Map[String, String]] =
     if (path.contains(okNamespace)) F.validationFailure(writeFailMessage)
-    else F.pure(Map(hints.pathToString(path) -> value))
+    else F.pure(Map(settings.pathToString(path) -> value))
 
   def testLookupFail[T](
     gen: Gen[T]
@@ -64,10 +60,10 @@ class FailingSourceSpec extends Specification with ScalaCheck with EitherMatcher
   )(implicit encoder: MapEncoder[Validation, T], decoder: MapDecoder[Validation, T]): Prop =
     test[T](gen, _ mustEqual NonEmptyList.of(ValidationFailure(writeFailMessage)), Some(okNamespace))
 
-  def testCnilDecoder(implicit hints: MapHints, F: Eff[Validation]): MatchResult[Any] =
-    cnilDecoder.read(List.empty, None, Map.empty) mustEqual
+  def testCnilDecoder(implicit F: Eff[Validation]): MatchResult[Any] =
+    cnilDecoder.read(List.empty, defaultSettings, None, Map.empty) mustEqual
       F.validationFailure(
-        s"Could not find specified implementation of sealed type at path '${hints.pathToStringWithType(List.empty)}'"
+        s"Could not find specified implementation of sealed type at path '${defaultSettings.pathToStringWithType(List.empty)}'"
       )
 
   def testDurationDecoder: MatchResult[Any] =
