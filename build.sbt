@@ -3,7 +3,7 @@ import microsites._
 val specs2Ver = "4.0.4"
 val catsVer = "1.1.0"
 val catsEffectVer = "1.0.0-RC2"
-val prometheusVer = "0.3.0"
+val prometheusVer = "0.4.0"
 val refinedVer = "0.9.0"
 val scalaCheckShapelessVer = "1.1.8"
 
@@ -11,7 +11,7 @@ val commonSettings = Seq(
   organization := "extruder",
   scalaVersion := "2.12.6",
   crossScalaVersions := Seq("2.11.12", "2.12.6"),
-  addCompilerPlugin(("org.spire-math" % "kind-projector" % "0.9.6").cross(CrossVersion.binary)),
+  addCompilerPlugin(("org.spire-math" % "kind-projector" % "0.9.7").cross(CrossVersion.binary)),
   scalacOptions ++= Seq(
     "-unchecked",
     "-feature",
@@ -90,7 +90,7 @@ lazy val aws = (project in file("aws"))
       Seq(
         name := "extruder-aws",
         libraryDependencies ++= Seq(
-          "com.amazonaws" % "aws-java-sdk-core"   % "1.11.323",
+          "com.amazonaws" % "aws-java-sdk-core"   % "1.11.354",
           "org.specs2"    %% "specs2-core"        % specs2Ver % "test",
           "org.specs2"    %% "specs2-scalacheck"  % specs2Ver % "test",
           "eu.timepit"    %% "refined-scalacheck" % refinedVer % "test"
