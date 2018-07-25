@@ -29,7 +29,7 @@ trait DimensionalMetricEncoders extends MetricEncoders {
     defaultLabels: Map[String, String],
     defaultMetricType: MetricType
   )(implicit F: Eff[F]): F[Iterable[DimensionalMetric]] = {
-    val defaultDimensionNames = defaultLabels.keySet ++ namespaceName + metricTypeName
+    val defaultDimensionNames = defaultLabels.keys.toVector
     val defaultDimensionValues = defaultLabels.values.toVector
 
     val metrics = inter.toList
@@ -67,11 +67,11 @@ trait DimensionalMetricEncoders extends MetricEncoders {
     namespaceName: Option[String],
     namespace: List[String],
     settings: Sett,
-    defaultDimensionNames: Set[String],
+    defaultDimensionNames: Vector[String],
     defaultDimensionValues: Vector[String]
   ): (((String, MetricType, SortedSet[String]), List[(MetricKey, Numbers)])) => DimensionalMetric = {
     case ((name, metricType, dimensions), ms) =>
-      val allDimensions: Set[String] = defaultDimensionNames ++ dimensions
+      val allDimensions: Vector[String] = ((defaultDimensionNames ++ namespaceName) :+ metricTypeName) ++ dimensions.toVector
 
       val values = ms.foldLeft(Map.empty[Vector[String], Numbers]) {
         case (acc, (key, value)) =>
@@ -142,7 +142,7 @@ object UnRefute {
 
 case class DimensionalMetric private[dimensional] (
   name: String,
-  labelNames: Set[String],
+  labelNames: Vector[String],
   metricType: MetricType,
   values: Map[Vector[String], Numbers]
 )
