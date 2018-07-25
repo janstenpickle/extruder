@@ -1,10 +1,10 @@
 import microsites._
 
 val specs2Ver = "4.0.4"
-val catsVer = "1.2.0"
+val catsVer = "1.1.0"
 val catsEffectVer = "1.0.0-RC2"
 val prometheusVer = "0.4.0"
-val refinedVer = "0.9.2"
+val refinedVer = "0.9.0"
 val scalaCheckShapelessVer = "1.1.8"
 
 val commonSettings = Seq(
@@ -63,7 +63,7 @@ lazy val core = (project in file("core")).settings(
         "org.specs2" %% "specs2-core"       % specs2Ver % "test",
         "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test",
         ("org.typelevel" %% "cats-effect-laws" % catsEffectVer).exclude("org.scalacheck", "scalacheck"),
-        ("org.typelevel" %% "discipline"       % "0.10.0" % "test")
+        ("org.typelevel" %% "discipline"       % "0.9.0" % "test")
           .exclude("org.scalacheck", "scalacheck"),
         ("com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % scalaCheckShapelessVer % "test")
           .exclude("org.scalacheck", "scalacheck")
