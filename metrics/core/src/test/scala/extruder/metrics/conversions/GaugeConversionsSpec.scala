@@ -2,19 +2,12 @@ package extruder.metrics.conversions
 
 import extruder.metrics.conversions.gauge._
 import extruder.metrics.data.GaugeValue
-import org.scalacheck.Prop
-import org.specs2.matcher.Matchers
-import org.specs2.specification.core.SpecStructure
-import org.specs2.{ScalaCheck, Specification}
+import org.scalatest.FunSuite
+import org.scalatest.prop.GeneratorDrivenPropertyChecks
 
-class GaugeConversionsSpec extends Specification with ScalaCheck with Matchers {
-  override def is: SpecStructure =
-    s2"""
-        Can convert a numeric into a gauge $testNumeric
-      """
-
-  def testNumeric: Prop = prop { (i: Int) =>
+class GaugeConversionsSpec extends FunSuite with GeneratorDrivenPropertyChecks {
+  test("Can convert a numeric into a gauge")(forAll { i: Int =>
     val c: GaugeValue[Int] = i
-    c === GaugeValue(i)
-  }
+    assert(c === GaugeValue(i))
+  })
 }

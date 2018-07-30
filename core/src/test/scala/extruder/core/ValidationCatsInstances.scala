@@ -18,7 +18,9 @@ object ValidationCatsInstances {
       .map(l => NonEmptyList.of(l.head, l.tail: _*))
   )
 
-  implicit def eitherErrorsEq[A]: Eq[Validation[A]] = Eq.by[Validation[A], String](_.toString)
+  implicit def validationEq[A]: Eq[Validation[A]] = Eq.by[Validation[A], String](_.toString)
+
+  implicit val validationErrorsEq: Eq[ValidationError] = Eq.by(_.toString)
 
   implicit val vCogen: Cogen[ValidationErrors] = Cogen[String].contramap(_.toString)
 }

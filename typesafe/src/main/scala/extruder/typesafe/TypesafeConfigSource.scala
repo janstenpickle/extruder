@@ -184,10 +184,7 @@ trait BaseTypesafeConfigEncoders
   override type EncodeData = Config
   override type Enc[F[_], T] = TypesafeConfigEncoder[F, T]
 
-  override protected val monoid: Monoid[Config] = new Monoid[Config] {
-    override def empty: Config = List.empty
-    override def combine(x: Config, y: Config): Config = x ++ y
-  }
+  override protected val monoid: Monoid[Config] = BaseTypesafeConfigEncoders.monoid
 
   override protected def writeValue[F[_]](path: List[String], settings: Settings, value: String)(
     implicit F: Eff[F]
@@ -236,6 +233,13 @@ trait BaseTypesafeConfigEncoders
     new TypesafeConfigEncoder[F, T] {
       override def write(path: List[String], settings: Settings, in: T): F[Config] = f(path, settings, in)
     }
+}
+
+object BaseTypesafeConfigEncoders {
+  implicit val monoid: Monoid[Config] = new Monoid[Config] {
+    override def empty: Config = List.empty
+    override def combine(x: Config, y: Config): Config = x ++ y
+  }
 }
 
 trait TypesafeConfigEncoder[F[_], T] extends Encoder[F, Settings, T, Config]

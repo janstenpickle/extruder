@@ -6,11 +6,12 @@ val catsEffectVer = "1.0.0-RC2"
 val prometheusVer = "0.4.0"
 val refinedVer = "0.9.0"
 val scalaCheckShapelessVer = "1.1.8"
+val scalaTestVer = "3.0.5"
 
 val commonSettings = Seq(
   organization := "extruder",
-  scalaVersion := "2.12.6",
-  crossScalaVersions := Seq("2.11.12", "2.12.6"),
+  scalaVersion := "2.12.7",
+  crossScalaVersions := Seq("2.11.12", "2.12.7"),
   addCompilerPlugin(("org.spire-math" % "kind-projector" % "0.9.7").cross(CrossVersion.binary)),
   scalacOptions ++= Seq(
     "-unchecked",
@@ -60,12 +61,11 @@ lazy val core = (project in file("core")).settings(
         ("org.typelevel" %% "cats-effect" % catsEffectVer).exclude("org.scalacheck", "scalacheck"),
         ("org.typelevel" %% "mouse"       % "0.17").exclude("org.scalacheck", "scalacheck"),
         ("com.chuusai"   %% "shapeless"   % "2.3.3").exclude("org.scalacheck", "scalacheck"),
-        "org.specs2" %% "specs2-core"       % specs2Ver % "test",
-        "org.specs2" %% "specs2-scalacheck" % specs2Ver % "test",
+        "org.scalatest" %% "scalatest" % scalaTestVer % Test,
         ("org.typelevel" %% "cats-effect-laws" % catsEffectVer).exclude("org.scalacheck", "scalacheck"),
-        ("org.typelevel" %% "discipline"       % "0.9.0" % "test")
+        ("org.typelevel" %% "discipline"       % "0.9.0" % Test)
           .exclude("org.scalacheck", "scalacheck"),
-        ("com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % scalaCheckShapelessVer % "test")
+        ("com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % scalaCheckShapelessVer % Test)
           .exclude("org.scalacheck", "scalacheck")
       ),
       publishArtifact in Test := true,
@@ -121,11 +121,10 @@ lazy val metricsCore = (project in file("metrics/core"))
       Seq(
         name := "extruder-metrics-core",
         libraryDependencies ++= Seq(
-          "org.specs2"                 %% "specs2-core"               % specs2Ver              % "test",
-          "org.specs2"                 %% "specs2-scalacheck"         % specs2Ver              % "test",
-          "com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % scalaCheckShapelessVer % "test",
-          "com.lihaoyi"                %% "utest"                     % "0.6.3"                % "test",
-          ("org.typelevel" %% "discipline" % "0.9.0" % "test")
+          "org.scalatest"              %% "scalatest"                 % scalaTestVer           % Test,
+          "com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % scalaCheckShapelessVer % Test,
+          "com.lihaoyi"                %% "utest"                     % "0.6.3"                % Test,
+          ("org.typelevel" %% "discipline" % "0.9.0" % Test)
             .exclude("org.scalacheck", "scalacheck")
         ),
         coverageEnabled.in(Test, test) := true
@@ -141,6 +140,7 @@ lazy val prometheus = (project in file("metrics/prometheus"))
         libraryDependencies ++= Seq(
           "io.prometheus"              % "simpleclient"               % prometheusVer,
           "io.prometheus"              % "simpleclient_pushgateway"   % prometheusVer,
+          "org.scalatest"              %% "scalatest"                 % scalaTestVer % Test,
           "org.specs2"                 %% "specs2-core"               % specs2Ver % "test",
           "org.specs2"                 %% "specs2-scalacheck"         % specs2Ver % "test",
           "org.specs2"                 %% "specs2-mock"               % specs2Ver % "test",

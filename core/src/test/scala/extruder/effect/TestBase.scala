@@ -3,15 +3,13 @@ package extruder.effect
 import java.io.{ByteArrayOutputStream, PrintStream}
 
 import cats.effect.laws.util.TestContext
-import org.specs2.Specification
-import org.specs2.scalacheck.Parameters
-import org.specs2.specification.core.Fragments
+import org.scalatest.FunSuite
 import org.typelevel.discipline.Laws
-import org.typelevel.discipline.specs2.Discipline
+import org.typelevel.discipline.scalatest.Discipline
 
 import scala.util.control.NonFatal
 
-trait TestBase extends Specification with Discipline {
+trait TestBase extends FunSuite with Discipline {
   def silenceSystemErr[A](thunk: => A): A = synchronized {
     // Silencing System.err
     val oldErr = System.err
@@ -33,14 +31,13 @@ trait TestBase extends Specification with Discipline {
     }
   }
 
-  def checkAllAsync(name: String, f: TestContext => Laws#RuleSet)(implicit p: Parameters): Fragments = {
+  def checkAllAsync(name: String, f: TestContext => Laws#RuleSet) {
     val context = TestContext()
     val ruleSet = f(context)
 
-    s"""${ruleSet.name} laws must hold for ${name}""" ^ br ^
-      Fragments.foreach(ruleSet.all.properties) {
-        case (id, prop) =>
-          id ! silenceSystemErr(check(prop, p, defaultFreqMapPretty)) ^ br
+    for ((id, prop) ← ruleSet.all.properties)
+      test(name + "." + id) {
+        silenceSystemErr(check(prop))
       }
   }
 }

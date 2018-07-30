@@ -2,25 +2,27 @@ package extruder.core
 
 import java.net.URL
 
-import cats.{Eq, Monad}
 import cats.data.{NonEmptyList, OptionT, ValidatedNel}
-import cats.syntax.either._
 import cats.instances.all._
 import cats.kernel.laws.discipline.MonoidTests
+import cats.{Eq, Monad}
 import extruder.core.TestCommon._
 import extruder.core.ValidationCatsInstances._
 import extruder.effect.ExtruderMonadError
+import org.scalacheck.{Arbitrary, Gen}
 import org.scalacheck.Gen.Choose
 import org.scalacheck.ScalacheckShapeless._
-import org.scalacheck.{Arbitrary, Gen, Prop}
-import org.specs2.matcher.{EitherMatchers, MatchResult}
-import org.specs2.specification.core.SpecStructure
-import org.specs2.{ScalaCheck, Specification}
-import org.typelevel.discipline.specs2.Discipline
+import org.scalatest.prop.GeneratorDrivenPropertyChecks
+import org.scalatest.{Assertion, EitherValues, FunSuite}
+import org.typelevel.discipline.scalatest.Discipline
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
-trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with Discipline {
+abstract class SourceSuite[A](monoidTests: MonoidTests[A]#RuleSet)
+    extends FunSuite
+    with GeneratorDrivenPropertyChecks
+    with EitherValues
+    with Discipline {
   self: Encode
     with Encoders
     with PrimitiveEncoders
@@ -37,9 +39,6 @@ trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with 
   override type OutputData = InputData
 
   val supportsEmptyNamespace: Boolean = true
-  def ext: SpecStructure = s2""
-  def ext2: SpecStructure = s2""
-  def monoidTests: MonoidTests[EncodeData]#RuleSet
 
   implicit val caseClassEq: Eq[CaseClass] = Eq.fromUniversalEquals
   implicit val urlEq: Eq[URL] = Eq.fromUniversalEquals
@@ -57,34 +56,23 @@ trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with 
 
   def convertData(map: Map[List[String], String]): InputData
 
-  override def is: SpecStructure =
-    s2"""
-       Can decode and encode the following types
-        String ${testType(Gen.alphaNumStr.suchThat(_.nonEmpty))}
-        Int ${testNumeric[Int]}
-        Long ${testNumeric[Long]}
-        Double ${testNumeric[Double]}
-        Float ${testNumeric[Float]}
-        Short ${testNumeric[Short]}
-        Byte ${testNumeric[Byte]}
-        Boolean ${testType(Gen.oneOf(true, false))}
-        URL ${testType(urlGen)}
-        Duration ${testType(durationGen)}
-        FiniteDuration ${testType(finiteDurationGen)}
-        Case class tree ${test(Gen.resultOf(CaseClass))}
-        Case class with defaults set $testDefaults
-        Tuple ${test(implicitly[Arbitrary[(Int, Long)]].arbitrary)}
-        Optional Tuple ${test(Gen.option(implicitly[Arbitrary[(Int, Long)]].arbitrary))}
-
-      Can load data defaults with
-        Standard sync decode $testDefaultDecode
-
-      Can represent the following types as a table of required params
-
-      ${checkAll("Encoder monoid", monoidTests)}
-      $ext
-      $ext2
-      """
+  checkAll("Encoder monoid", monoidTests)
+  test("Can decode and encode a String") { testType(Gen.alphaNumStr.suchThat(_.nonEmpty)) }
+  test("Can decode and encode an Int") { testNumeric[Int] }
+  test("Can decode and encode a Long") { testNumeric[Long] }
+  test("Can decode and encode a Double") { testNumeric[Double] }
+  test("Can decode and encode a Float") { testNumeric[Float] }
+  test("Can decode and encode a Short") { testNumeric[Short] }
+  test("Can decode and encode a Byte") { testNumeric[Byte] }
+  test("Can decode and encode a Boolean") { testType(Gen.oneOf(true, false)) }
+//  test("Can decode and encode a URL") { testType(urlGen) }
+  test("Can decode and encode a Duration") { testType(durationGen) }
+  test("Can decode and encode a FiniteDuration") { testType(finiteDurationGen) }
+  test("Can decode and encode a Case class tree") { test(Gen.resultOf(CaseClass)) }
+  test("Can decode and encode a Case class with defaults set") { testDefaults }
+  test("Can decode and encode a Tuple") { test(implicitly[Arbitrary[(Int, Long)]].arbitrary) }
+  test("Can decode and encode a Option Tuple") { test(Gen.option(implicitly[Arbitrary[(Int, Long)]].arbitrary)) }
+  test("Can load data defaults with standard sync decode") { testDefaultDecode }
 
   def testNumeric[T: Numeric](
     implicit encoder: Enc[Validation, T],
@@ -93,9 +81,10 @@ trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with 
     listDecoder: Dec[Validation, List[T]],
     tEq: Eq[T],
     choose: Choose[T]
-  ): Prop =
-    testType(Gen.posNum[T]) ++
-      testType(Gen.negNum[T])
+  ): Assertion = {
+    testType(Gen.posNum[T])
+    testType(Gen.negNum[T])
+  }
 
   def testType[T](gen: Gen[T])(
     implicit encoder: Enc[Validation, T],
@@ -103,48 +92,52 @@ trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with 
     listEncoder: Enc[Validation, List[T]],
     listDecoder: Dec[Validation, List[T]],
     tEq: Eq[T]
-  ): Prop =
-    test(gen) ++
-      test(Gen.option(gen)) ++
-      testList(Gen.listOf(gen).suchThat(_.nonEmpty)) ++
-      testNonEmptyList(gen)
+  ): Assertion = {
+    test(gen)
+    test(Gen.option(gen))
+    testList(Gen.listOf(gen).suchThat(_.nonEmpty))
+    testNonEmptyList(gen)
+  }
 
   def testList[T, F[T] <: TraversableOnce[T]](
     gen: Gen[F[T]]
-  )(implicit encoder: Enc[Validation, F[T]], decoder: Dec[Validation, F[T]]): Prop =
-    Prop.forAll(gen, namespaceGen) { (value, namespace) =>
-      (for {
+  )(implicit encoder: Enc[Validation, F[T]], decoder: Dec[Validation, F[T]]): Assertion =
+    forAll(gen, namespaceGen) { (value, namespace) =>
+      assert((for {
         encoded <- encode[F[T]](namespace, value)
         decoded <- decode[F[T]](namespace, encoded)
-      } yield decoded) must beRight.which(_.toList === value.filter(_.toString.trim.nonEmpty).toList)
+      } yield decoded).map(_.toList === value.filter(_.toString.trim.nonEmpty).toList).right.value)
     }
 
   def testNonEmptyList[T](
     gen: Gen[T]
-  )(implicit encoder: Enc[Validation, NonEmptyList[T]], decoder: Dec[Validation, NonEmptyList[T]]): Prop =
-    Prop.forAllNoShrink(nonEmptyListGen(gen), namespaceGen) { (value, namespace) =>
-      (for {
+  )(implicit encoder: Enc[Validation, NonEmptyList[T]], decoder: Dec[Validation, NonEmptyList[T]]): Assertion =
+    forAll(nonEmptyListGen(gen), namespaceGen) { (value, namespace) =>
+      assert((for {
         encoded <- encode[NonEmptyList[T]](namespace, value)
         decoded <- decode[NonEmptyList[T]](namespace, encoded)
-      } yield decoded) must beRight.which(_.toList === value.filter(_.toString.trim.nonEmpty))
+      } yield decoded).map(_.toList === value.filter(_.toString.trim.nonEmpty)).right.value)
     }
 
-  def test[T](
-    gen: Gen[T]
-  )(implicit encoder: Enc[Validation, T], decoder: Dec[Validation, T], teq: Eq[T], equals: Eq[Validation[T]]): Prop = {
+  def test[T](gen: Gen[T])(
+    implicit encoder: Enc[Validation, T],
+    decoder: Dec[Validation, T],
+    teq: Eq[T],
+    equals: Eq[Validation[T]]
+  ): Assertion = {
     val F: Eff[Validation] = ExtruderMonadError[Validation]
-    Prop.forAllNoShrink(gen, namespaceGen) { (value, namespace) =>
+    forAll(gen, namespaceGen) { (value, namespace) =>
       def eqv(encoded: Validation[OutputData], decoded: InputData => Validation[T]): Boolean =
         equals.eqv(F.flatMap(encoded)(decoded), Right(value))
 
-      eqv(encode[T](namespace, value), decode[T](namespace, _)) &&
-      (if (supportsEmptyNamespace) eqv(encode[T](value), decode[T]) else true)
+      assert(eqv(encode[T](namespace, value), decode[T](namespace, _)))
+      assert(if (supportsEmptyNamespace) eqv(encode[T](value), decode[T]) else true)
     }
   }
 
-  def testDefaults: Prop =
-    Prop.forAll(Gen.alphaNumStr, Gen.posNum[Int], Gen.posNum[Long])(
-      (s, i, l) =>
+  def testDefaults: Assertion =
+    forAll(Gen.alphaNumStr, Gen.posNum[Int], Gen.posNum[Long]) { (s, i, l) =>
+      assert(
         decode[CaseClass](
           convertData(
             Map(List("CaseClass", "s") -> s, List("CaseClass", "i") -> i.toString, List("CaseClass", "l") -> l.toString)
@@ -154,14 +147,18 @@ trait SourceSpec extends Specification with ScalaCheck with EitherMatchers with 
                   else k.filterNot(_ == "CaseClass") -> v
               }
           )
-        ) must beRight(CaseClass(s, i, l, None))
-    )
+        ) === Right(CaseClass(s, i, l, None))
+      )
+    }
 
-  def testDefaultDecode(implicit cvEq: Eq[Validation[CaseClass]]): Boolean =
-    cvEq.eqv(decode[CaseClass], Right(expectedCaseClass)) &&
-      cvEq.eqv(decode[CaseClass](List.empty), Right(expectedCaseClass))
+  def testDefaultDecode(implicit cvEq: Eq[Validation[CaseClass]]): Assertion = {
+    val test1 = cvEq.eqv(decode[CaseClass], Right(expectedCaseClass))
+    val test2 = cvEq.eqv(decode[CaseClass](List.empty), Right(expectedCaseClass))
+    assert(test1)
+    assert(test2)
+  }
 
-  def testCaseClassParams: MatchResult[String] = parameters[CaseClass] !== ""
+  def testCaseClassParams: Assertion = assert(parameters[CaseClass] !== "")
 
   implicit def tuple2Parser[F[_]: Monad, A, B](implicit A: Parser[A], B: Parser[B]): MultiParser[F, (A, B)] =
     new MultiParser[F, (A, B)] {

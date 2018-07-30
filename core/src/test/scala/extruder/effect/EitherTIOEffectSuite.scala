@@ -6,12 +6,12 @@ import cats.effect.laws.util.{TestContext, TestInstances}
 import cats.instances.either._
 import cats.{Eq, MonadError}
 import extruder.core.TestCommon
-import extruder.effect.EitherTIOEffectSpec.EitherIO
+import extruder.effect.EitherTIOEffectSuite.EitherIO
 
 import scala.util.{Failure, Success, Try}
 
-trait EitherTIOEffectSpec extends ThrowableEffectSpec[EitherIO] with TestInstances {
-  self: EffectSpec[EitherIO, Throwable] =>
+trait EitherTIOEffectSuite extends ThrowableEffectSuite[EitherIO] with TestInstances {
+  self: EffectSuite[EitherIO, Throwable] =>
   override def FF: MonadError[EitherIO, Throwable] = MonadError[EitherIO, Throwable]
 
   implicit val tc: TestContext = TestContext()
@@ -40,6 +40,6 @@ trait EitherTIOEffectSpec extends ThrowableEffectSpec[EitherIO] with TestInstanc
   override def getError[A](fa: EitherIO[A]): Throwable = fa.value.unsafeRunSync().left.get
 }
 
-object EitherTIOEffectSpec {
+object EitherTIOEffectSuite {
   type EitherIO[A] = EitherT[IO, Throwable, A]
 }

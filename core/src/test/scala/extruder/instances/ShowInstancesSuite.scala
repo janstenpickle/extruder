@@ -6,20 +6,16 @@ import cats.laws.discipline.ContravariantTests
 import cats.laws.discipline.eq._
 import extruder.core.Show
 import org.scalacheck.Arbitrary
-import org.specs2.Specification
-import org.specs2.specification.core.SpecStructure
-import org.typelevel.discipline.specs2.Discipline
+import org.scalatest.FunSuite
+import org.typelevel.discipline.scalatest.Discipline
 
-class ShowInstancesSpec extends Specification with Discipline {
-  import ShowInstancesSpec._
+class ShowInstancesSuite extends FunSuite with Discipline {
+  import ShowInstancesSuite._
 
-  override def is: SpecStructure =
-    s2"""
-        ${checkAll("Show", ContravariantTests[Show].contravariant[Int, Int, Int])}
-      """
+  checkAll("Show", ContravariantTests[Show].contravariant[Int, Int, Int])
 }
 
-object ShowInstancesSpec {
+object ShowInstancesSuite {
   implicit def faAb[A]: Arbitrary[Show[A]] =
     Arbitrary(Show[A] { a: A =>
       a.toString

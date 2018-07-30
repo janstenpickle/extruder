@@ -2,53 +2,56 @@ package extruder.metrics.prometheus
 
 import cats.effect.IO
 import extruder.metrics.snakeCaseTransformation
-import org.scalacheck.Prop
 import org.scalacheck.ScalacheckShapeless._
+import org.scalatest.prop.GeneratorDrivenPropertyChecks
+import org.scalatest.{Assertion, FunSuite}
 import org.specs2.specification.core.SpecStructure
-import org.specs2.{ScalaCheck, Specification}
 
-class PrometheusRegistrySpec extends Specification with ScalaCheck {
+class PrometheusRegistrySpec extends FunSuite with GeneratorDrivenPropertyChecks {
   import TestUtils._
 
-  override def is: SpecStructure =
-    s2"""
-        Can encode namespaced values $encodeNamespaced
-        Can encode an object $encodeObject
-        Can encode a dimensional object $encodeDimensionalObject
-      """
+  test("Can encode namespaced values")(encodeNamespaced)
+  test("Can encode an object")(encodeObject)
+  test("Can encode a dimensional object")(encodeDimensionalObject)
 
   case class X(a: String, b: Int)
 
-  def encodeNamespaced: Prop = prop { (value: Int, name: String) =>
+  def encodeNamespaced: Assertion = forAll { (value: Int, name: String) =>
     val reg = new PrometheusRegistry().encode[IO, Int](List(name), value).unsafeRunSync()
-    reg
-      .getSampleValue(snakeCaseTransformation(name), Array("metric_type"), Array("gauge")) === value.toDouble
+    assert(
+      reg
+        .getSampleValue(snakeCaseTransformation(name), Array("metric_type"), Array("gauge")) === value.toDouble
+    )
   }
 
-  def encodeObject: Prop = prop { metrics: Metrics =>
+  def encodeObject: Assertion = forAll { metrics: Metrics =>
     val reg = new PrometheusRegistry().encode[IO, Metrics](metrics).unsafeRunSync
-    (reg
-      .getSampleValue(snakeCaseTransformation("a"), Array("metric_type"), Array("counter")) === metrics.a.value.toDouble)
-      .and(
-        reg.getSampleValue(snakeCaseTransformation("b"), Array("metric_type"), Array("counter")) === metrics.b.value.toDouble
-      )
-      .and(
-        reg.getSampleValue(snakeCaseTransformation("c"), Array("metric_type"), Array("counter")) === metrics.c.value.toDouble
-      )
+    assert(
+      reg
+        .getSampleValue(snakeCaseTransformation("a"), Array("metric_type"), Array("counter")) === metrics.a.value.toDouble
+    )
+    assert(
+      reg.getSampleValue(snakeCaseTransformation("b"), Array("metric_type"), Array("counter")) === metrics.b.value.toDouble
+    )
+    assert(
+      reg.getSampleValue(snakeCaseTransformation("c"), Array("metric_type"), Array("counter")) === metrics.c.value.toDouble
+    )
   }
 
-  def encodeDimensionalObject: Prop = prop { stats: Stats =>
+  def encodeDimensionalObject: Assertion = forAll { stats: Stats =>
     val reg = new PrometheusRegistry().encode[IO, Stats](stats).unsafeRunSync()
-    (reg
-      .getSampleValue(snakeCaseTransformation("requests"), Array("metric_type", "metrics"), Array("counter", "a")) === stats.requests.a.value.toDouble)
-      .and(
-        reg
-          .getSampleValue(snakeCaseTransformation("requests"), Array("metric_type", "metrics"), Array("counter", "b")) === stats.requests.b.value.toDouble
-      )
-      .and(
-        reg
-          .getSampleValue(snakeCaseTransformation("requests"), Array("metric_type", "metrics"), Array("counter", "c")) === stats.requests.c.value.toDouble
-      )
+    assert(
+      reg
+        .getSampleValue(snakeCaseTransformation("requests"), Array("metric_type", "metrics"), Array("counter", "a")) === stats.requests.a.value.toDouble
+    )
+    assert(
+      reg
+        .getSampleValue(snakeCaseTransformation("requests"), Array("metric_type", "metrics"), Array("counter", "b")) === stats.requests.b.value.toDouble
+    )
+    assert(
+      reg
+        .getSampleValue(snakeCaseTransformation("requests"), Array("metric_type", "metrics"), Array("counter", "c")) === stats.requests.c.value.toDouble
+    )
 
   }
 }

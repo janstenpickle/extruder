@@ -1,21 +1,18 @@
 package extruder.metrics.keyed
 
-import extruder.core.{Encode, Validation}
+import extruder.core.Encode
 import extruder.effect.ExtruderMonadError
 import extruder.metrics.MetricSettings
 import extruder.metrics.data.{MetricType, Metrics, Numbers}
-import org.scalacheck.Prop
 import org.scalacheck.ScalacheckShapeless._
-import org.specs2.matcher.{EitherMatchers, Matchers}
-import org.specs2.specification.core.SpecStructure
-import org.specs2.{ScalaCheck, Specification}
+import org.scalatest.prop.GeneratorDrivenPropertyChecks
+import org.scalatest.{EitherValues, FunSuite}
 import shapeless.Coproduct
 
 class KeyedMetricEnodersSpec
-    extends Specification
-    with ScalaCheck
-    with Matchers
-    with EitherMatchers
+    extends FunSuite
+    with GeneratorDrivenPropertyChecks
+    with EitherValues
     with KeyedMetricEncoders
     with Encode {
   import extruder.metrics.MetricEncodersSpec._
@@ -37,33 +34,25 @@ class KeyedMetricEnodersSpec
     implicit F: ExtruderMonadError[F]
   ): F[Iterable[KeyedMetric]] = buildMetrics(settings, inter, MetricType.Gauge)
 
-  override def is: SpecStructure =
-    s2"""
-        Can encode an object $testObject
-      """
-
-  def testObject: Prop = prop { (req: RequestCount) =>
-    encode[RequestCount](req) must beRight.which {
-      _ must containTheSameElementsAs(
-        List(
-          KeyedMetric(
-            "request_count.http_requests.status_code.200",
-            MetricType.Gauge,
-            Coproduct[Numbers](req.httpRequests.`200`)
-          ),
-          KeyedMetric(
-            "request_count.http_requests.status_code.500",
-            MetricType.Gauge,
-            Coproduct[Numbers](req.httpRequests.`500`)
-          ),
-          KeyedMetric(
-            "request_count.http_requests.status_code.other",
-            MetricType.Gauge,
-            Coproduct[Numbers](req.httpRequests.other)
-          )
+  test("Can encode an object")(forAll { req: RequestCount =>
+    encode[RequestCount](req).right.value ===
+      List(
+        KeyedMetric(
+          "request_count.http_requests.status_code.200",
+          MetricType.Gauge,
+          Coproduct[Numbers](req.httpRequests.`200`)
+        ),
+        KeyedMetric(
+          "request_count.http_requests.status_code.500",
+          MetricType.Gauge,
+          Coproduct[Numbers](req.httpRequests.`500`)
+        ),
+        KeyedMetric(
+          "request_count.http_requests.status_code.other",
+          MetricType.Gauge,
+          Coproduct[Numbers](req.httpRequests.other)
         )
       )
-    }
-  }
+  })
 
 }

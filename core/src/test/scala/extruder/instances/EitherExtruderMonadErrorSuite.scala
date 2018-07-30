@@ -2,9 +2,9 @@ package extruder.instances
 
 import cats.Eq
 import extruder.core.{Missing, ValidationError, ValidationException, ValidationFailure}
-import extruder.effect.ExtruderMonadErrorSpec
+import extruder.effect.ExtruderMonadErrorSuite
 
-class EitherExtruderMonadErrorSpec extends ExtruderMonadErrorSpec[Either[ValidationError, ?], ValidationError] {
+class EitherExtruderMonadErrorSuite extends ExtruderMonadErrorSuite[Either[ValidationError, ?], ValidationError] {
   override implicit def feq[A](implicit eq: Eq[A]): Eq[Either[ValidationError, A]] = Eq.fromUniversalEquals
 
   override def errEq: Eq[ValidationError] = Eq.fromUniversalEquals

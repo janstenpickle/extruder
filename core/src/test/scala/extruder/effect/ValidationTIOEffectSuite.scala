@@ -6,8 +6,8 @@ import cats.effect.{Effect, IO}
 import cats.{Applicative, Eq}
 import extruder.core.ValidationErrors
 
-trait ValidationTIOEffectSpec extends ValidationTEffectSpec[IO] with TestInstances {
-  self: EffectSpec[EitherT[IO, ValidationErrors, ?], ValidationErrors] =>
+trait ValidationTIOEffectSuite extends ValidationTEffectSuite[IO] with TestInstances {
+  self: EffectSuite[EitherT[IO, ValidationErrors, ?], ValidationErrors] =>
 
   implicit val tc: TestContext = TestContext()
 

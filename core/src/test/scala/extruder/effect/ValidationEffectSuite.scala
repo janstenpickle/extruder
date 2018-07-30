@@ -4,7 +4,7 @@ import cats.Eq
 import cats.data.NonEmptyList
 import extruder.core.{Missing, ValidationErrors, ValidationException, ValidationFailure}
 
-trait ValidationEffectSpec[F[_]] { self: EffectSpec[F, ValidationErrors] =>
+trait ValidationEffectSuite[F[_]] { self: EffectSuite[F, ValidationErrors] =>
   override def missingValue(message: String): NonEmptyList[Missing] = NonEmptyList.of(Missing(message))
 
   override def validationFailureValue(message: String): NonEmptyList[ValidationFailure] =

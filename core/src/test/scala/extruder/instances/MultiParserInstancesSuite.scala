@@ -8,20 +8,16 @@ import cats.laws.discipline.FunctorTests
 import cats.{Eq, Id}
 import extruder.core.MultiParser
 import org.scalacheck.Arbitrary
-import org.specs2.Specification
-import org.specs2.specification.core.SpecStructure
-import org.typelevel.discipline.specs2.Discipline
+import org.scalatest.FunSuite
+import org.typelevel.discipline.scalatest.Discipline
 
-class MultiParserInstancesSpec extends Specification with Discipline {
-  import MultiParserInstancesSpec._
+class MultiParserInstancesSuite extends FunSuite with Discipline {
+  import MultiParserInstancesSuite._
 
-  override def is: SpecStructure =
-    s2"""
-        ${checkAll("MultiParser", FunctorTests[MultiParserId].functor[Int, Int, Int])}
-      """
+  checkAll("MultiParser", FunctorTests[MultiParserId].functor[Int, Int, Int])
 }
 
-object MultiParserInstancesSpec {
+object MultiParserInstancesSuite {
   type MultiParserId[A] = MultiParser[Id, A]
 
   implicit def faArb[A](implicit intArb: Arbitrary[A]): Arbitrary[MultiParser[Id, A]] =

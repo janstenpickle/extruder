@@ -3,7 +3,7 @@ package extruder.effect
 import cats.{Eq, MonadError}
 import cats.instances.string._
 
-trait ThrowableEffectSpec[F[_]] { self: EffectSpec[F, Throwable] =>
+trait ThrowableEffectSuite[F[_]] { self: EffectSuite[F, Throwable] =>
   def FF: MonadError[F, Throwable]
 
   override def missingValue(message: String): Throwable = new NoSuchElementException(message)

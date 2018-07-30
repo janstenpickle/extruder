@@ -3,11 +3,11 @@ package extruder.instances
 import cats.data.EitherT
 import cats.{Applicative, Bimonad, Eq, Eval}
 import extruder.core.ValidationErrors
-import extruder.effect.{ExtruderSync, ExtruderSyncSpec, ValidationTEffectSpec}
+import extruder.effect.{ExtruderSync, ExtruderSyncSuite, ValidationTEffectSuite}
 
-class ValidationTEvalExtruderSyncSpec
-    extends ExtruderSyncSpec[EitherT[Eval, ValidationErrors, ?], ValidationErrors]()(ExtruderSync.eitherTEvalSync)
-    with ValidationTEffectSpec[Eval] {
+class ValidationTEvalExtruderSyncSuite
+    extends ExtruderSyncSuite[EitherT[Eval, ValidationErrors, ?], ValidationErrors]()(ExtruderSync.eitherTEvalSync)
+    with ValidationTEffectSuite[Eval] {
 
   override implicit def feq[A](implicit eq: Eq[A]): Eq[EitherT[Eval, ValidationErrors, A]] =
     Eq.instance { (x, y) =>

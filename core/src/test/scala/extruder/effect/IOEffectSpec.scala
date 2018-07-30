@@ -6,7 +6,7 @@ import cats.{Eq, MonadError}
 
 import scala.util.Try
 
-trait IOEffectSpec extends ThrowableEffectSpec[IO] with TestInstances { self: EffectSpec[IO, Throwable] =>
+trait IOEffectSpec extends ThrowableEffectSuite[IO] with TestInstances { self: EffectSuite[IO, Throwable] =>
   override def FF: MonadError[IO, Throwable] = MonadError[IO, Throwable]
 
   implicit val tc: TestContext = TestContext()

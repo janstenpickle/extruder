@@ -4,8 +4,8 @@ import cats.data.EitherT
 import cats.{Applicative, Eq}
 import extruder.core.{Validation, ValidationErrors}
 
-trait ValidationTEffectSpec[F[_]] extends ValidationEffectSpec[EitherT[F, ValidationErrors, ?]] {
-  self: EffectSpec[EitherT[F, ValidationErrors, ?], ValidationErrors] =>
+trait ValidationTEffectSuite[F[_]] extends ValidationEffectSuite[EitherT[F, ValidationErrors, ?]] {
+  self: EffectSuite[EitherT[F, ValidationErrors, ?], ValidationErrors] =>
 
   implicit def FF: Applicative[F]
 

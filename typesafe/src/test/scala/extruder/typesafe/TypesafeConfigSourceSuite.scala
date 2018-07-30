@@ -10,16 +10,19 @@ import extruder.core.TestCommon._
 import extruder.core.ValidationCatsInstances._
 import extruder.core._
 import extruder.effect.ExtruderMonadError
+import extruder.typesafe.BaseTypesafeConfigEncoders._
+import extruder.typesafe.TypesafeConfigSourceSuite._
 import extruder.typesafe.IntermediateTypes._
 import org.scalacheck.ScalacheckShapeless._
-import org.scalacheck.{Arbitrary, Gen, Prop}
-import org.specs2.matcher.MatchResult
-import org.specs2.specification.core.SpecStructure
+import org.scalacheck.{Arbitrary, Gen}
+import org.scalatest.Assertion
 
 import scala.collection.JavaConverters._
 
-class TypesafeConfigSourceSpec extends StringMapSourceSpec with TypesafeConfigDecoders with TypesafeConfigEncoders {
-  import TypesafeConfigSourceSpec._
+class TypesafeConfigSourceSuite
+    extends StringMapSourceSuite(MonoidTests[Config].monoid)
+    with TypesafeConfigDecoders
+    with TypesafeConfigEncoders {
 
   implicit val configValueEq: Eq[ConfigValue] = Eq.fromUniversalEquals
   implicit val configObjectEq: Eq[ConfigObject] = Eq.fromUniversalEquals
@@ -39,48 +42,46 @@ class TypesafeConfigSourceSpec extends StringMapSourceSpec with TypesafeConfigDe
   override def loadInput[F[_]](implicit F: ExtruderMonadError[F]): F[TConfig] =
     F.catchNonFatal(convertData(caseClassData))
 
-  override def ext: SpecStructure =
-    s2"""
-        Can convert typesafe specific types
-          ConfigValue ${test[ConfigValue](configValueGen)}
-          ConfigObject ${test[ConfigObject](configObjectGen)}
-          ConfigList ${test[ConfigList](configListGen)}
-          ConfigObjectList ${testList(Gen.listOfN(5, Gen.resultOf(CaseClass)))}
+  test("Can convert ConfigValue") { test[ConfigValue](configValueGen) }
+  test("Can convert ConfigObject") { test[ConfigObject](configObjectGen) }
+  test("Can convert ConfigList") { test[ConfigList](configListGen) }
+  test("Can convert ConfigObjectList") { testList(Gen.listOfN(5, Gen.resultOf(CaseClass))) }
 
-        Can encode and decode a list $testTypesafeList
-        Fails to decode a missing list $testTypsafeListMissing
-        Fails to decode an invalid list $testTypsafeListInvalid
+  test("Can encode and decode a list") { testTypesafeList }
+  test("Fails to decode a missing list") { testTypsafeListMissing }
+  test("Fails to decode an invalid list") { testTypsafeListInvalid }
+  test("Fails to convert an invalid type") { testException }
 
-        Fails to convert an invalid type $testException
-      """
-
-  def testException: MatchResult[Any] =
-    decode[String](List(Key), new BrokenConfig(LookupFailureMessage)) must beLeft.which(
-      _.head.asInstanceOf[ValidationException].exception.getMessage === LookupFailureMessage
+  def testException: Assertion =
+    assert(
+      decode[String](List(Key), new BrokenConfig(LookupFailureMessage))
+        .leftMap(_.head.asInstanceOf[ValidationException].exception.getMessage) === Left(LookupFailureMessage)
     )
 
-  def testTypesafeList: Prop = prop { (li: List[Int]) =>
-    (for {
+  def testTypesafeList: Assertion = forAll { li: List[Int] =>
+    assert((for {
       enc <- encode[List[Int]](List("a"), li)
       dec <- decode[List[Int]](List("a"), enc)
-    } yield dec) must beRight.which(_ === li)
+    } yield dec) === Right(li))
   }
 
-  def testTypsafeListMissing: MatchResult[Validation[List[Int]]] =
-    decode[List[Int]](List("a")) must beLeft.which(
-      _.head === Missing("Could not find list at 'a' and no default available")
+  def testTypsafeListMissing: Assertion =
+    assert(
+      decode[List[Int]](List("a")).leftMap(_.head) ===
+        Left(Missing("Could not find list at 'a' and no default available"))
     )
 
-  def testTypsafeListInvalid: Prop = prop { (li: NonEmptyList[String]) =>
-    decode[List[Int]](List("a"), ConfigFactory.parseMap(Map[String, Any]("a" -> li.toList.asJava).asJava)) must beLeft
-      .which(_.head === ValidationFailure(s"""Could not parse value '${li.toList
-        .mkString(", ")}' at 'a': For input string: "${li.head}""""))
+  def testTypsafeListInvalid: Assertion = forAll { li: NonEmptyList[String] =>
+    assert(
+      decode[List[Int]](List("a"), ConfigFactory.parseMap(Map[String, Any]("a" -> li.toList.asJava).asJava))
+        .leftMap(_.head)
+        .===(Left(ValidationFailure(s"""Could not parse value '${li.toList
+          .mkString(", ")}' at 'a': For input string: "${li.head}"""")))
+    )
   }
-
-  override def monoidTests: MonoidTests[Config]#RuleSet = MonoidTests[Config](monoid).monoid
 }
 
-object TypesafeConfigSourceSpec {
+object TypesafeConfigSourceSuite {
   val Key = "x"
   val LookupFailureMessage = "boom!"
 

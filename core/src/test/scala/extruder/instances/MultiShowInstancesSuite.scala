@@ -8,20 +8,16 @@ import cats.laws.discipline.ContravariantTests
 import cats.laws.discipline.eq._
 import extruder.core.MultiShow
 import org.scalacheck.Arbitrary
-import org.specs2.specification.core.SpecStructure
-import org.specs2.{ScalaCheck, Specification}
-import org.typelevel.discipline.specs2.Discipline
+import org.scalatest.FunSuite
+import org.typelevel.discipline.scalatest.Discipline
 
-class MultiShowInstancesSpec extends Specification with ScalaCheck with Discipline {
-  import MultiShowInstancesSpec._
+class MultiShowInstancesSuite extends FunSuite with Discipline {
+  import MultiShowInstancesSuite._
 
-  override def is: SpecStructure =
-    s2"""
-        ${checkAll("MultiShow", ContravariantTests[MultiShow].contravariant[Int, Int, Int])}
-      """
+  checkAll("MultiShow", ContravariantTests[MultiShow].contravariant[Int, Int, Int])
 }
 
-object MultiShowInstancesSpec {
+object MultiShowInstancesSuite {
   implicit def faAb[A]: Arbitrary[MultiShow[A]] =
     Arbitrary(new MultiShow[A] {
       override def show(v: A): Map[List[String], String] = Map(List("test") -> v.toString)

@@ -1,23 +1,20 @@
 package extruder.core
 
 import cats.data.NonEmptyList
-import org.scalacheck.{Arbitrary, Gen, Prop}
-import org.specs2.specification.core.SpecStructure
-import org.specs2.{ScalaCheck, Specification}
+import org.scalacheck.{Arbitrary, Gen}
+import org.scalatest.FunSuite
+import org.scalatest.prop.GeneratorDrivenPropertyChecks
 
-class CoreSpec extends Specification with ScalaCheck with DataSource {
-  import CoreSpec._
+class CoreSuite extends FunSuite with GeneratorDrivenPropertyChecks with DataSource {
+  import CoreSuite._
 
   override type Sett = Settings
 
-  override def is: SpecStructure =
-    s2"""
-        Converts a non-empty list of validation errors to throwables $testErrorsToThrowable
-      """
-
-  def testErrorsToThrowable: Prop = prop { li: ValidationErrors =>
-    val th = errorsToThrowable(li)
-    li.map(_.message).toList === (th :: th.getSuppressed.toList).map(_.getMessage)
+  test("Converts a non-empty list of validation errors to throwables") {
+    forAll { li: ValidationErrors =>
+      val th = errorsToThrowable(li)
+      li.map(_.message).toList === (th :: th.getSuppressed.toList).map(_.getMessage)
+    }
   }
 
   override def defaultSettings: Sett = new Sett {
@@ -25,7 +22,7 @@ class CoreSpec extends Specification with ScalaCheck with DataSource {
   }
 }
 
-object CoreSpec {
+object CoreSuite {
   implicit val validationErrorsArb: Arbitrary[ValidationErrors] = Arbitrary(
     Gen
       .nonEmptyListOf(Gen.alphaNumStr)
