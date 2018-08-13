@@ -11,7 +11,6 @@ import scala.collection.SortedSet
 import scala.concurrent.duration.FiniteDuration
 
 trait DimensionalMetricEncoders extends MetricEncoders {
-  val metricTypeName = "metric_type"
 
   override type EncRefute[T] = DimensionalMetricEncoderRefute[T]
   override type Sett <: DimensionalMetricSettings
@@ -71,12 +70,12 @@ trait DimensionalMetricEncoders extends MetricEncoders {
     defaultDimensionValues: Vector[String]
   ): (((String, MetricType, SortedSet[String]), List[(MetricKey, Numbers)])) => DimensionalMetric = {
     case ((name, metricType, dimensions), ms) =>
-      val allDimensions: Vector[String] = ((defaultDimensionNames ++ namespaceName) :+ metricTypeName) ++ dimensions.toVector
+      val allDimensions: Vector[String] = defaultDimensionNames ++ namespaceName ++ dimensions.toVector
 
       val values = ms.foldLeft(Map.empty[Vector[String], Numbers]) {
         case (acc, (key, value)) =>
-          val baseDimensionValues: Vector[String] = (defaultDimensionValues ++ namespaceName
-            .map(_ => calculateNameSpace(namespace ++ key.path, settings).getOrElse(""))) :+ metricType.name
+          val baseDimensionValues: Vector[String] = defaultDimensionValues ++ namespaceName
+            .map(_ => calculateNameSpace(namespace ++ key.path, settings).getOrElse(""))
 
           val dimensionValues: Vector[String] = key match {
             case _: SimpleMetricKey => baseDimensionValues

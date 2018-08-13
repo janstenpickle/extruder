@@ -22,32 +22,28 @@ class PrometheusRegistrySpec extends Specification with ScalaCheck {
   def encodeNamespaced: Prop = prop { (value: Int, name: String) =>
     val reg = new PrometheusRegistry().encode[IO, Int](List(name), value).unsafeRunSync()
     reg
-      .getSampleValue(snakeCaseTransformation(name), Array("metric_type"), Array("gauge")) === value.toDouble
+      .getSampleValue(snakeCaseTransformation(name)) === value.toDouble
   }
 
   def encodeObject: Prop = prop { metrics: Metrics =>
     val reg = new PrometheusRegistry().encode[IO, Metrics](metrics).unsafeRunSync
     (reg
-      .getSampleValue(snakeCaseTransformation("a"), Array("metric_type"), Array("counter")) === metrics.a.value.toDouble)
-      .and(
-        reg.getSampleValue(snakeCaseTransformation("b"), Array("metric_type"), Array("counter")) === metrics.b.value.toDouble
-      )
-      .and(
-        reg.getSampleValue(snakeCaseTransformation("c"), Array("metric_type"), Array("counter")) === metrics.c.value.toDouble
-      )
+      .getSampleValue(snakeCaseTransformation("a")) === metrics.a.value.toDouble)
+      .and(reg.getSampleValue(snakeCaseTransformation("b")) === metrics.b.value.toDouble)
+      .and(reg.getSampleValue(snakeCaseTransformation("c")) === metrics.c.value.toDouble)
   }
 
   def encodeDimensionalObject: Prop = prop { stats: Stats =>
     val reg = new PrometheusRegistry().encode[IO, Stats](stats).unsafeRunSync()
     (reg
-      .getSampleValue(snakeCaseTransformation("requests"), Array("metric_type", "metrics"), Array("counter", "a")) === stats.requests.a.value.toDouble)
+      .getSampleValue(snakeCaseTransformation("requests"), Array("metrics"), Array("a")) === stats.requests.a.value.toDouble)
       .and(
         reg
-          .getSampleValue(snakeCaseTransformation("requests"), Array("metric_type", "metrics"), Array("counter", "b")) === stats.requests.b.value.toDouble
+          .getSampleValue(snakeCaseTransformation("requests"), Array("metrics"), Array("b")) === stats.requests.b.value.toDouble
       )
       .and(
         reg
-          .getSampleValue(snakeCaseTransformation("requests"), Array("metric_type", "metrics"), Array("counter", "c")) === stats.requests.c.value.toDouble
+          .getSampleValue(snakeCaseTransformation("requests"), Array("metrics"), Array("c")) === stats.requests.c.value.toDouble
       )
 
   }

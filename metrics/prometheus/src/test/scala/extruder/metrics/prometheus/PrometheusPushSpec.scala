@@ -41,8 +41,8 @@ class PrometheusPushSpec extends Specification with ScalaCheck with Mockito {
       .and(jobNameCapture.value === jobName)
       .and(metric.name === snakeCaseTransformation(name))
       .and(metric.samples.size === 1)
-      .and(sample.labelNames.asScala must containTheSameElementsAs(List("metric_type", "instance")))
-      .and(sample.labelValues.asScala must containTheSameElementsAs(List("gauge", jobInstance)))
+      .and(sample.labelNames.asScala must containTheSameElementsAs(List("instance")))
+      .and(sample.labelValues.asScala must containTheSameElementsAs(List(jobInstance)))
       .and(sample.value === value.toDouble)
   }
 
@@ -91,14 +91,10 @@ class PrometheusPushSpec extends Specification with ScalaCheck with Mockito {
       .and(capturedMetrics.size === 1)
       .and(samples.size === 3)
       .and(samples.map(_.name) must containTheSameElementsAs(List("requests", "requests", "requests")))
-      .and(
-        samples.flatMap(_.labelNames.asScala).distinct must containTheSameElementsAs(
-          List("metric_type", "instance", "metrics")
-        )
-      )
+      .and(samples.flatMap(_.labelNames.asScala).distinct must containTheSameElementsAs(List("instance", "metrics")))
       .and(
         samples.flatMap(_.labelValues.asScala).distinct must containTheSameElementsAs(
-          List("counter", jobInstance, "a", "b", "c").distinct
+          List(jobInstance, "a", "b", "c").distinct
         )
       )
       .and(

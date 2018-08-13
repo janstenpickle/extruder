@@ -21,7 +21,7 @@ class DropwizardDimensionalEncodersSpec extends Specification with ScalaCheck {
 
   def encodeNamespaced: Prop = prop { (value: Int, name: String) =>
     val reg = new DropwizardDimensionalRegistry().encode[IO, Int](List(name), value).unsafeRunSync()
-    val metricName = MetricName.build(snakeCaseTransformation(name)).tagged("metric_type", "gauge")
+    val metricName = MetricName.build(snakeCaseTransformation(name))
     reg
       .getGauges()
       .get(metricName)
@@ -30,7 +30,7 @@ class DropwizardDimensionalEncodersSpec extends Specification with ScalaCheck {
 
   def encodeObject: Prop = prop { metrics: Metrics =>
     val reg = new DropwizardDimensionalRegistry().encode[IO, Metrics](metrics).unsafeRunSync
-    def metricName(name: String) = MetricName.build(snakeCaseTransformation(name)).tagged("metric_type", "counter")
+    def metricName(name: String) = MetricName.build(snakeCaseTransformation(name))
     (reg.getCounters().get(metricName("a")).getCount === metrics.a.value)
       .and(reg.getCounters().get(metricName("b")).getCount === metrics.b.value)
       .and(reg.getCounters().get(metricName("c")).getCount === metrics.c.value)
@@ -39,7 +39,7 @@ class DropwizardDimensionalEncodersSpec extends Specification with ScalaCheck {
   def encodeDimensionalObject: Prop = prop { stats: Stats =>
     val reg = new DropwizardDimensionalRegistry().encode[IO, Stats](stats).unsafeRunSync
     def metricName(name: String) =
-      MetricName.build(snakeCaseTransformation("requests")).tagged("metric_type", "counter", "metrics", name)
+      MetricName.build(snakeCaseTransformation("requests")).tagged("metrics", name)
     (reg.getCounters().get(metricName("a")).getCount === stats.requests.a.value)
       .and(reg.getCounters().get(metricName("b")).getCount === stats.requests.b.value)
       .and(reg.getCounters().get(metricName("c")).getCount === stats.requests.c.value)
