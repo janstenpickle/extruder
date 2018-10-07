@@ -27,16 +27,30 @@ trait PrimitiveDecoders {
     implicit F: Eff[F]
   ): F[Option[String]]
 
-  implicit def parserDecoder[F[_], T](implicit parser: Parser[T], F: Eff[F], lp: LowPriority): Dec[F, T] =
+  implicit def parserDecoder[F[_], T](
+    implicit parser: Parser[T],
+    F: Eff[F],
+    error: ExtruderErrors[F],
+    lp: LowPriority
+  ): Dec[F, T] =
     mkDecoder[F, T](
       (path, settings, default, data) =>
         resolveValue(formatParserError(parser, path, settings)).apply(path, settings, default, data)
     )
 
-  implicit def optionalMultiParserDecoder[F[_], T](implicit parser: MultiParser[F, T], F: Eff[F]): Dec[F, Option[T]] =
+  implicit def optionalMultiParserDecoder[F[_], T](
+    implicit parser: MultiParser[F, T],
+    F: Eff[F],
+    extruderErrors: ExtruderErrors[F]
+  ): Dec[F, Option[T]] =
     mkDecoder[F, Option[T]]((path, settings, _, data) => multiParse(parser, path, settings, data))
 
-  implicit def multiParserDecoder[F[_], T](implicit parser: MultiParser[F, T], F: Eff[F], lp: LowPriority): Dec[F, T] =
+  implicit def multiParserDecoder[F[_], T](
+    implicit parser: MultiParser[F, T],
+    F: Eff[F],
+    extruderErrors: ExtruderErrors[F],
+    lp: LowPriority
+  ): Dec[F, T] =
     mkDecoder[F, T](
       (path, settings, default, data) =>
         for {
@@ -46,7 +60,8 @@ trait PrimitiveDecoders {
     )
 
   private def multiParse[F[_], T](parser: MultiParser[F, T], path: List[String], settings: Sett, data: DecodeData)(
-    implicit F: Eff[F]
+    implicit F: Eff[F],
+    error: ExtruderErrors[F]
   ): F[Option[T]] =
     parser
       .parse(p => OptionT(lookupValue[F](path ++ p, settings, data)))
@@ -58,8 +73,9 @@ trait PrimitiveDecoders {
             .fold[F[Option[T]]](
               errs =>
                 errs.tail
-                  .foldLeft(F.validationFailure[Option[T]](errs.head))(
-                    (acc, v) => F.ap2[Option[T], Option[T], Option[T]](F.pure((l, _) => l))(acc, F.validationFailure(v))
+                  .foldLeft(error.validationFailure[Option[T]](errs.head))(
+                    (acc, v) =>
+                      F.ap2[Option[T], Option[T], Option[T]](F.pure((l, _) => l))(acc, error.validationFailure(v))
                 ),
               F.pure
           )
@@ -67,14 +83,15 @@ trait PrimitiveDecoders {
 
   implicit def nonEmptyListDecoder[F[_], T](
     implicit decoder: Lazy[Dec[F, List[T]]],
-    F: Eff[F]
+    F: Eff[F],
+    error: ExtruderErrors[F]
   ): Dec[F, NonEmptyList[T]] = mkDecoder[F, NonEmptyList[T]] { (path, settings, default, data) =>
     val decoded = decoder.value.read(path, settings, default.map(_.toList), data)
     decoded
       .map(NonEmptyList.fromList)
       .flatMap[NonEmptyList[T]](
         _.fold[F[NonEmptyList[T]]](
-          F.validationFailure(
+          error.validationFailure(
             s"List at '${settings.pathToString(path)}' must contain data, but is empty, and no default available"
           )
         )(F.pure)
@@ -84,6 +101,7 @@ trait PrimitiveDecoders {
   implicit def optionalDecoder[F[_], T](
     implicit decoder: Lazy[Dec[F, T]],
     F: Eff[F],
+    error: ExtruderErrors[F],
     refute: Refute[MultiParser[F, T]]
   ): Dec[F, Option[T]] =
     mkDecoder[F, Option[T]] { (path, settings, _, data) =>
@@ -105,13 +123,15 @@ trait PrimitiveDecoders {
 
   protected def resolveValue[F[_], E, T](
     parser: String => F[T]
-  )(implicit F: Eff[F]): (List[String], Sett, Option[T], DecodeData) => F[T] =
+  )(implicit F: Eff[F], error: ExtruderErrors[F]): (List[String], Sett, Option[T], DecodeData) => F[T] =
     resolve[F, T, String](parser, lookupValue[F])
 
-  protected def resolve[F[_], T, V](
-    parser: V => F[T],
-    lookup: (List[String], Sett, DecodeData) => F[Option[V]]
-  )(path: List[String], settings: Sett, default: Option[T], data: DecodeData)(implicit F: Eff[F]): F[T] =
+  protected def resolve[F[_], T, V](parser: V => F[T], lookup: (List[String], Sett, DecodeData) => F[Option[V]])(
+    path: List[String],
+    settings: Sett,
+    default: Option[T],
+    data: DecodeData
+  )(implicit F: Eff[F], error: ExtruderErrors[F]): F[T] =
     for {
       v <- lookup(path, settings, data)
       parsed <- Traverse[Option].sequence(v.map(parser))
@@ -119,18 +139,22 @@ trait PrimitiveDecoders {
     } yield result
 
   protected def formatParserError[F[_], T](parser: Parser[T], path: List[String], settings: Sett)(
-    implicit F: Eff[F]
+    implicit F: Eff[F],
+    error: ExtruderErrors[F]
   ): String => F[T] =
     value =>
       parser
         .parse(value)
         .fold[F[T]](
-          err => F.validationFailure(s"Could not parse value '$value' at '${settings.pathToString(path)}': $err"),
+          err => error.validationFailure(s"Could not parse value '$value' at '${settings.pathToString(path)}': $err"),
           F.pure
       )
 
-  protected def formatParserError1[F[_], T](parseResult: Either[String, T], settings: Sett)(implicit F: Eff[F]): F[T] =
-    parseResult.fold[F[T]](err => F.validationFailure(err), F.pure)
+  protected def formatParserError1[F[_], T](
+    parseResult: Either[String, T],
+    settings: Sett
+  )(implicit F: Eff[F], error: ExtruderErrors[F]): F[T] =
+    parseResult.fold[F[T]](err => error.validationFailure(err), F.pure)
 
 }
 

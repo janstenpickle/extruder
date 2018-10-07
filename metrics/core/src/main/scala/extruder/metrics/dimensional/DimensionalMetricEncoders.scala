@@ -1,7 +1,7 @@
 package extruder.metrics.dimensional
 
 import cats.data.NonEmptyList
-import extruder.core.{EncoderRefute, Show}
+import extruder.core.{EncoderRefute, ExtruderErrors, Show}
 import extruder.metrics.{snakeCaseTransformation, MetricEncoders, MetricSettings}
 import extruder.metrics.data._
 import shapeless.ops.hlist.{Length, Mapper, Repeat, Take}
@@ -28,7 +28,7 @@ trait DimensionalMetricEncoders extends MetricEncoders {
     inter: Metrics,
     defaultLabels: Map[String, String],
     defaultMetricType: MetricType
-  )(implicit F: Eff[F]): F[Iterable[DimensionalMetric]] = {
+  )(implicit F: Eff[F], error: ExtruderErrors[F]): F[Iterable[DimensionalMetric]] = {
     val defaultDimensionNames = defaultLabels.keys.toVector
     val defaultDimensionValues = defaultLabels.values.toVector
 
@@ -45,7 +45,9 @@ trait DimensionalMetricEncoders extends MetricEncoders {
     if (metricTypes.isEmpty) F.pure(metrics)
     else {
       val invalid = metricTypes.map { case (name, types) => s"'$name' -> '${types.mkString(", ")}'" }.mkString(", ")
-      F.validationFailure(s"Multiple metric types for the following metrics, please ensure there is just one: $invalid")
+      error.validationFailure(
+        s"Multiple metric types for the following metrics, please ensure there is just one: $invalid"
+      )
     }
   }
 

@@ -4,11 +4,12 @@ trait Decoders { self: DecodeTypes =>
   protected def mkDecoder[F[_], T](f: (List[String], Sett, Option[T], DecodeData) => F[T]): Dec[F, T]
 
   protected def selectOption[F[_], A](path: List[String], settings: Sett, primary: Option[A], secondary: Option[A])(
-    implicit F: Eff[F]
+    implicit F: Eff[F],
+    error: ExtruderErrors[F]
   ): F[A] =
     (primary, secondary) match {
       case (None, None) =>
-        F.missing(s"Could not find value at '${settings.pathToString(path)}' and no default available")
+        error.missing(s"Could not find value at '${settings.pathToString(path)}' and no default available")
       case (None, Some(value)) => F.pure(value)
       case (Some(value), _) => F.pure(value)
     }
@@ -234,7 +235,7 @@ trait DecodeFromDefaultSource { self: Decode with DecodeTypes =>
     namespace: List[String],
     settings: Sett
   )(implicit decoder: Dec[Validation, A], F: Eff[Validation]): Validation[A] =
-    decode[Validation, A](namespace, settings)
+    decode[A](namespace, settings)
 
   /** Decode the specified type from a default data source, wrapping the result in specified target monad
     * If the data source is asynchronous by nature this method will wait for the duration specified in `settings` for decoding to timeout

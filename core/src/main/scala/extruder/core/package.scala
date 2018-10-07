@@ -20,4 +20,7 @@ package object core {
       acc
     }
   }
+
+  implicit object Dis
+  implicit object Dis2
 }

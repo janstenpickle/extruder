@@ -6,8 +6,8 @@ import shapeless.labelled.FieldType
 import scala.reflect.runtime.universe.TypeTag
 
 trait DerivedEncoders { self: Encoders with EncodeTypes =>
-  implicit def cnilEncoder[F[_]](implicit F: Eff[F]): Enc[F, CNil] = mkEncoder { (_, _, _) =>
-    F.validationFailure(s"Impossible!")
+  implicit def cnilEncoder[F[_]](implicit F: Eff[F], error: ExtruderErrors[F]): Enc[F, CNil] = mkEncoder { (_, _, _) =>
+    error.validationFailure(s"Impossible!")
   }
 
   implicit def cconsEncoder[F[_], K <: Symbol, H, T <: Coproduct](

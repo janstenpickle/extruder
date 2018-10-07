@@ -1,11 +1,11 @@
 package extruder.core
 
-import extruder.effect.ExtruderMonadError
+import cats.MonadError
 
 trait DataSource {
   type InputData
   type OutputData
-  type Eff[F[_]] <: ExtruderMonadError[F]
+  type Eff[F[_]] <: MonadError[F, Throwable]
   type Sett <: Settings
 
   def defaultSettings: Sett

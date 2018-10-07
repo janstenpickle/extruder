@@ -30,10 +30,6 @@ class TypesafeConfigSourceSuite
 
   override val supportsEmptyNamespace: Boolean = false
 
-//  override val defaultSettings: Sett = new Sett {
-//    override def pathToString(path: List[String]): String = TypesafeConfigSource.defaultSettings.pathToString(path)
-//  }
-
   override def convertData(map: Map[List[String], String]): TConfig = {
     val config = map.map { case (k, v) => defaultSettings.pathToString(k) -> v }.asJava
     ConfigFactory.parseMap(config)
@@ -45,7 +41,7 @@ class TypesafeConfigSourceSuite
   test("Can convert ConfigValue") { test[ConfigValue](configValueGen) }
   test("Can convert ConfigObject") { test[ConfigObject](configObjectGen) }
   test("Can convert ConfigList") { test[ConfigList](configListGen) }
-  test("Can convert ConfigObjectList") { testList(Gen.listOfN(5, Gen.resultOf(CaseClass))) }
+  test("Can convert ConfigObjectList") { testList(Gen.listOfN(2, Gen.resultOf(CaseClass))) }
 
   test("Can encode and decode a list") { testTypesafeList }
   test("Fails to decode a missing list") { testTypsafeListMissing }

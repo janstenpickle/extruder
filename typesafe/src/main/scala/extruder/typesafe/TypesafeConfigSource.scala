@@ -86,7 +86,7 @@ trait BaseTypesafeConfigDecoders
 
   private def resolve[F[_], T](
     lookup: (List[String], Settings, TConfig) => F[Option[T]]
-  )(implicit F: Eff[F]): (List[String], Settings, Option[T], TConfig) => F[T] =
+  )(implicit F: Eff[F], error: ExtruderErrors[F]): (List[String], Settings, Option[T], TConfig) => F[T] =
     resolve[F, T, T](F.pure, lookup)
 
   implicit def traversableObjectDecoder[F[_], T, FF[T] <: TraversableOnce[T]](
@@ -94,6 +94,7 @@ trait BaseTypesafeConfigDecoders
     decoder: Dec[F, T],
     cbf: CanBuildFrom[FF[T], T, FF[T]],
     F: Eff[F],
+    error: ExtruderErrors[F],
     refute: Refute[Parser[T]]
   ): Dec[F, FF[T]] =
     mkDecoder[F, FF[T]] { (path, settings, default, data) =>
@@ -103,7 +104,7 @@ trait BaseTypesafeConfigDecoders
           v =>
             (v, default) match {
               case (None, None) =>
-                F.missing(s"Could not find list at '${settings.pathToString(path)}' and no default available")
+                error.missing(s"Could not find list at '${settings.pathToString(path)}' and no default available")
               case (Some(li), _) => Traverse[List].sequence[F, T](li).map(Parser.convertTraversable(_))
               case (None, Some(li)) => F.pure(li)
           }
@@ -113,7 +114,8 @@ trait BaseTypesafeConfigDecoders
   implicit def traversableDecoder[T, F[_], FF[T] <: TraversableOnce[T]](
     implicit parser: Parser[T],
     cbf: CanBuildFrom[FF[T], T, FF[T]],
-    F: Eff[F]
+    F: Eff[F],
+    error: ExtruderErrors[F]
   ): TypesafeConfigDecoder[F, FF[T]] =
     mkDecoder[F, FF[T]](
       (path, settings: Settings, default, data) =>
@@ -121,7 +123,7 @@ trait BaseTypesafeConfigDecoders
           listOpt =>
             (listOpt, default) match {
               case (None, None) =>
-                F.missing(s"Could not find list at '${settings.pathToString(path)}' and no default available")
+                error.missing(s"Could not find list at '${settings.pathToString(path)}' and no default available")
               case (None, Some(li)) => F.pure(li)
               case (Some(li), _) =>
                 Traverse[List]
@@ -129,7 +131,7 @@ trait BaseTypesafeConfigDecoders
                   .map(Parser.convertTraversable(_))
                   .fold(
                     err =>
-                      F.validationFailure(
+                      error.validationFailure(
                         s"Could not parse value '${li.mkString(", ")}' at '${settings.pathToString(path)}': $err"
                     ),
                     F.pure(_)
@@ -138,13 +140,22 @@ trait BaseTypesafeConfigDecoders
       )
     )
 
-  implicit def dataValueDecoder[F[_]](implicit F: Eff[F]): TypesafeConfigDecoder[F, ConfigValue] =
+  implicit def dataValueDecoder[F[_]](
+    implicit F: Eff[F],
+    error: ExtruderErrors[F]
+  ): TypesafeConfigDecoder[F, ConfigValue] =
     mkDecoder(resolve[F, ConfigValue]((path, settings, data) => lookup(_.getValue(settings.pathToString(path)), data)))
 
-  implicit def dataListDecoder[F[_]](implicit F: Eff[F]): TypesafeConfigDecoder[F, ConfigList] =
+  implicit def dataListDecoder[F[_]](
+    implicit F: Eff[F],
+    error: ExtruderErrors[F]
+  ): TypesafeConfigDecoder[F, ConfigList] =
     mkDecoder(resolve[F, ConfigList]((path, settings, data) => lookup(_.getList(settings.pathToString(path)), data)))
 
-  implicit def dataObjectDecoder[F[_]](implicit F: Eff[F]): TypesafeConfigDecoder[F, ConfigObject] =
+  implicit def dataObjectDecoder[F[_]](
+    implicit F: Eff[F],
+    error: ExtruderErrors[F]
+  ): TypesafeConfigDecoder[F, ConfigObject] =
     mkDecoder(
       resolve[F, ConfigObject]((path, settings, data) => lookup(_.getObject(settings.pathToString(path)), data))
     )

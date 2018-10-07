@@ -7,9 +7,9 @@ import shapeless.labelled.{field, FieldType}
 import scala.reflect.runtime.universe.TypeTag
 
 trait DerivedDecoders { self: Decoders with DecodeTypes =>
-  implicit def cnilDecoder[F[_]](implicit F: Eff[F]): Dec[F, CNil] =
+  implicit def cnilDecoder[F[_]](implicit F: Eff[F], error: ExtruderErrors[F]): Dec[F, CNil] =
     mkDecoder[F, CNil] { (path, settings, _, _) =>
-      F.validationFailure(
+      error.validationFailure(
         s"Could not find specified implementation of sealed type at path '${settings.pathToStringWithType(path)}'"
       )
     }
@@ -19,12 +19,13 @@ trait DerivedDecoders { self: Decoders with DecodeTypes =>
     headResolve: Dec[F, H],
     tailResolve: Lazy[Dec[F, T]],
     typeResolver: Lazy[Dec[F, Option[String]]],
-    F: Eff[F]
+    F: Eff[F],
+    error: ExtruderErrors[F]
   ): Dec[F, FieldType[K, H] :+: T] =
     mkDecoder { (path, settings, _, data) =>
       val onValidType: Option[String] => F[FieldType[K, H] :+: T] = {
         case None =>
-          F.missing(s"Could not type of sealed instance at path '${settings.pathToStringWithType(path)}'")
+          error.missing(s"Could not type of sealed instance at path '${settings.pathToStringWithType(path)}'")
         case Some(tpe) if tpe == key.value.name =>
           headResolve.read(path, settings, None, data).map(v => Inl(field[K](v)))
         case _ => tailResolve.value.read(path, settings, None, data).map(Inr(_))

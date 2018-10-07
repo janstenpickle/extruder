@@ -5,7 +5,6 @@ import extruder.metrics.snakeCaseTransformation
 import org.scalacheck.ScalacheckShapeless._
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{Assertion, FunSuite}
-import org.specs2.specification.core.SpecStructure
 
 class PrometheusRegistrySpec extends FunSuite with GeneratorDrivenPropertyChecks {
   import TestUtils._

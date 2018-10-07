@@ -14,6 +14,7 @@ trait StringMapDecoders { self: Decoders with DecodeTypes =>
 
   implicit def mapDecoder[F[_], T](
     implicit F: Eff[F],
+    error: ExtruderErrors[F],
     decoder: Dec[F, T],
     refute: Refute[MultiParser[F, T]]
   ): Dec[F, Map[String, T]] =
