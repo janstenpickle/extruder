@@ -1,0 +1,823 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <title>DerivedEncoders - extruder.core.DerivedEncoders</title>
+          <meta name="description" content="DerivedEncoders - extruder.core.DerivedEncoders" />
+          <meta name="keywords" content="DerivedEncoders extruder.core.DerivedEncoders" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../lib/template.js"></script>
+      <script type="text/javascript" src="../../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../index.html';
+            var hash = 'extruder.core.DerivedEncoders';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="type">
+      <div id="definition">
+        <img alt="Trait" src="../../lib/trait_big.png" />
+        <p id="owner"><a href="../package.html" class="extype" name="extruder">extruder</a>.<a href="package.html" class="extype" name="extruder.core">core</a></p>
+        <h1>DerivedEncoders</h1><h3><span class="morelinks"><div>Related Doc:
+            <a href="package.html" class="extype" name="extruder.core">package core</a>
+          </div></span></h3><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <span class="name">DerivedEncoders</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Self Type</dt><dd><a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a> with <a href="Encoders.html" class="extype" name="extruder.core.Encoders">Encoders</a> with <a href="EncodeTypes.html" class="extype" name="extruder.core.EncodeTypes">EncodeTypes</a></dd></dl><div class="toggleContainer block">
+          <span class="toggle">Linear Supertypes</span>
+          <div class="superTypes hiddenContent"><span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
+        </div><div class="toggleContainer block">
+            <span class="toggle">Known Subclasses</span>
+            <div class="subClasses hiddenContent"><a href="BaseMapEncoders.html" class="extype" name="extruder.core.BaseMapEncoders">BaseMapEncoders</a>, <a href="../typesafe/BaseTypesafeConfigEncoders.html" class="extype" name="extruder.typesafe.BaseTypesafeConfigEncoders">BaseTypesafeConfigEncoders</a>, <a href="../metrics/dimensional/DimensionalMetricEncoders.html" class="extype" name="extruder.metrics.dimensional.DimensionalMetricEncoders">DimensionalMetricEncoders</a>, <a href="../metrics/dropwizard/DropwizardDimensionalEncode.html" class="extype" name="extruder.metrics.dropwizard.DropwizardDimensionalEncode">DropwizardDimensionalEncode</a>, <a href="../metrics/dropwizard/DropwizardDimensionalEncoders.html" class="extype" name="extruder.metrics.dropwizard.DropwizardDimensionalEncoders">DropwizardDimensionalEncoders</a>, <a href="../metrics/dropwizard/DropwizardDimensionalMetricsEncoder$.html" class="extype" name="extruder.metrics.dropwizard.DropwizardDimensionalMetricsEncoder">DropwizardDimensionalMetricsEncoder</a>, <a href="../metrics/dropwizard/DropwizardDimensionalRegistry.html" class="extype" name="extruder.metrics.dropwizard.DropwizardDimensionalRegistry">DropwizardDimensionalRegistry</a>, <a href="../metrics/dropwizard/DropwizardDimensionalRegistryEncoders.html" class="extype" name="extruder.metrics.dropwizard.DropwizardDimensionalRegistryEncoders">DropwizardDimensionalRegistryEncoders</a>, <a href="../metrics/dropwizard/DropwizardKeyedEncode.html" class="extype" name="extruder.metrics.dropwizard.DropwizardKeyedEncode">DropwizardKeyedEncode</a>, <a href="../metrics/dropwizard/DropwizardKeyedEncoders.html" class="extype" name="extruder.metrics.dropwizard.DropwizardKeyedEncoders">DropwizardKeyedEncoders</a>, <a href="../metrics/dropwizard/DropwizardKeyedMetricsEncoder$.html" class="extype" name="extruder.metrics.dropwizard.DropwizardKeyedMetricsEncoder">DropwizardKeyedMetricsEncoder</a>, <a href="../metrics/dropwizard/DropwizardKeyedRegistry.html" class="extype" name="extruder.metrics.dropwizard.DropwizardKeyedRegistry">DropwizardKeyedRegistry</a>, <a href="../metrics/dropwizard/DropwizardKeyedRegistryEncoders.html" class="extype" name="extruder.metrics.dropwizard.DropwizardKeyedRegistryEncoders">DropwizardKeyedRegistryEncoders</a>, <a href="../metrics/keyed/KeyedMetricEncoders.html" class="extype" name="extruder.metrics.keyed.KeyedMetricEncoders">KeyedMetricEncoders</a>, <a href="MapEncoder$.html" class="extype" name="extruder.core.MapEncoder">MapEncoder</a>, <a href="MapEncoders.html" class="extype" name="extruder.core.MapEncoders">MapEncoders</a>, <a href="MapSource.html" class="extype" name="extruder.core.MapSource">MapSource</a>, <a href="MapSource$.html" class="extype" name="extruder.core.MapSource">MapSource</a>, <a href="../metrics/MetricEncoders.html" class="extype" name="extruder.metrics.MetricEncoders">MetricEncoders</a>, <a href="../metrics/prometheus/PrometheusEncode.html" class="extype" name="extruder.metrics.prometheus.PrometheusEncode">PrometheusEncode</a>, <a href="../metrics/prometheus/PrometheusEncoders.html" class="extype" name="extruder.metrics.prometheus.PrometheusEncoders">PrometheusEncoders</a>, <a href="../metrics/prometheus/PrometheusPush.html" class="extype" name="extruder.metrics.prometheus.PrometheusPush">PrometheusPush</a>, <a href="../metrics/prometheus/PrometheusRegistry.html" class="extype" name="extruder.metrics.prometheus.PrometheusRegistry">PrometheusRegistry</a>, <a href="../metrics/prometheus/PushEncoders.html" class="extype" name="extruder.metrics.prometheus.PushEncoders">PushEncoders</a>, <a href="../metrics/prometheus/PushMetricsEncoder$.html" class="extype" name="extruder.metrics.prometheus.PushMetricsEncoder">PushMetricsEncoder</a>, <a href="../metrics/spectator/RegistryEncoders.html" class="extype" name="extruder.metrics.spectator.RegistryEncoders">RegistryEncoders</a>, <a href="../metrics/prometheus/RegistryEncoders.html" class="extype" name="extruder.metrics.prometheus.RegistryEncoders">RegistryEncoders</a>, <a href="../metrics/spectator/RegistryMetricsEncoder$.html" class="extype" name="extruder.metrics.spectator.RegistryMetricsEncoder">RegistryMetricsEncoder</a>, <a href="../metrics/prometheus/RegistryMetricsEncoder$.html" class="extype" name="extruder.metrics.prometheus.RegistryMetricsEncoder">RegistryMetricsEncoder</a>, <a href="../system/SafeSystemPropertiesSource.html" class="extype" name="extruder.system.SafeSystemPropertiesSource">SafeSystemPropertiesSource</a>, <a href="../system/SafeSystemPropertiesSource$.html" class="extype" name="extruder.system.SafeSystemPropertiesSource">SafeSystemPropertiesSource</a>, <a href="../typesafe/SafeTypesafeConfigEncoders.html" class="extype" name="extruder.typesafe.SafeTypesafeConfigEncoders">SafeTypesafeConfigEncoders</a>, <a href="../typesafe/SafeTypesafeConfigSource$.html" class="extype" name="extruder.typesafe.SafeTypesafeConfigSource">SafeTypesafeConfigSource</a>, <a href="../metrics/spectator/SpectatorEncode.html" class="extype" name="extruder.metrics.spectator.SpectatorEncode">SpectatorEncode</a>, <a href="../metrics/spectator/SpectatorEncoders.html" class="extype" name="extruder.metrics.spectator.SpectatorEncoders">SpectatorEncoders</a>, <a href="../metrics/spectator/SpectatorRegistry.html" class="extype" name="extruder.metrics.spectator.SpectatorRegistry">SpectatorRegistry</a>, <a href="../system/SystemPropertiesEncoder$.html" class="extype" name="extruder.system.SystemPropertiesEncoder">SystemPropertiesEncoder</a>, <a href="../system/SystemPropertiesEncoders.html" class="extype" name="extruder.system.SystemPropertiesEncoders">SystemPropertiesEncoders</a>, <a href="../system/SystemPropertiesSource$.html" class="extype" name="extruder.system.SystemPropertiesSource">SystemPropertiesSource</a>, <a href="../system/SystemPropertiesSource.html" class="extype" name="extruder.system.SystemPropertiesSource">SystemPropertiesSource</a>, <a href="../typesafe/TypesafeConfigEncoder$.html" class="extype" name="extruder.typesafe.TypesafeConfigEncoder">TypesafeConfigEncoder</a>, <a href="../typesafe/TypesafeConfigEncoders.html" class="extype" name="extruder.typesafe.TypesafeConfigEncoders">TypesafeConfigEncoders</a>, <a href="../typesafe/TypesafeConfigSource$.html" class="extype" name="extruder.typesafe.TypesafeConfigSource">TypesafeConfigSource</a></div>
+          </div></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        <div id="order">
+              <span class="filtertype">Ordering</span>
+              <ol>
+                
+                <li class="alpha in"><span>Alphabetic</span></li>
+                <li class="inherit out"><span>By Inheritance</span></li>
+              </ol>
+            </div>
+        <div id="ancestors">
+                <span class="filtertype">Inherited<br />
+                </span>
+                <ol id="linearization">
+                  <li class="in" name="extruder.core.DerivedEncoders"><span>DerivedEncoders</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                </ol>
+              </div><div id="ancestors">
+                <span class="filtertype">Implicitly<br />
+                </span>
+                <ol id="implicits"> <li class="in" name="scala.Predef.any2stringadd" data-hidden="true"><span>by any2stringadd</span></li><li class="in" name="scala.Predef.StringFormat" data-hidden="true"><span>by StringFormat</span></li><li class="in" name="scala.Predef.Ensuring" data-hidden="true"><span>by Ensuring</span></li><li class="in" name="scala.Predef.ArrowAssoc" data-hidden="true"><span>by ArrowAssoc</span></li>
+                </ol>
+              </div><div id="ancestors">
+            <span class="filtertype"></span>
+            <ol>
+              <li class="hideall out"><span>Hide All</span></li>
+              <li class="showall in"><span>Show All</span></li>
+            </ol>
+          </div>
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="extruder.core.DerivedEncoders.DerivedEncoder" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="DerivedEncoder[T,F[_],Repr&lt;:shapeless.HList]extendsAnyRef"></a>
+      <a id="DerivedEncoder[T,F[_],Repr&lt;:HList]:(DerivedEncoders.this)#DerivedEncoder[T,F,Repr]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="DerivedEncoders$DerivedEncoder.html"><span class="name">DerivedEncoder</span></a><span class="tparams">[<span name="T">T</span>, <span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>, <span name="Repr">Repr &lt;: <span class="extype" name="shapeless.HList">HList</span></span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@DerivedEncoder[T,F[_],Repr&lt;:shapeless.HList]extendsAnyRef" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li></ol>
+            </div>
+
+        
+
+        <div id="values" class="values members">
+              <h3>Value Members</h3>
+              <ol><li name="scala.AnyRef#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="!=(x$1:Any):Boolean"></a>
+      <a id="!=(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@!=(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef###" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="##():Int"></a>
+      <a id="##():Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@##():Int" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.Predef.any2stringadd#+" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="+(other:String):String"></a>
+      <a id="+(String):String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $plus" class="implicit">+</span><span class="params">(<span name="other">other: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@+(other:String):String" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a> to
+            <span class="extype" name="scala.Predef.any2stringadd">any2stringadd</span>[<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>] performed by method any2stringadd in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>any2stringadd</dd></dl></div>
+    </li><li name="scala.Predef.ArrowAssoc#-&gt;" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="-&gt;[B](y:B):(A,B)"></a>
+      <a id="-&gt;[B](B):(DerivedEncoders,B)"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $minus$greater" class="implicit">-&gt;</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="y">y: <span class="extype" name="scala.Predef.ArrowAssoc.-&gt;.B">B</span></span>)</span><span class="result">: (<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>, <span class="extype" name="scala.Predef.ArrowAssoc.-&gt;.B">B</span>)</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@-&gt;[B](y:B):(A,B)" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a> to
+            <span class="extype" name="scala.Predef.ArrowAssoc">ArrowAssoc</span>[<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>] performed by method ArrowAssoc in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>ArrowAssoc</dd><dt>Annotations</dt><dd>
+                <span class="name">@inline</span><span class="args">()</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="==(x$1:Any):Boolean"></a>
+      <a id="==(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@==(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="asInstanceOf[T0]:T0"></a>
+      <a id="asInstanceOf[T0]:T0"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Any.asInstanceOf.T0">T0</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@asInstanceOf[T0]:T0" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="extruder.core.DerivedEncoders#cconsEncoder" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="cconsEncoder[F[_],K&lt;:Symbol,H,T&lt;:shapeless.Coproduct](implicitkey:shapeless.Witness.Aux[K],implicitheadEncode:DerivedEncoders.this.Enc[F,H],implicittailEncode:shapeless.Lazy[DerivedEncoders.this.Enc[F,T]],implicittypeEncode:shapeless.Lazy[DerivedEncoders.this.Enc[F,String]],implicitF:DerivedEncoders.this.Eff[F]):DerivedEncoders.this.Enc[F,shapeless.:+:[shapeless.labelled.FieldType[K,H],T]]"></a>
+      <a id="cconsEncoder[F[_],K&lt;:Symbol,H,T&lt;:Coproduct](Aux[K],(DerivedEncoders.this)#Enc[F,H],Lazy[(DerivedEncoders.this)#Enc[F,T]],Lazy[(DerivedEncoders.this)#Enc[F,String]],(DerivedEncoders.this)#Eff[F]):(DerivedEncoders.this)#Enc[F,:+:[FieldType[K,H],T]]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">cconsEncoder</span><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>, <span name="K">K &lt;: <span class="extype" name="scala.Symbol">Symbol</span></span>, <span name="H">H</span>, <span name="T">T &lt;: <span class="extype" name="shapeless.Coproduct">Coproduct</span></span>]</span><span class="params">(<span class="implicit">implicit </span><span name="key">key: <span class="extype" name="shapeless.Witness.Aux">Aux</span>[<span class="extype" name="extruder.core.DerivedEncoders.cconsEncoder.K">K</span>]</span>, <span name="headEncode">headEncode: (<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>.this)#<span class="extype" name="extruder.core.EncodeTypes.Enc">Enc</span>[<span class="extype" name="extruder.core.DerivedEncoders.cconsEncoder.F">F</span>, <span class="extype" name="extruder.core.DerivedEncoders.cconsEncoder.H">H</span>]</span>, <span name="tailEncode">tailEncode: <span class="extype" name="shapeless.Lazy">Lazy</span>[(<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>.this)#<span class="extype" name="extruder.core.EncodeTypes.Enc">Enc</span>[<span class="extype" name="extruder.core.DerivedEncoders.cconsEncoder.F">F</span>, <span class="extype" name="extruder.core.DerivedEncoders.cconsEncoder.T">T</span>]]</span>, <span name="typeEncode">typeEncode: <span class="extype" name="shapeless.Lazy">Lazy</span>[(<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>.this)#<span class="extype" name="extruder.core.EncodeTypes.Enc">Enc</span>[<span class="extype" name="extruder.core.DerivedEncoders.cconsEncoder.F">F</span>, <span class="extype" name="scala.Predef.String">String</span>]]</span>, <span name="F">F: (<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>.this)#<span class="extype" name="extruder.core.DataSource.Eff">Eff</span>[<span class="extype" name="extruder.core.DerivedEncoders.cconsEncoder.F">F</span>]</span>)</span><span class="result">: (<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>.this)#<span class="extype" name="extruder.core.EncodeTypes.Enc">Enc</span>[<span class="extype" name="extruder.core.DerivedEncoders.cconsEncoder.F">F</span>, <span class="extype" name="shapeless.:+:">:+:</span>[<span class="extype" name="shapeless.labelled.FieldType">FieldType</span>[<span class="extype" name="extruder.core.DerivedEncoders.cconsEncoder.K">K</span>, <span class="extype" name="extruder.core.DerivedEncoders.cconsEncoder.H">H</span>], <span class="extype" name="extruder.core.DerivedEncoders.cconsEncoder.T">T</span>]]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@cconsEncoder[F[_],K&lt;:Symbol,H,T&lt;:shapeless.Coproduct](implicitkey:shapeless.Witness.Aux[K],implicitheadEncode:DerivedEncoders.this.Enc[F,H],implicittailEncode:shapeless.Lazy[DerivedEncoders.this.Enc[F,T]],implicittypeEncode:shapeless.Lazy[DerivedEncoders.this.Enc[F,String]],implicitF:DerivedEncoders.this.Eff[F]):DerivedEncoders.this.Enc[F,shapeless.:+:[shapeless.labelled.FieldType[K,H],T]]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="clone():Object"></a>
+      <a id="clone():AnyRef"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@clone():Object" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@HotSpotIntrinsicCandidate</span><span class="args">()</span>
+              
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.CloneNotSupportedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="extruder.core.DerivedEncoders#cnilEncoder" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="cnilEncoder[F[_]](implicitF:DerivedEncoders.this.Eff[F]):DerivedEncoders.this.Enc[F,shapeless.CNil]"></a>
+      <a id="cnilEncoder[F[_]]((DerivedEncoders.this)#Eff[F]):(DerivedEncoders.this)#Enc[F,CNil]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">cnilEncoder</span><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>]</span><span class="params">(<span class="implicit">implicit </span><span name="F">F: (<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>.this)#<span class="extype" name="extruder.core.DataSource.Eff">Eff</span>[<span class="extype" name="extruder.core.DerivedEncoders.cnilEncoder.F">F</span>]</span>)</span><span class="result">: (<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>.this)#<span class="extype" name="extruder.core.EncodeTypes.Enc">Enc</span>[<span class="extype" name="extruder.core.DerivedEncoders.cnilEncoder.F">F</span>, <span class="extype" name="shapeless.CNil">CNil</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@cnilEncoder[F[_]](implicitF:DerivedEncoders.this.Eff[F]):DerivedEncoders.this.Enc[F,shapeless.CNil]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ensuring(cond:A=&gt;Boolean,msg:=&gt;Any):A"></a>
+      <a id="ensuring((DerivedEncoders)⇒Boolean,⇒Any):DerivedEncoders"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: (<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>) ⇒ <span class="extype" name="scala.Boolean">Boolean</span></span>, <span name="msg">msg: ⇒ <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@ensuring(cond:A=&gt;Boolean,msg:=&gt;Any):A" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a> to
+            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>] performed by method Ensuring in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>Ensuring</dd></dl></div>
+    </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ensuring(cond:A=&gt;Boolean):A"></a>
+      <a id="ensuring((DerivedEncoders)⇒Boolean):DerivedEncoders"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: (<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>) ⇒ <span class="extype" name="scala.Boolean">Boolean</span></span>)</span><span class="result">: <a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@ensuring(cond:A=&gt;Boolean):A" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a> to
+            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>] performed by method Ensuring in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>Ensuring</dd></dl></div>
+    </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ensuring(cond:Boolean,msg:=&gt;Any):A"></a>
+      <a id="ensuring(Boolean,⇒Any):DerivedEncoders"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: <span class="extype" name="scala.Boolean">Boolean</span></span>, <span name="msg">msg: ⇒ <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@ensuring(cond:Boolean,msg:=&gt;Any):A" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a> to
+            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>] performed by method Ensuring in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>Ensuring</dd></dl></div>
+    </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ensuring(cond:Boolean):A"></a>
+      <a id="ensuring(Boolean):DerivedEncoders"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: <span class="extype" name="scala.Boolean">Boolean</span></span>)</span><span class="result">: <a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@ensuring(cond:Boolean):A" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a> to
+            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>] performed by method Ensuring in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>Ensuring</dd></dl></div>
+    </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="eq(x$1:AnyRef):Boolean"></a>
+      <a id="eq(AnyRef):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#equals" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="equals(x$1:Any):Boolean"></a>
+      <a id="equals(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@equals(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.Predef.StringFormat#formatted" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="formatted(fmtstr:String):String"></a>
+      <a id="formatted(String):String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">formatted</span><span class="params">(<span name="fmtstr">fmtstr: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@formatted(fmtstr:String):String" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a> to
+            <span class="extype" name="scala.Predef.StringFormat">StringFormat</span>[<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>] performed by method StringFormat in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>StringFormat</dd><dt>Annotations</dt><dd>
+                <span class="name">@inline</span><span class="args">()</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#getClass" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getClass():Class[_]"></a>
+      <a id="getClass():Class[_]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getClass</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.Class">Class</span>[_]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@getClass():Class[_]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd><dt>Annotations</dt><dd>
+                <span class="name">@HotSpotIntrinsicCandidate</span><span class="args">()</span>
+              
+        </dd></dl></div>
+    </li><li name="extruder.core.DerivedEncoders#hConsDerivedEncoder" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="hConsDerivedEncoder[T,F[_],K&lt;:Symbol,V,TailRepr&lt;:shapeless.HList](implicitkey:shapeless.Witness.Aux[K],implicitF:DerivedEncoders.this.Eff[F],implicitencoder:shapeless.Lazy[DerivedEncoders.this.Enc[F,V]],implicittailEncoder:shapeless.Lazy[DerivedEncoders.this.DerivedEncoder[T,F,TailRepr]]):DerivedEncoders.this.DerivedEncoder[T,F,shapeless.::[shapeless.labelled.FieldType[K,V],TailRepr]]"></a>
+      <a id="hConsDerivedEncoder[T,F[_],K&lt;:Symbol,V,TailRepr&lt;:HList](Aux[K],(DerivedEncoders.this)#Eff[F],Lazy[(DerivedEncoders.this)#Enc[F,V]],Lazy[(DerivedEncoders.this)#DerivedEncoder[T,F,TailRepr]]):(DerivedEncoders.this)#DerivedEncoder[T,F,::[FieldType[K,V],TailRepr]]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">hConsDerivedEncoder</span><span class="tparams">[<span name="T">T</span>, <span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>, <span name="K">K &lt;: <span class="extype" name="scala.Symbol">Symbol</span></span>, <span name="V">V</span>, <span name="TailRepr">TailRepr &lt;: <span class="extype" name="shapeless.HList">HList</span></span>]</span><span class="params">(<span class="implicit">implicit </span><span name="key">key: <span class="extype" name="shapeless.Witness.Aux">Aux</span>[<span class="extype" name="extruder.core.DerivedEncoders.hConsDerivedEncoder.K">K</span>]</span>, <span name="F">F: (<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>.this)#<span class="extype" name="extruder.core.DataSource.Eff">Eff</span>[<span class="extype" name="extruder.core.DerivedEncoders.hConsDerivedEncoder.F">F</span>]</span>, <span name="encoder">encoder: <span class="extype" name="shapeless.Lazy">Lazy</span>[(<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>.this)#<span class="extype" name="extruder.core.EncodeTypes.Enc">Enc</span>[<span class="extype" name="extruder.core.DerivedEncoders.hConsDerivedEncoder.F">F</span>, <span class="extype" name="extruder.core.DerivedEncoders.hConsDerivedEncoder.V">V</span>]]</span>, <span name="tailEncoder">tailEncoder: <span class="extype" name="shapeless.Lazy">Lazy</span>[(<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>.this)#<span class="extype" name="extruder.core.DerivedEncoders.DerivedEncoder">DerivedEncoder</span>[<span class="extype" name="extruder.core.DerivedEncoders.hConsDerivedEncoder.T">T</span>, <span class="extype" name="extruder.core.DerivedEncoders.hConsDerivedEncoder.F">F</span>, <span class="extype" name="extruder.core.DerivedEncoders.hConsDerivedEncoder.TailRepr">TailRepr</span>]]</span>)</span><span class="result">: (<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>.this)#<span class="extype" name="extruder.core.DerivedEncoders.DerivedEncoder">DerivedEncoder</span>[<span class="extype" name="extruder.core.DerivedEncoders.hConsDerivedEncoder.T">T</span>, <span class="extype" name="extruder.core.DerivedEncoders.hConsDerivedEncoder.F">F</span>, <span class="extype" name="shapeless.::">::</span>[<span class="extype" name="shapeless.labelled.FieldType">FieldType</span>[<span class="extype" name="extruder.core.DerivedEncoders.hConsDerivedEncoder.K">K</span>, <span class="extype" name="extruder.core.DerivedEncoders.hConsDerivedEncoder.V">V</span>], <span class="extype" name="extruder.core.DerivedEncoders.hConsDerivedEncoder.TailRepr">TailRepr</span>]]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@hConsDerivedEncoder[T,F[_],K&lt;:Symbol,V,TailRepr&lt;:shapeless.HList](implicitkey:shapeless.Witness.Aux[K],implicitF:DerivedEncoders.this.Eff[F],implicitencoder:shapeless.Lazy[DerivedEncoders.this.Enc[F,V]],implicittailEncoder:shapeless.Lazy[DerivedEncoders.this.DerivedEncoder[T,F,TailRepr]]):DerivedEncoders.this.DerivedEncoder[T,F,shapeless.::[shapeless.labelled.FieldType[K,V],TailRepr]]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="extruder.core.DerivedEncoders#hNilDerivedEncoder" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="hNilDerivedEncoder[T,F[_]](implicitF:DerivedEncoders.this.Eff[F]):DerivedEncoders.this.DerivedEncoder[T,F,shapeless.HNil]"></a>
+      <a id="hNilDerivedEncoder[T,F[_]]((DerivedEncoders.this)#Eff[F]):(DerivedEncoders.this)#DerivedEncoder[T,F,HNil]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">hNilDerivedEncoder</span><span class="tparams">[<span name="T">T</span>, <span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>]</span><span class="params">(<span class="implicit">implicit </span><span name="F">F: (<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>.this)#<span class="extype" name="extruder.core.DataSource.Eff">Eff</span>[<span class="extype" name="extruder.core.DerivedEncoders.hNilDerivedEncoder.F">F</span>]</span>)</span><span class="result">: (<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>.this)#<span class="extype" name="extruder.core.DerivedEncoders.DerivedEncoder">DerivedEncoder</span>[<span class="extype" name="extruder.core.DerivedEncoders.hNilDerivedEncoder.T">T</span>, <span class="extype" name="extruder.core.DerivedEncoders.hNilDerivedEncoder.F">F</span>, <span class="extype" name="shapeless.HNil">HNil</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@hNilDerivedEncoder[T,F[_]](implicitF:DerivedEncoders.this.Eff[F]):DerivedEncoders.this.DerivedEncoder[T,F,shapeless.HNil]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="scala.AnyRef#hashCode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="hashCode():Int"></a>
+      <a id="hashCode():Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@hashCode():Int" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd><dt>Annotations</dt><dd>
+                <span class="name">@HotSpotIntrinsicCandidate</span><span class="args">()</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.Any#isInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="isInstanceOf[T0]:Boolean"></a>
+      <a id="isInstanceOf[T0]:Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ne(x$1:AnyRef):Boolean"></a>
+      <a id="ne(AnyRef):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#notify" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="notify():Unit"></a>
+      <a id="notify():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@notify():Unit" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@HotSpotIntrinsicCandidate</span><span class="args">()</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#notifyAll" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="notifyAll():Unit"></a>
+      <a id="notifyAll():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@notifyAll():Unit" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@HotSpotIntrinsicCandidate</span><span class="args">()</span>
+              
+        </dd></dl></div>
+    </li><li name="extruder.core.DerivedEncoders#productEncoder" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="productEncoder[F[_],T,GenRepr&lt;:shapeless.HList](implicitgen:shapeless.LabelledGeneric.Aux[T,GenRepr],implicittag:reflect.runtime.universe.TypeTag[T],implicitF:DerivedEncoders.this.Eff[F],implicitencoder:shapeless.Lazy[DerivedEncoders.this.DerivedEncoder[T,F,GenRepr]],implicitlp:shapeless.LowPriority,implicitrefute:shapeless.Refute[DerivedEncoders.this.EncRefute[T]],implicitrefuteShow:shapeless.Refute[extruder.core.Show[T]],implicitrefuteMultiShow:shapeless.Refute[extruder.core.MultiShow[T]]):DerivedEncoders.this.Enc[F,T]"></a>
+      <a id="productEncoder[F[_],T,GenRepr&lt;:HList](Aux[T,GenRepr],scala.reflect.api.JavaUniverse.TypeTag[T],(DerivedEncoders.this)#Eff[F],Lazy[(DerivedEncoders.this)#DerivedEncoder[T,F,GenRepr]],LowPriority,Refute[(DerivedEncoders.this)#EncRefute[T]],Refute[Show[T]],Refute[MultiShow[T]]):(DerivedEncoders.this)#Enc[F,T]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">productEncoder</span><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>, <span name="T">T</span>, <span name="GenRepr">GenRepr &lt;: <span class="extype" name="shapeless.HList">HList</span></span>]</span><span class="params">(<span class="implicit">implicit </span><span name="gen">gen: <span class="extype" name="shapeless.LabelledGeneric.Aux">Aux</span>[<span class="extype" name="extruder.core.DerivedEncoders.productEncoder.T">T</span>, <span class="extype" name="extruder.core.DerivedEncoders.productEncoder.GenRepr">GenRepr</span>]</span>, <span name="tag">tag: <span class="extype" name="scala.reflect.api.TypeTags.TypeTag">scala.reflect.api.JavaUniverse.TypeTag</span>[<span class="extype" name="extruder.core.DerivedEncoders.productEncoder.T">T</span>]</span>, <span name="F">F: (<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>.this)#<span class="extype" name="extruder.core.DataSource.Eff">Eff</span>[<span class="extype" name="extruder.core.DerivedEncoders.productEncoder.F">F</span>]</span>, <span name="encoder">encoder: <span class="extype" name="shapeless.Lazy">Lazy</span>[(<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>.this)#<span class="extype" name="extruder.core.DerivedEncoders.DerivedEncoder">DerivedEncoder</span>[<span class="extype" name="extruder.core.DerivedEncoders.productEncoder.T">T</span>, <span class="extype" name="extruder.core.DerivedEncoders.productEncoder.F">F</span>, <span class="extype" name="extruder.core.DerivedEncoders.productEncoder.GenRepr">GenRepr</span>]]</span>, <span name="lp">lp: <span class="extype" name="shapeless.LowPriority">LowPriority</span></span>, <span name="refute">refute: <span class="extype" name="shapeless.Refute">Refute</span>[(<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>.this)#<span class="extype" name="extruder.core.EncodeTypes.EncRefute">EncRefute</span>[<span class="extype" name="extruder.core.DerivedEncoders.productEncoder.T">T</span>]]</span>, <span name="refuteShow">refuteShow: <span class="extype" name="shapeless.Refute">Refute</span>[<a href="Show.html" class="extype" name="extruder.core.Show">Show</a>[<span class="extype" name="extruder.core.DerivedEncoders.productEncoder.T">T</span>]]</span>, <span name="refuteMultiShow">refuteMultiShow: <span class="extype" name="shapeless.Refute">Refute</span>[<a href="MultiShow.html" class="extype" name="extruder.core.MultiShow">MultiShow</a>[<span class="extype" name="extruder.core.DerivedEncoders.productEncoder.T">T</span>]]</span>)</span><span class="result">: (<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>.this)#<span class="extype" name="extruder.core.EncodeTypes.Enc">Enc</span>[<span class="extype" name="extruder.core.DerivedEncoders.productEncoder.F">F</span>, <span class="extype" name="extruder.core.DerivedEncoders.productEncoder.T">T</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@productEncoder[F[_],T,GenRepr&lt;:shapeless.HList](implicitgen:shapeless.LabelledGeneric.Aux[T,GenRepr],implicittag:reflect.runtime.universe.TypeTag[T],implicitF:DerivedEncoders.this.Eff[F],implicitencoder:shapeless.Lazy[DerivedEncoders.this.DerivedEncoder[T,F,GenRepr]],implicitlp:shapeless.LowPriority,implicitrefute:shapeless.Refute[DerivedEncoders.this.EncRefute[T]],implicitrefuteShow:shapeless.Refute[extruder.core.Show[T]],implicitrefuteMultiShow:shapeless.Refute[extruder.core.MultiShow[T]]):DerivedEncoders.this.Enc[F,T]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
+      <a id="synchronized[T0](⇒T0):T0"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">synchronized</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">(<span name="arg0">arg0: ⇒ <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>)</span><span class="result">: <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@synchronized[T0](x$1:=&gt;T0):T0" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="toString():String"></a>
+      <a id="toString():String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@toString():String" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="extruder.core.DerivedEncoders#unionEncoder" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="unionEncoder[F[_],T,O&lt;:shapeless.Coproduct](implicitgen:shapeless.LabelledGeneric.Aux[T,O],implicitunderlying:shapeless.Lazy[DerivedEncoders.this.Enc[F,O]],implicitF:DerivedEncoders.this.Eff[F],implicitlp:shapeless.LowPriority,implicitrefute:shapeless.Refute[extruder.core.EncoderRefute[T]],implicitrefuteShow:shapeless.Refute[extruder.core.Show[T]],implicitrefuteMultiShow:shapeless.Refute[extruder.core.MultiShow[T]],implicitneOpt:shapeless.&lt;:!&lt;[T,Option[_]],implicitneCol:shapeless.&lt;:!&lt;[T,TraversableOnce[_]]):DerivedEncoders.this.Enc[F,T]"></a>
+      <a id="unionEncoder[F[_],T,O&lt;:Coproduct](Aux[T,O],Lazy[(DerivedEncoders.this)#Enc[F,O]],(DerivedEncoders.this)#Eff[F],LowPriority,Refute[EncoderRefute[T]],Refute[Show[T]],Refute[MultiShow[T]],&lt;:!&lt;[T,Option[_]],&lt;:!&lt;[T,TraversableOnce[_]]):(DerivedEncoders.this)#Enc[F,T]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">unionEncoder</span><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>, <span name="T">T</span>, <span name="O">O &lt;: <span class="extype" name="shapeless.Coproduct">Coproduct</span></span>]</span><span class="params">(<span class="implicit">implicit </span><span name="gen">gen: <span class="extype" name="shapeless.LabelledGeneric.Aux">Aux</span>[<span class="extype" name="extruder.core.DerivedEncoders.unionEncoder.T">T</span>, <span class="extype" name="extruder.core.DerivedEncoders.unionEncoder.O">O</span>]</span>, <span name="underlying">underlying: <span class="extype" name="shapeless.Lazy">Lazy</span>[(<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>.this)#<span class="extype" name="extruder.core.EncodeTypes.Enc">Enc</span>[<span class="extype" name="extruder.core.DerivedEncoders.unionEncoder.F">F</span>, <span class="extype" name="extruder.core.DerivedEncoders.unionEncoder.O">O</span>]]</span>, <span name="F">F: (<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>.this)#<span class="extype" name="extruder.core.DataSource.Eff">Eff</span>[<span class="extype" name="extruder.core.DerivedEncoders.unionEncoder.F">F</span>]</span>, <span name="lp">lp: <span class="extype" name="shapeless.LowPriority">LowPriority</span></span>, <span name="refute">refute: <span class="extype" name="shapeless.Refute">Refute</span>[<a href="EncoderRefute.html" class="extype" name="extruder.core.EncoderRefute">EncoderRefute</a>[<span class="extype" name="extruder.core.DerivedEncoders.unionEncoder.T">T</span>]]</span>, <span name="refuteShow">refuteShow: <span class="extype" name="shapeless.Refute">Refute</span>[<a href="Show.html" class="extype" name="extruder.core.Show">Show</a>[<span class="extype" name="extruder.core.DerivedEncoders.unionEncoder.T">T</span>]]</span>, <span name="refuteMultiShow">refuteMultiShow: <span class="extype" name="shapeless.Refute">Refute</span>[<a href="MultiShow.html" class="extype" name="extruder.core.MultiShow">MultiShow</a>[<span class="extype" name="extruder.core.DerivedEncoders.unionEncoder.T">T</span>]]</span>, <span name="neOpt">neOpt: <span class="extype" name="shapeless.&lt;:!&lt;">&lt;:!&lt;</span>[<span class="extype" name="extruder.core.DerivedEncoders.unionEncoder.T">T</span>, <span class="extype" name="scala.Option">Option</span>[_]]</span>, <span name="neCol">neCol: <span class="extype" name="shapeless.&lt;:!&lt;">&lt;:!&lt;</span>[<span class="extype" name="extruder.core.DerivedEncoders.unionEncoder.T">T</span>, <span class="extype" name="scala.TraversableOnce">TraversableOnce</span>[_]]</span>)</span><span class="result">: (<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>.this)#<span class="extype" name="extruder.core.EncodeTypes.Enc">Enc</span>[<span class="extype" name="extruder.core.DerivedEncoders.unionEncoder.F">F</span>, <span class="extype" name="extruder.core.DerivedEncoders.unionEncoder.T">T</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@unionEncoder[F[_],T,O&lt;:shapeless.Coproduct](implicitgen:shapeless.LabelledGeneric.Aux[T,O],implicitunderlying:shapeless.Lazy[DerivedEncoders.this.Enc[F,O]],implicitF:DerivedEncoders.this.Eff[F],implicitlp:shapeless.LowPriority,implicitrefute:shapeless.Refute[extruder.core.EncoderRefute[T]],implicitrefuteShow:shapeless.Refute[extruder.core.Show[T]],implicitrefuteMultiShow:shapeless.Refute[extruder.core.MultiShow[T]],implicitneOpt:shapeless.&lt;:!&lt;[T,Option[_]],implicitneCol:shapeless.&lt;:!&lt;[T,TraversableOnce[_]]):DerivedEncoders.this.Enc[F,T]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait():Unit"></a>
+      <a id="wait():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@wait():Unit" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait(x$1:Long,x$2:Int):Unit"></a>
+      <a id="wait(Long,Int):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>, <span name="arg1">arg1: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait(x$1:Long):Unit"></a>
+      <a id="wait(Long):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@wait(x$1:Long):Unit" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.Predef.ArrowAssoc#→" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="→[B](y:B):(A,B)"></a>
+      <a id="→[B](B):(DerivedEncoders,B)"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $u2192" class="implicit">→</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="y">y: <span class="extype" name="scala.Predef.ArrowAssoc.→.B">B</span></span>)</span><span class="result">: (<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>, <span class="extype" name="scala.Predef.ArrowAssoc.→.B">B</span>)</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@→[B](y:B):(A,B)" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a> to
+            <span class="extype" name="scala.Predef.ArrowAssoc">ArrowAssoc</span>[<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>] performed by method ArrowAssoc in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>ArrowAssoc</dd></dl></div>
+    </li></ol>
+            </div>
+
+        
+
+        <div id="values" class="values members">
+              <h3>Deprecated Value Members</h3>
+              <ol><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="finalize():Unit"></a>
+      <a id="finalize():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name deprecated" title="Deprecated: (Since version ) see corresponding Javadoc for more information.">finalize</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.core.DerivedEncoders@finalize():Unit" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@Deprecated</span>
+              
+                <span class="name">@deprecated</span>
+              
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="symbol">classOf[java.lang.Throwable]</span>
+    </span>)</span>
+              
+        </dd><dt>Deprecated</dt><dd class="cmt"><p><i>(Since version )</i> see corresponding Javadoc for more information.</p></dd></dl></div>
+    </li></ol>
+            </div>
+        </div>
+
+        <div id="inheritedMembers">
+        <div class="parent" name="scala.AnyRef">
+              <h3>Inherited from <span class="extype" name="scala.AnyRef">AnyRef</span></h3>
+            </div><div class="parent" name="scala.Any">
+              <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>
+            </div>
+        <div class="conversion" name="scala.Predef.any2stringadd">
+              <h3>Inherited by implicit conversion any2stringadd from
+                <a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a> to <span class="extype" name="scala.Predef.any2stringadd">any2stringadd</span>[<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>]
+              </h3>
+            </div><div class="conversion" name="scala.Predef.StringFormat">
+              <h3>Inherited by implicit conversion StringFormat from
+                <a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a> to <span class="extype" name="scala.Predef.StringFormat">StringFormat</span>[<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>]
+              </h3>
+            </div><div class="conversion" name="scala.Predef.Ensuring">
+              <h3>Inherited by implicit conversion Ensuring from
+                <a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a> to <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>]
+              </h3>
+            </div><div class="conversion" name="scala.Predef.ArrowAssoc">
+              <h3>Inherited by implicit conversion ArrowAssoc from
+                <a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a> to <span class="extype" name="scala.Predef.ArrowAssoc">ArrowAssoc</span>[<a href="" class="extype" name="extruder.core.DerivedEncoders">DerivedEncoders</a>]
+              </h3>
+            </div>
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>
