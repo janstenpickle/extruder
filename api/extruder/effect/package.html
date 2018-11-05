@@ -1,0 +1,308 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <title>effect - extruder.effect</title>
+          <meta name="description" content="effect - extruder.effect" />
+          <meta name="keywords" content="effect extruder.effect" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../lib/template.js"></script>
+      <script type="text/javascript" src="../../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../index.html';
+            var hash = 'extruder.effect.package';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="value">
+      <div id="definition">
+        <img alt="Package" src="../../lib/package_big.png" />
+        <p id="owner"><a href="../package.html" class="extype" name="extruder">extruder</a></p>
+        <h1>effect</h1><span class="permalink">
+      <a href="../../index.html#extruder.effect.package" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <span class="name">effect</span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        
+        
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="extruder.effect.AsyncInstances" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="AsyncInstancesextendsAnyRef"></a>
+      <a id="AsyncInstances:AsyncInstances"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="AsyncInstances.html"><span class="name">AsyncInstances</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.effect.package@AsyncInstancesextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="extruder.effect.ExtruderAsync" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="ExtruderAsync[F[_]]extendsExtruderSync[F]withAsync[F]"></a>
+      <a id="ExtruderAsync[F[_]]:ExtruderAsync[F]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="ExtruderAsync.html"><span class="name">ExtruderAsync</span></a><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>]</span><span class="result"> extends <a href="ExtruderSync.html" class="extype" name="extruder.effect.ExtruderSync">ExtruderSync</a>[<span class="extype" name="extruder.effect.ExtruderAsync.F">F</span>] with <span class="extype" name="cats.effect.Async">Async</span>[<span class="extype" name="extruder.effect.ExtruderAsync.F">F</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.effect.package@ExtruderAsync[F[_]]extendsExtruderSync[F]withAsync[F]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="extruder.effect.ExtruderMonadError" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="ExtruderMonadError[F[_]]extendsMonadError[F,Throwable]"></a>
+      <a id="ExtruderMonadError[F[_]]:ExtruderMonadError[F]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="ExtruderMonadError.html"><span class="name">ExtruderMonadError</span></a><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>]</span><span class="result"> extends <span class="extype" name="cats.MonadError">MonadError</span>[<span class="extype" name="extruder.effect.ExtruderMonadError.F">F</span>, <span class="extype" name="scala.Throwable">Throwable</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.effect.package@ExtruderMonadError[F[_]]extendsMonadError[F,Throwable]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="extruder.effect.ExtruderMonadErrorInstances" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="ExtruderMonadErrorInstancesextendsAnyRef"></a>
+      <a id="ExtruderMonadErrorInstances:ExtruderMonadErrorInstances"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="ExtruderMonadErrorInstances.html"><span class="name">ExtruderMonadErrorInstances</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.effect.package@ExtruderMonadErrorInstancesextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="extruder.effect.ExtruderSync" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="ExtruderSync[F[_]]extendsSync[F]withExtruderMonadError[F]"></a>
+      <a id="ExtruderSync[F[_]]:ExtruderSync[F]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="ExtruderSync.html"><span class="name">ExtruderSync</span></a><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>]</span><span class="result"> extends <span class="extype" name="cats.effect.Sync">Sync</span>[<span class="extype" name="extruder.effect.ExtruderSync.F">F</span>] with <a href="ExtruderMonadError.html" class="extype" name="extruder.effect.ExtruderMonadError">ExtruderMonadError</a>[<span class="extype" name="extruder.effect.ExtruderSync.F">F</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.effect.package@ExtruderSync[F[_]]extendsSync[F]withExtruderMonadError[F]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="extruder.effect.LowPriorityAsyncInstances" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="LowPriorityAsyncInstancesextendsAnyRef"></a>
+      <a id="LowPriorityAsyncInstances:LowPriorityAsyncInstances"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="LowPriorityAsyncInstances.html"><span class="name">LowPriorityAsyncInstances</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.effect.package@LowPriorityAsyncInstancesextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="extruder.effect.LowPriorityMonadErrorInstances" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="LowPriorityMonadErrorInstancesextendsAnyRef"></a>
+      <a id="LowPriorityMonadErrorInstances:LowPriorityMonadErrorInstances"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="LowPriorityMonadErrorInstances.html"><span class="name">LowPriorityMonadErrorInstances</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.effect.package@LowPriorityMonadErrorInstancesextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="extruder.effect.LowPrioritySyncInstances" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="LowPrioritySyncInstancesextendsAnyRef"></a>
+      <a id="LowPrioritySyncInstances:LowPrioritySyncInstances"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="LowPrioritySyncInstances.html"><span class="name">LowPrioritySyncInstances</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.effect.package@LowPrioritySyncInstancesextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="extruder.effect.SyncInstances" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="SyncInstancesextendsAnyRef"></a>
+      <a id="SyncInstances:SyncInstances"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="SyncInstances.html"><span class="name">SyncInstances</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.effect.package@SyncInstancesextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li></ol>
+            </div>
+
+        
+
+        <div id="values" class="values members">
+              <h3>Value Members</h3>
+              <ol><li name="extruder.effect.ExtruderAsync" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ExtruderAsync"></a>
+      <a id="ExtruderAsync:ExtruderAsync"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="ExtruderAsync$.html"><span class="name">ExtruderAsync</span></a><span class="result"> extends <a href="AsyncInstances.html" class="extype" name="extruder.effect.AsyncInstances">AsyncInstances</a> with <a href="LowPriorityAsyncInstances.html" class="extype" name="extruder.effect.LowPriorityAsyncInstances">LowPriorityAsyncInstances</a> with <a href="../instances/EitherInstances.html" class="extype" name="extruder.instances.EitherInstances">EitherInstances</a> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.effect.package@ExtruderAsync" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="extruder.effect.ExtruderMonadError" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ExtruderMonadError"></a>
+      <a id="ExtruderMonadError:ExtruderMonadError"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="ExtruderMonadError$.html"><span class="name">ExtruderMonadError</span></a><span class="result"> extends <a href="../instances/EitherInstances.html" class="extype" name="extruder.instances.EitherInstances">EitherInstances</a> with <a href="ExtruderMonadErrorInstances.html" class="extype" name="extruder.effect.ExtruderMonadErrorInstances">ExtruderMonadErrorInstances</a> with <a href="LowPriorityMonadErrorInstances.html" class="extype" name="extruder.effect.LowPriorityMonadErrorInstances">LowPriorityMonadErrorInstances</a> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.effect.package@ExtruderMonadError" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="extruder.effect.ExtruderSync" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ExtruderSync"></a>
+      <a id="ExtruderSync:ExtruderSync"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="ExtruderSync$.html"><span class="name">ExtruderSync</span></a><span class="result"> extends <a href="../instances/EitherInstances.html" class="extype" name="extruder.instances.EitherInstances">EitherInstances</a> with <a href="SyncInstances.html" class="extype" name="extruder.effect.SyncInstances">SyncInstances</a> with <a href="LowPrioritySyncInstances.html" class="extype" name="extruder.effect.LowPrioritySyncInstances">LowPrioritySyncInstances</a> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#extruder.effect.package@ExtruderSync" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li></ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>
