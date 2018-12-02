@@ -226,13 +226,18 @@ trait Parsers {
     traversableBuilder[T, F](_.split(',').toList)
 }
 
-case class Parser[T](parse: String => Either[String, T]) {
+trait Parser[T] {
+  def parse: String => Either[String, T]
   def parseNel: String => ValidatedNel[String, T] = parse.andThen(_.toValidatedNel)
   def map[A](f: T => A): Parser[A] = Parser[A](parse.andThen(_.map(f)))
   def flatMapResult[A](f: T => Either[String, A]): Parser[A] = Parser(parse.andThen(_.flatMap(f)))
 }
 
 object Parser extends Parsers with ParserInstances {
+  def apply[T](f: String => Either[String, T]): Parser[T] = new Parser[T] {
+    override def parse: String => Either[String, T] = f
+  }
+
   def apply[T](implicit parser: Parser[T]): Parser[T] = parser
 
   def fromEitherException[T](parse: String => Either[Throwable, T]): Parser[T] =

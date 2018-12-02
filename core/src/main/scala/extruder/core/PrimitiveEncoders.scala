@@ -68,17 +68,22 @@ trait Shows {
   def traversableBuilder[T, F[_], FF[T] <: TraversableOnce[T]](
     concat: TraversableOnce[String] => String
   )(implicit shows: Show[T]): Show[FF[T]] =
-    Show((x: FF[T]) => concat(x.map(shows.show).filter(_.trim.nonEmpty)))
+    Show.make((x: FF[T]) => concat(x.map(shows.show).filter(_.trim.nonEmpty)))
 
   implicit def traversable[T, F[_], FF[T] <: TraversableOnce[T]](implicit shows: Show[T]): Show[FF[T]] =
     traversableBuilder[T, F, FF](_.mkString(","))
 }
 
-case class Show[T](show: T => String)
+trait Show[T] {
+  def show(t: T): String
+}
 
 object Show extends Shows with ShowInstances {
-  def apply[T](implicit showWrapper: Show[T]): Show[T] = showWrapper
-  def apply[T](show: CatsShow[T]): Show[T] = new Show(show.show)
+  def make[T](f: T => String): Show[T] = new Show[T] {
+    override def show(t: T): String = f(t)
+  }
+  def apply[T](implicit show: Show[T]): Show[T] = show
+  def apply[T](show: CatsShow[T]): Show[T] = make[T](show.show _)
   def by[T, V](f: V => T)(implicit ev: Show[T]): Show[V] =
     Contravariant[Show].contramap(ev)(f)
 }
