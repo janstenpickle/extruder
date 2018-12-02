@@ -15,13 +15,13 @@ class DropwizardKeyedEncodersSpec extends FunSuite with GeneratorDrivenPropertyC
   test("Can encode an object")(encodeObject)
 
   def encodeNamespaced: Assertion = forAll { (value: Int, name: String) =>
-    val reg = new DropwizardKeyedRegistry().encode[IO, Int](List(name), value).unsafeRunSync()
+    val reg = new DropwizardKeyedRegistry().encodeF[IO](List(name), value).unsafeRunSync()
     assert(reg.getGauges.size() === 1)
     assert(reg.getGauges().get(MetricName.build(snakeCaseTransformation(name))).getValue === value.toDouble)
   }
 
   def encodeObject: Assertion = forAll { metrics: Metrics =>
-    val reg = new DropwizardKeyedRegistry().encode[IO, Metrics](metrics).unsafeRunSync()
+    val reg = new DropwizardKeyedRegistry().encodeF[IO](metrics).unsafeRunSync()
     assert(reg.getGauges.size() === 2)
     assert(reg.getCounters.size() === 1)
     assert(reg.getGauges.get(MetricName.build("metrics.timer")).getValue === metrics.timer.value.toDouble)

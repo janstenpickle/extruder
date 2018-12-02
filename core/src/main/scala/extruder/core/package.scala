@@ -1,18 +1,14 @@
 package extruder
 
-import cats.data.{EitherT, NonEmptyList}
+import extruder.data.{ValidationError, ValidationErrors, ValidationException}
 
 package object core {
-  type ValidationErrors = NonEmptyList[ValidationError]
-  type Validation[T] = Either[ValidationErrors, T]
-  type ValidationT[F[_], T] = EitherT[F, ValidationErrors, T]
-
   val TypeKey: String = "type"
 
   def errorsToThrowable(errs: ValidationErrors): Throwable = {
     val errorToThrowable: ValidationError => Throwable = {
       case e: ValidationException => e.exception
-      case e: Any => new RuntimeException(e.message)
+      case e: Any => e
     }
 
     errs.tail.foldLeft(errorToThrowable(errs.head)) { (acc, v) =>
@@ -21,6 +17,7 @@ package object core {
     }
   }
 
-  implicit object Dis
+  implicit object Dis1
   implicit object Dis2
+  implicit object Dis3
 }

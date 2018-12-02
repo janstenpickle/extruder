@@ -1,15 +1,15 @@
 package extruder.metrics.dropwizard
 
+import cats.effect.Sync
 import cats.instances.list._
-import cats.syntax.either._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.syntax.traverse._
-import extruder.core.Encode
-import extruder.effect.ExtruderAsync
+import extruder.cats.effect.EvalValidation
+import extruder.core.{Encode, ExtruderErrors}
+import extruder.metrics.MetricEncoder
 import extruder.metrics.data.{MetricType, Metrics, Numbers}
 import extruder.metrics.dimensional.{DimensionalMetric, DimensionalMetricEncoders, DimensionalMetricSettings}
-import extruder.metrics.{snakeCaseTransformation, MetricEncoder}
 import io.dropwizard.metrics5.{MetricName, MetricRegistry}
 
 import scala.collection.JavaConverters._
@@ -20,17 +20,17 @@ trait DropwizardDimensionalEncoders extends DimensionalMetricEncoders {
 }
 
 trait DropwizardDimensionalEncode extends DropwizardDimensionalEncoders with Encode {
-  protected def makeCounter[F[_]](metric: DimensionalMetric)(implicit F: Eff[F]): F[Unit]
-  protected def makeGauge[F[_]](metric: DimensionalMetric)(implicit F: Eff[F]): F[Unit]
+  protected def makeCounter[F[_]](metric: DimensionalMetric)(implicit F: EncEff[F]): F[Unit]
+  protected def makeGauge[F[_]](metric: DimensionalMetric)(implicit F: EncEff[F]): F[Unit]
 
-  protected def buildMeters[F[_]](
+  protected def buildMeters[F[_]: EncEff: ExtruderErrors](
     namespaceName: Option[String],
     namespace: List[String],
     settings: Sett,
     inter: Metrics,
     defaultLabels: Map[String, String],
     defaultMetricType: MetricType
-  )(implicit F: Eff[F]): F[List[Unit]] =
+  ): F[List[Unit]] =
     buildMetrics[F](namespaceName, namespace, settings, inter, defaultLabels, defaultMetricType).flatMap { metrics =>
       metrics.toList.traverse { metric =>
         metric.metricType match {
@@ -42,8 +42,9 @@ trait DropwizardDimensionalEncode extends DropwizardDimensionalEncoders with Enc
 }
 
 trait DropwizardDimensionalRegistryEncoders extends DropwizardDimensionalEncoders {
-  override type Enc[F[_], T] = DropwizardDimensionalMetricsEncoder[F, T]
-  override type Eff[F[_]] = ExtruderAsync[F]
+  override type EncDefault[A] = EvalValidation[A]
+  override type EncT[F[_], T] = DropwizardDimensionalMetricsEncoder[F, T]
+  override type EncEff[F[_]] = Sync[F]
   override type OutputData = MetricRegistry
 
   override protected def mkEncoder[F[_], T](
@@ -65,36 +66,30 @@ class DropwizardDimensionalRegistry(
   defaultMetricType: MetricType = MetricType.Gauge
 ) extends DropwizardDimensionalRegistryEncoders
     with DropwizardDimensionalEncode {
-  override protected def makeCounter[F[_]](metric: DimensionalMetric)(implicit F: ExtruderAsync[F]): F[Unit] =
-    F.async(
-      cb =>
-        cb(Either.catchNonFatal {
-          metric.values.foreach {
-            case (tagValues, value) =>
-              val tags = metric.labelNames.zip(tagValues).toMap
-              val metricName = MetricName.build(metric.name).tagged(tags.asJava)
-              val counter = registry.counter(metricName)
-              counter.inc(Numbers.toLong(value))
-          }
-        })
-    )
+  override protected def makeCounter[F[_]](metric: DimensionalMetric)(implicit F: Sync[F]): F[Unit] =
+    F.suspend(F.catchNonFatal {
+      metric.values.foreach {
+        case (tagValues, value) =>
+          val tags = metric.labelNames.zip(tagValues).toMap
+          val metricName = MetricName.build(metric.name).tagged(tags.asJava)
+          val counter = registry.counter(metricName)
+          counter.inc(Numbers.toLong(value))
+      }
+    })
 
-  override protected def makeGauge[F[_]](metric: DimensionalMetric)(implicit F: ExtruderAsync[F]): F[Unit] =
-    F.async(
-      cb =>
-        cb(Either.catchNonFatal {
-          metric.values.foreach {
-            case (tagValues, value) =>
-              val tags = metric.labelNames.zip(tagValues).toMap
-              val metricName = MetricName.build(metric.name).tagged(tags.asJava)
-              val gauge = registry.gauge(metricName, new SimpleGaugeSupplier).asInstanceOf[SimpleGauge]
-              gauge.set(Numbers.toDouble(value))
-          }
-        })
-    )
+  override protected def makeGauge[F[_]](metric: DimensionalMetric)(implicit F: Sync[F]): F[Unit] =
+    F.suspend(F.catchNonFatal {
+      metric.values.foreach {
+        case (tagValues, value) =>
+          val tags = metric.labelNames.zip(tagValues).toMap
+          val metricName = MetricName.build(metric.name).tagged(tags.asJava)
+          val gauge = registry.gauge(metricName, new SimpleGaugeSupplier).asInstanceOf[SimpleGauge]
+          gauge.set(Numbers.toDouble(value))
+      }
+    })
 
   override protected def finalizeOutput[F[_]](namespace: List[String], settings: Sett, inter: Metrics)(
-    implicit F: ExtruderAsync[F]
+    implicit F: Sync[F]
   ): F[MetricRegistry] =
     buildMeters(namespaceName, namespace, settings, inter, defaultLabels, defaultMetricType).map(_ => registry)
 }

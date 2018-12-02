@@ -1,7 +1,7 @@
 package extruder.core
 
-import cats.Monoid
-import extruder.effect.ExtruderMonadError
+import cats.{Id, Monad, MonadError, Monoid}
+import extruder.data.Validation
 
 trait BaseMapEncoders
     extends Encoders
@@ -10,7 +10,7 @@ trait BaseMapEncoders
     with DerivedEncoders
     with EncodeTypes {
   override type EncodeData = Map[String, String]
-  override type Enc[F[_], T] = MapEncoder[F, T]
+  override type EncT[F[_], T] = MapEncoder[F, T]
   override type Sett = Settings
 
   override protected val monoid: Monoid[Map[String, String]] = new Monoid[Map[String, String]] {
@@ -19,7 +19,7 @@ trait BaseMapEncoders
   }
 
   override protected def writeValue[F[_]](path: List[String], settings: Sett, value: String)(
-    implicit F: Eff[F]
+    implicit F: EncEff[F]
   ): F[Map[String, String]] =
     F.pure(Map(settings.pathToString(path) -> value))
 
@@ -36,21 +36,21 @@ trait BaseMapDecoders
     with DerivedDecoders
     with DecodeTypes {
   override type DecodeData = Map[String, String]
-  override type Dec[F[_], T] = MapDecoder[F, T]
+  override type DecT[F[_], T] = MapDecoder[F, T]
   override type Sett = Settings
 
   override protected def hasValue[F[_]](path: List[String], settings: Sett, data: Map[String, String])(
-    implicit F: Eff[F]
+    implicit F: DecEff[F]
   ): F[Boolean] =
     F.map(lookupValue(path, settings, data))(_.isDefined)
 
   override protected def lookupValue[F[_]](path: List[String], settings: Sett, data: Map[String, String])(
-    implicit F: Eff[F]
+    implicit F: DecEff[F]
   ): F[Option[String]] =
     F.pure(data.get(settings.pathToString(path)))
 
   override protected def prune[F[_]](path: List[String], settings: Sett, data: Map[String, String])(
-    implicit F: Eff[F]
+    implicit F: DecEff[F]
   ): F[Option[(List[String], Map[String, String])]] = {
     val basePath = s"${settings.pathToString(path)}."
     val pruned = data.filterKeys(_.startsWith(basePath))
@@ -69,36 +69,50 @@ trait BaseMapDecoders
     }
 }
 
-trait MapDecoder[F[_], T] extends Decoder[F, Settings, T, Map[String, String]]
+trait MapDecoder[F[_], T] extends DecoderT[F, Settings, T, Map[String, String]]
 
 trait MapDecoders extends BaseMapDecoders with Decode with MapDataSource {
+  override type DecEff[F[_]] <: MonadError[F, Throwable]
+
   override protected def prepareInput[F[_]](namespace: List[String], settings: Sett, data: Map[String, String])(
-    implicit F: Eff[F]
+    implicit F: DecEff[F]
   ): F[Map[String, String]] =
     F.pure(data)
 }
 
-object MapDecoder extends MapDecoders
+object MapDecoder extends MapDecoders {
+  override type DecDefault[A] = Validation[A]
+  override type DecEff[F[_]] = MonadError[F, Throwable]
+}
 
-trait MapEncoder[F[_], T] extends Encoder[F, Settings, T, Map[String, String]]
+trait MapEncoder[F[_], T] extends EncoderT[F, Settings, T, Map[String, String]]
 
 trait MapEncoders extends BaseMapEncoders with Encode with MapDataSource {
+  override type EncEff[F[_]] <: Monad[F]
+
   override protected def finalizeOutput[F[_]](namespace: List[String], settings: Sett, inter: Map[String, String])(
-    implicit F: Eff[F]
+    implicit F: EncEff[F]
   ): F[Map[String, String]] =
     F.pure(inter)
 }
 
-object MapEncoder extends MapEncoders
+object MapEncoder extends MapEncoders {
+  override type EncDefault[A] = Id[A]
+  override type EncEff[F[_]] = Monad[F]
+}
 
 trait MapSource extends MapEncoders with MapDecoders
 
-object MapSource extends MapSource
+object MapSource extends MapSource {
+  override type EncDefault[A] = Id[A]
+  override type EncEff[F[_]] = Monad[F]
+  override type DecDefault[A] = Validation[A]
+  override type DecEff[F[_]] = MonadError[F, Throwable]
+}
 
 trait MapDataSource extends DataSource {
   override type InputData = Map[String, String]
   override type OutputData = Map[String, String]
-  override type Eff[F[_]] = ExtruderMonadError[F]
   override type Sett = Settings
 
   override val defaultSettings: Sett = new Settings {

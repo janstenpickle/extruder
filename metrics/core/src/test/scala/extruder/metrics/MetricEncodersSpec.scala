@@ -2,12 +2,11 @@ package extruder.metrics
 
 import java.util.concurrent.TimeUnit
 
-import cats.Eq
+import cats.{Eq, MonadError}
 import cats.instances.long._
 import cats.instances.map._
 import cats.kernel.laws.discipline.MonoidTests
-import extruder.core.Validation
-import extruder.effect.ExtruderMonadError
+import extruder.data.Validation
 import extruder.metrics.data.MetricType.Counter
 import extruder.metrics.data._
 import org.scalacheck.ScalacheckShapeless._
@@ -27,9 +26,10 @@ class MetricEncodersSpec
     with MetricEncoders {
   import MetricEncodersSpec._
 
-  override type Enc[F[_], T] = TestMetricEncoder[F, T]
+  override type EncDefault[A] = Validation[A]
+  override type EncT[F[_], T] = TestMetricEncoder[F, T]
   override type OutputData = Metrics
-  override type Eff[F[_]] = ExtruderMonadError[F]
+  override type EncEff[F[_]] = MonadError[F, Throwable]
   override type Sett = MetricSettings
 
   override def defaultSettings: MetricSettings = new MetricSettings {}

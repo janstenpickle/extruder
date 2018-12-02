@@ -17,7 +17,7 @@ class DropwizardDimensionalEncodersSpec extends FunSuite with GeneratorDrivenPro
   test("Can encode a dimensional object")(encodeDimensionalObject)
 
   def encodeNamespaced: Assertion = forAll { (value: Int, name: String) =>
-    val reg = new DropwizardDimensionalRegistry().encode[IO, Int](List(name), value).unsafeRunSync()
+    val reg = new DropwizardDimensionalRegistry().encodeF[IO](List(name), value).unsafeRunSync()
     val metricName = MetricName.build(snakeCaseTransformation(name)).tagged("metric_type", "gauge")
     assert(
       reg
@@ -28,7 +28,7 @@ class DropwizardDimensionalEncodersSpec extends FunSuite with GeneratorDrivenPro
   }
 
   def encodeObject: Assertion = forAll { metrics: Metrics =>
-    val reg = new DropwizardDimensionalRegistry().encode[IO, Metrics](metrics).unsafeRunSync
+    val reg = new DropwizardDimensionalRegistry().encodeF[IO](metrics).unsafeRunSync
     def metricName(name: String) = MetricName.build(snakeCaseTransformation(name)).tagged("metric_type", "counter")
     assert(reg.getCounters().get(metricName("a")).getCount === metrics.a.value)
     assert(reg.getCounters().get(metricName("b")).getCount === metrics.b.value)
@@ -36,7 +36,7 @@ class DropwizardDimensionalEncodersSpec extends FunSuite with GeneratorDrivenPro
   }
 
   def encodeDimensionalObject: Assertion = forAll { stats: Stats =>
-    val reg = new DropwizardDimensionalRegistry().encode[IO, Stats](stats).unsafeRunSync
+    val reg = new DropwizardDimensionalRegistry().encodeF[IO](stats).unsafeRunSync
     def metricName(name: String) =
       MetricName.build(snakeCaseTransformation("requests")).tagged("metric_type", "counter", "metrics", name)
     assert(reg.getCounters().get(metricName("a")).getCount === stats.requests.a.value)

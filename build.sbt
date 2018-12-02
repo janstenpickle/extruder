@@ -1,4 +1,5 @@
 import microsites._
+import sbt.Keys.libraryDependencies
 
 val catsVer = "1.5.0"
 val catsEffectVer = "1.0.0"
@@ -59,10 +60,9 @@ lazy val core = (project in file("core")).settings(
       name := "extruder-core",
       libraryDependencies ++= Seq(
         "io.estatico" %% "newtype" % "0.4.2",
-        ("org.typelevel" %% "cats-core"   % catsVer).exclude("org.scalacheck", "scalacheck"),
-        ("org.typelevel" %% "cats-effect" % catsEffectVer).exclude("org.scalacheck", "scalacheck"),
-        ("org.typelevel" %% "mouse"       % "0.18").exclude("org.scalacheck", "scalacheck"),
-        ("com.chuusai"   %% "shapeless"   % "2.3.3").exclude("org.scalacheck", "scalacheck"),
+        ("org.typelevel" %% "cats-core" % catsVer).exclude("org.scalacheck", "scalacheck"),
+        ("org.typelevel" %% "mouse"     % "0.18").exclude("org.scalacheck", "scalacheck"),
+        ("com.chuusai"   %% "shapeless" % "2.3.3").exclude("org.scalacheck", "scalacheck"),
         "org.scalatest" %% "scalatest" % scalaTestVer % Test,
         ("org.typelevel" %% "cats-effect-laws" % catsEffectVer).exclude("org.scalacheck", "scalacheck"),
         ("org.typelevel" %% "discipline"       % "0.10.0" % Test)
@@ -75,9 +75,25 @@ lazy val core = (project in file("core")).settings(
     )
 )
 
+lazy val catsEffect = (project in file("cats-effect"))
+  .settings(
+    commonSettings ++
+      Seq(
+        name := "extruder-cats-effect",
+        libraryDependencies ++= Seq(
+          ("org.typelevel" %% "cats-effect" % catsEffectVer).exclude("org.scalacheck", "scalacheck"),
+          "org.scalatest" %% "scalatest" % scalaTestVer % Test,
+          ("org.typelevel" %% "cats-effect-laws" % catsEffectVer).exclude("org.scalacheck", "scalacheck"),
+          ("org.typelevel" %% "discipline"       % "0.10.0" % Test)
+            .exclude("org.scalacheck", "scalacheck")
+        )
+      )
+  )
+  .dependsOn(core)
+
 lazy val systemSources = (project in file("system-sources"))
   .settings(commonSettings ++ Seq(name := "extruder-system-sources"))
-  .dependsOn(core)
+  .dependsOn(core, catsEffect)
 
 lazy val examples = (project in file("examples"))
   .settings(
@@ -115,7 +131,7 @@ lazy val typesafe = (project in file("typesafe"))
         coverageEnabled.in(Test, test) := true
       )
   )
-  .dependsOn(core % "compile->compile;test->test")
+  .dependsOn(core % "compile->compile;test->test", catsEffect)
 
 lazy val metricsCore = (project in file("metrics/core"))
   .settings(
@@ -133,7 +149,7 @@ lazy val metricsCore = (project in file("metrics/core"))
         coverageEnabled.in(Test, test) := true
       )
   )
-  .dependsOn(core)
+  .dependsOn(core, catsEffect)
 
 lazy val prometheus = (project in file("metrics/prometheus"))
   .settings(
@@ -212,10 +228,10 @@ lazy val root = (project in file("."))
         libraryDependencies := libraryDependencies.all(aggregateCompile).value.flatten
       )
   )
-  .aggregate(core, aws, typesafe, refined, metricsCore, dropwizard, prometheus, spectator)
+  .aggregate(core, catsEffect, aws, typesafe, systemSources, refined, metricsCore, dropwizard, prometheus, spectator)
 
 lazy val aggregateCompile =
-  ScopeFilter(inProjects(core, systemSources), inConfigurations(Compile))
+  ScopeFilter(inProjects(core), inConfigurations(Compile))
 
 lazy val docSettings = commonSettings ++ Seq(
   micrositeName := "extruder",

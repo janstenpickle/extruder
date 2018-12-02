@@ -15,19 +15,19 @@ import java.net.URL
 import extruder.core._
 
 trait WithURL extends MapSource {
-  implicit def urlDecoder[F[_], E](implicit F: Eff[F]): MapDecoder[F, URL] =
+  implicit def urlDecoder[F[_], E](implicit F: DecEff[F], error: ExtruderErrors[F]): MapDecoder[F, URL] =
     mkDecoder[F, URL]((path, settings, default, src) =>
       (src.get(settings.pathToString(path)), default) match {
         case (Some(v), _) => Either.catchNonFatal(new URL(v)).fold(ex =>
-            F.validationException(ex.getMessage, ex),
+            error.validationException(ex.getMessage, ex),
             F.pure
           )
         case (None, Some(url)) => F.pure(url)
-        case _ => F.missing(s"Could not find value for ${settings.pathToString(path)}")
+        case _ => error.missing(s"Could not find value for ${settings.pathToString(path)}")
       }
     )
 
-  implicit def urlEncoder[F[_], E](implicit F: Eff[F]): MapEncoder[F, URL] =
+  implicit def urlEncoder[F[_], E](implicit F: EncEff[F]): MapEncoder[F, URL] =
     mkEncoder[F, URL]((path, settings, value) =>
       F.pure(Map(settings.pathToString(path) -> value.toString))
     )
@@ -50,7 +50,7 @@ object WithURL {
     Either.catchNonFatal(new URL(url))
   )
 
-  implicit val urlShow: Show[URL] = new Show(_.toString)
+  implicit val urlShow: Show[URL] = Show.make(_.toString)
 }
 ```
 

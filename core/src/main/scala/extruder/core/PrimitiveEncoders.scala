@@ -12,26 +12,28 @@ import shapeless._
 import scala.concurrent.duration.Duration
 
 trait PrimitiveEncoders { self: Encoders with EncodeTypes =>
-  protected def writeValue[F[_]](path: List[String], settings: Sett, value: String)(implicit F: Eff[F]): F[EncodeData]
+  protected def writeValue[F[_]](path: List[String], settings: Sett, value: String)(
+    implicit F: EncEff[F]
+  ): F[EncodeData]
 
-  implicit def showEncoder[F[_], T](implicit shows: Show[T], F: Eff[F], lp: LowPriority): Enc[F, T] =
+  implicit def showEncoder[F[_], T](implicit shows: Show[T], F: EncEff[F], lp: LowPriority): EncT[F, T] =
     mkEncoder[F, T] { (path, settings, value) =>
       writeValue(path, settings, shows.show(value))
     }
 
-  implicit def multiShowEncoder[F[_], T](implicit shows: MultiShow[T], F: Eff[F], lp: LowPriority): Enc[F, T] =
+  implicit def multiShowEncoder[F[_], T](implicit shows: MultiShow[T], F: EncEff[F], lp: LowPriority): EncT[F, T] =
     mkEncoder[F, T] { (path, settings, value) =>
       Traverse[List]
         .traverse(shows.show(value).toList) { case (p, v) => writeValue[F](path ++ p, settings, v) }
         .map(monoid.combineAll)
     }
 
-  implicit def nonEmptyListEncoder[F[_], T](implicit encoder: Lazy[Enc[F, List[T]]]): Enc[F, NonEmptyList[T]] =
+  implicit def nonEmptyListEncoder[F[_], T](implicit encoder: Lazy[EncT[F, List[T]]]): EncT[F, NonEmptyList[T]] =
     mkEncoder { (path, settings, value) =>
       encoder.value.write(path, settings, value.toList)
     }
 
-  implicit def optionalEncoder[F[_], T](implicit encoder: Lazy[Enc[F, T]], F: Eff[F]): Enc[F, Option[T]] =
+  implicit def optionalEncoder[F[_], T](implicit encoder: Lazy[EncT[F, T]], F: EncEff[F]): EncT[F, Option[T]] =
     mkEncoder[F, Option[T]] { (path, settings, value) =>
       value.fold[F[EncodeData]](F.pure(monoid.empty))(encoder.value.write(path, settings, _))
     }

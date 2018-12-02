@@ -9,15 +9,15 @@ import shapeless.Refute
 
 trait StringMapDecoders { self: Decoders with DecodeTypes =>
   protected def prune[F[_]](path: List[String], settings: Sett, data: DecodeData)(
-    implicit F: Eff[F]
+    implicit F: DecEff[F]
   ): F[Option[(List[String], DecodeData)]]
 
   implicit def mapDecoder[F[_], T](
-    implicit F: Eff[F],
+    implicit F: DecEff[F],
     error: ExtruderErrors[F],
-    decoder: Dec[F, T],
+    decoder: DecT[F, T],
     refute: Refute[MultiParser[F, T]]
-  ): Dec[F, Map[String, T]] =
+  ): DecT[F, Map[String, T]] =
     mkDecoder(
       (path, settings, default, data) =>
         for {
@@ -31,7 +31,7 @@ trait StringMapDecoders { self: Decoders with DecodeTypes =>
   private def decodeMap[F[_]: Applicative, T](
     basePath: List[String],
     settings: Sett
-  )(keys: List[String], data: DecodeData)(implicit decoder: Dec[F, T]): F[Map[String, T]] = {
+  )(keys: List[String], data: DecodeData)(implicit decoder: DecT[F, T]): F[Map[String, T]] = {
     Traverse[List]
       .sequence[F, (String, T)](
         keys

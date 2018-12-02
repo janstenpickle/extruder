@@ -16,7 +16,7 @@ trait DimensionalMetricEncoders extends MetricEncoders {
   override type EncRefute[T] = DimensionalMetricEncoderRefute[T]
   override type Sett <: DimensionalMetricSettings
 
-  implicit def resetNamespaceEncoder[F[_]: Eff, T](implicit enc: Enc[F, T]): Enc[F, ResetNamespace[T]] =
+  implicit def resetNamespaceEncoder[F[_]: EncEff, T](implicit enc: EncT[F, T]): EncT[F, ResetNamespace[T]] =
     mkEncoder[F, ResetNamespace[T]] { (path, settings: Sett, v) =>
       enc.write(path.lastOption.fold(path)(List(_)), settings, v.value)
     }
@@ -28,7 +28,7 @@ trait DimensionalMetricEncoders extends MetricEncoders {
     inter: Metrics,
     defaultLabels: Map[String, String],
     defaultMetricType: MetricType
-  )(implicit F: Eff[F], error: ExtruderErrors[F]): F[Iterable[DimensionalMetric]] = {
+  )(implicit F: EncEff[F], error: ExtruderErrors[F]): F[Iterable[DimensionalMetric]] = {
     val defaultDimensionNames = defaultLabels.keys.toVector
     val defaultDimensionValues = defaultLabels.values.toVector
 

@@ -1,7 +1,8 @@
 package extruder.metrics.keyed
 
+import cats.MonadError
 import extruder.core.Encode
-import extruder.effect.ExtruderMonadError
+import extruder.data.Validation
 import extruder.metrics.MetricSettings
 import extruder.metrics.data.{MetricType, Metrics, Numbers}
 import org.scalacheck.ScalacheckShapeless._
@@ -17,10 +18,10 @@ class KeyedMetricEnodersSpec
     with Encode {
   import extruder.metrics.MetricEncodersSpec._
 
-  override type Enc[F[_], T] = TestMetricEncoder[F, T]
-
+  override type EncDefault[A] = Validation[A]
+  override type EncT[F[_], T] = TestMetricEncoder[F, T]
   override type OutputData = Iterable[KeyedMetric]
-  override type Eff[F[_]] = ExtruderMonadError[F]
+  override type EncEff[F[_]] = MonadError[F, Throwable]
   override type Sett = MetricSettings
 
   override def defaultSettings: MetricSettings = new MetricSettings {}
@@ -31,7 +32,7 @@ class KeyedMetricEnodersSpec
     }
 
   override protected def finalizeOutput[F[_]](namespace: List[String], settings: Sett, inter: Metrics)(
-    implicit F: ExtruderMonadError[F]
+    implicit F: EncEff[F]
   ): F[Iterable[KeyedMetric]] = buildMetrics(settings, inter, MetricType.Gauge)
 
   test("Can encode an object")(forAll { req: RequestCount =>

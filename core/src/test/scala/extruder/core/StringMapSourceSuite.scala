@@ -1,8 +1,11 @@
 package extruder.core
 
 import cats.kernel.laws.discipline.MonoidTests
+import extruder.data.Validation
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.Assertion
+import cats.syntax.flatMap._
+import cats.syntax.functor._
 
 abstract class StringMapSourceSuite[A](monoidTests: MonoidTests[A]#RuleSet) extends SourceSuite(monoidTests) {
   self: Encode
@@ -33,8 +36,8 @@ abstract class StringMapSourceSuite[A](monoidTests: MonoidTests[A]#RuleSet) exte
 
   def testMap: Assertion = forAll { map: Map[String, Int] =>
     assert((for {
-      enc <- encode[Map[String, Int]](List("a"), map)
-      dec <- decode[Map[String, Int]](List("a"), enc)
+      enc <- encodeF[Validation](List("a"), map)
+      dec <- decodeF[Validation, Map[String, Int]](List("a"), enc)
     } yield dec).map(_ === map).right.value)
   }
 

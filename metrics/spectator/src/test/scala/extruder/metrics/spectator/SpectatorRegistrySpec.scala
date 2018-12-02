@@ -20,7 +20,7 @@ class SpectatorRegistrySpec extends FunSuite with GeneratorDrivenPropertyChecks 
   test("Can encode a dimensional object")(encodeDimensionalObject)
 
   def encodeNamespaced: Assertion = forAll { (value: Int, name: String) =>
-    val reg = new SpectatorRegistry(new ServoRegistry()).encode[IO, Int](List(name), value).unsafeRunSync()
+    val reg = new SpectatorRegistry(new ServoRegistry()).encodeF[IO](List(name), value).unsafeRunSync()
     val id = reg.createId(snakeCaseTransformation(name)).withTags(Map("metric_type" -> "gauge").asJava)
     val metric = reg.get(id).measure().asScala
     assert(metric.head.value() === value.toDouble)
@@ -29,14 +29,14 @@ class SpectatorRegistrySpec extends FunSuite with GeneratorDrivenPropertyChecks 
 
   def encodeCounter: Assertion = forAll { (value: Int, name: String) =>
     val reg = new SpectatorRegistry(new ServoRegistry())
-      .encode[IO, CounterValue[Int]](List(name), CounterValue(value))
+      .encodeF[IO](List(name), CounterValue(value))
       .unsafeRunSync()
     val id = reg.createId(snakeCaseTransformation(name)).withTags(Map("metric_type" -> "counter").asJava)
     assert(reg.get(id).measure().asScala.size === 1)
   }
 
   def encodeObject: Assertion = forAll { metrics: Metrics =>
-    val reg = new SpectatorRegistry(new ServoRegistry()).encode[IO, Metrics](metrics).unsafeRunSync
+    val reg = new SpectatorRegistry(new ServoRegistry()).encodeF[IO](metrics).unsafeRunSync
     def id(name: String) = reg.createId(name).withTags(Map("metric_type" -> "gauge").asJava)
 
     def testMetric(name: String, expected: GaugeValue[Long]) = {
@@ -51,7 +51,7 @@ class SpectatorRegistrySpec extends FunSuite with GeneratorDrivenPropertyChecks 
   }
 
   def encodeDimensionalObject: Assertion = forAll { stats: Stats =>
-    val reg = new SpectatorRegistry(new ServoRegistry()).encode[IO, Stats](stats).unsafeRunSync()
+    val reg = new SpectatorRegistry(new ServoRegistry()).encodeF[IO](stats).unsafeRunSync()
 
     def id(name: String) = reg.createId("requests").withTags(Map("metric_type" -> "gauge", "metrics" -> name).asJava)
 

@@ -1,11 +1,11 @@
 package extruder.metrics.prometheus
 
 import cats.Traverse
+import cats.effect.Async
 import cats.instances.list._
 import cats.syntax.either._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
-import extruder.effect.ExtruderAsync
 import extruder.metrics.MetricEncoder
 import extruder.metrics.data.{MetricType, Metrics, Numbers}
 import extruder.metrics.dimensional.{DimensionalMetric, DimensionalMetricSettings}
@@ -13,8 +13,8 @@ import io.prometheus.client.exporter.PushGateway
 import io.prometheus.client.{Collector, Counter, Gauge}
 
 trait PushEncoders extends PrometheusEncoders {
-  override type Enc[F[_], T] = PushMetricsEncoder[F, T]
-  override type Eff[F[_]] = ExtruderAsync[F]
+  override type EncT[F[_], T] = PushMetricsEncoder[F, T]
+  override type EncEff[F[_]] = Async[F]
 
   override protected def mkEncoder[F[_], T](f: (List[String], Sett, T) => F[Metrics]): PushMetricsEncoder[F, T] =
     new PushMetricsEncoder[F, T] {
@@ -37,7 +37,7 @@ case class PrometheusPush(
     with PrometheusEncode {
   override type OutputData = Unit
 
-  override protected def makeCounter[F[_]](metric: DimensionalMetric)(implicit F: Eff[F]): F[Collector] = {
+  override protected def makeCounter[F[_]](metric: DimensionalMetric)(implicit F: EncEff[F]): F[Collector] = {
     val counter = Counter
       .build(metric.name, Help)
       .labelNames(metric.labelNames.toSeq: _*)
@@ -46,7 +46,7 @@ case class PrometheusPush(
     F.pure(counter)
   }
 
-  override protected def makeGauge[F[_]](metric: DimensionalMetric)(implicit F: Eff[F]): F[Collector] = {
+  override protected def makeGauge[F[_]](metric: DimensionalMetric)(implicit F: EncEff[F]): F[Collector] = {
     val gauge = Gauge
       .build(metric.name, Help)
       .labelNames(metric.labelNames.toSeq: _*)
@@ -56,7 +56,7 @@ case class PrometheusPush(
   }
 
   override protected def finalizeOutput[F[_]](namespace: List[String], settings: Sett, inter: EncodeData)(
-    implicit F: ExtruderAsync[F]
+    implicit F: Async[F]
   ): F[Unit] =
     for {
       collectors <- buildCollectors(

@@ -1,6 +1,7 @@
 package extruder.core
 
 import cats.data.NonEmptyList
+import extruder.data.{ValidationError, ValidationErrors, ValidationException, ValidationFailure}
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.FunSuite
 import org.scalatest.prop.GeneratorDrivenPropertyChecks

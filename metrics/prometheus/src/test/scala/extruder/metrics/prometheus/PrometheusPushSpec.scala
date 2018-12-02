@@ -28,7 +28,7 @@ class PrometheusPushSpec extends FunSuite with GeneratorDrivenPropertyChecks wit
     val jobNameCapture: ArgumentCaptor[String] = ArgumentCaptor.forClass(classOf[String])
 
     PrometheusPush(push, jobName, jobInstance)
-      .encode[IO, Int](List(name), value)
+      .encodeF[IO](List(name), value)
       .unsafeRunSync()
 
     lazy val metric = collectorCapture.getValue.collect().asScala.toList.head
@@ -50,7 +50,7 @@ class PrometheusPushSpec extends FunSuite with GeneratorDrivenPropertyChecks wit
     val jobNameCapture: ArgumentCaptor[String] = ArgumentCaptor.forClass(classOf[String])
 
     PrometheusPush(push, jobName, jobInstance)
-      .encode[IO, Metrics](metrics)
+      .encodeF[IO](metrics)
       .unsafeRunSync()
 
     lazy val capturedMetrics = collectorCapture.getAllValues.asScala.flatMap(_.collect().asScala)
@@ -73,7 +73,7 @@ class PrometheusPushSpec extends FunSuite with GeneratorDrivenPropertyChecks wit
     val jobNameCapture: ArgumentCaptor[String] = ArgumentCaptor.forClass(classOf[String])
 
     PrometheusPush(push, jobName, jobInstance)
-      .encode[IO, Stats](stats)
+      .encodeF[IO](stats)
       .unsafeRunSync()
 
     lazy val capturedMetrics = collectorCapture.getValue.collect().asScala

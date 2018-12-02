@@ -17,9 +17,7 @@ class ShowInstancesSuite extends FunSuite with Discipline {
 
 object ShowInstancesSuite {
   implicit def faAb[A]: Arbitrary[Show[A]] =
-    Arbitrary(Show[A] { a: A =>
-      a.toString
-    })
+    Arbitrary(Show.make[A](_.toString))
 
   implicit def faEq[A: Arbitrary]: Eq[Show[A]] =
     Eq.by[Show[A], A => String] { showInstance => (a: A) =>

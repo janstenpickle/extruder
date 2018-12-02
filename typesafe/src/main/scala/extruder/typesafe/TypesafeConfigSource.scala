@@ -1,6 +1,7 @@
 package extruder.typesafe
 
-import cats.{Monoid, Traverse}
+import cats.effect.Sync
+import cats.{MonadError, Monoid, Traverse}
 import cats.instances.either._
 import cats.instances.list._
 import cats.instances.option._
@@ -10,8 +11,9 @@ import cats.syntax.functor._
 import com.typesafe.config
 import com.typesafe.config.ConfigException.Missing
 import com.typesafe.config.{ConfigFactory, ConfigList, ConfigObject, ConfigValue, Config => TConfig}
+import extruder.cats.effect.EvalValidation
 import extruder.core._
-import extruder.effect.{ExtruderMonadError, ExtruderSync}
+import extruder.data.Validation
 import extruder.typesafe.IntermediateTypes._
 import shapeless.Refute
 
@@ -32,13 +34,15 @@ trait TypesafeConfigCommon { self: DataSource =>
 }
 
 trait TypesafeConfigDecoders extends BaseTypesafeConfigDecoders {
-  override type Eff[F[_]] = ExtruderMonadError[F]
+  override type DecDefault[A] = Validation[A]
+  override type DecEff[F[_]] = MonadError[F, Throwable]
 }
 
 trait SafeTypesafeConfigDecoders extends BaseTypesafeConfigDecoders {
-  override type Eff[F[_]] = ExtruderSync[F]
+  override type DecDefault[A] = EvalValidation[A]
+  override type DecEff[F[_]] = Sync[F]
 
-  override def loadInput[F[_]](implicit F: Eff[F]): F[TConfig] = F.delay(ConfigFactory.load())
+  override def loadInput[F[_]](implicit F: DecEff[F]): F[TConfig] = F.delay(ConfigFactory.load())
 }
 
 trait BaseTypesafeConfigDecoders
@@ -52,30 +56,31 @@ trait BaseTypesafeConfigDecoders
     with TypesafeConfigCommon {
   override type InputData = TConfig
   override type DecodeData = TConfig
-  override type Dec[F[_], T] = TypesafeConfigDecoder[F, T]
+  override type DecT[F[_], T] = TypesafeConfigDecoder[F, T]
+  override type DecEff[F[_]] <: MonadError[F, Throwable]
 
-  def lookup[T, F[_]](f: TConfig => T, data: TConfig)(implicit F: Eff[F]): F[Option[T]] =
+  def lookup[T, F[_]](f: TConfig => T, data: TConfig)(implicit F: DecEff[F]): F[Option[T]] =
     F.recoverWith(F.map[T, Option[T]](F.catchNonFatal(f(data)))(Some(_))) {
       case _: Missing => F.pure(None)
     }
 
   override protected def prepareInput[F[_]](namespace: List[String], settings: Settings, data: TConfig)(
-    implicit F: Eff[F]
+    implicit F: DecEff[F]
   ): F[TConfig] =
     F.pure(data)
 
   override protected def hasValue[F[_]](path: List[String], settings: Settings, data: TConfig)(
-    implicit F: Eff[F]
+    implicit F: DecEff[F]
   ): F[Boolean] =
     F.catchNonFatal(data.hasPath(settings.pathToString(path)))
 
   override protected def lookupValue[F[_]](path: List[String], settings: Settings, data: TConfig)(
-    implicit F: Eff[F]
+    implicit F: DecEff[F]
   ): F[Option[String]] =
     lookup(_.getString(settings.pathToString(path)), data)
 
   override protected def prune[F[_]](path: List[String], settings: Settings, data: TConfig)(
-    implicit F: Eff[F]
+    implicit F: DecEff[F]
   ): F[Option[(List[String], config.Config)]] =
     lookup[ConfigObject, F](_.getObject(settings.pathToString(path)), data).map(_.map { co =>
       val pruned =
@@ -86,17 +91,17 @@ trait BaseTypesafeConfigDecoders
 
   private def resolve[F[_], T](
     lookup: (List[String], Settings, TConfig) => F[Option[T]]
-  )(implicit F: Eff[F], error: ExtruderErrors[F]): (List[String], Settings, Option[T], TConfig) => F[T] =
+  )(implicit F: DecEff[F], error: ExtruderErrors[F]): (List[String], Settings, Option[T], TConfig) => F[T] =
     resolve[F, T, T](F.pure, lookup)
 
   implicit def traversableObjectDecoder[F[_], T, FF[T] <: TraversableOnce[T]](
     implicit parser: Parser[List[String]],
-    decoder: Dec[F, T],
+    decoder: DecT[F, T],
     cbf: CanBuildFrom[FF[T], T, FF[T]],
-    F: Eff[F],
+    F: DecEff[F],
     error: ExtruderErrors[F],
     refute: Refute[Parser[T]]
-  ): Dec[F, FF[T]] =
+  ): DecT[F, FF[T]] =
     mkDecoder[F, FF[T]] { (path, settings, default, data) =>
       lookup[List[TConfig], F](_.getConfigList(settings.pathToString(path)).asScala.toList, data)
         .map(_.map(_.map(decoder.read(List.empty, settings, None, _))))
@@ -114,7 +119,7 @@ trait BaseTypesafeConfigDecoders
   implicit def traversableDecoder[T, F[_], FF[T] <: TraversableOnce[T]](
     implicit parser: Parser[T],
     cbf: CanBuildFrom[FF[T], T, FF[T]],
-    F: Eff[F],
+    F: DecEff[F],
     error: ExtruderErrors[F]
   ): TypesafeConfigDecoder[F, FF[T]] =
     mkDecoder[F, FF[T]](
@@ -141,19 +146,19 @@ trait BaseTypesafeConfigDecoders
     )
 
   implicit def dataValueDecoder[F[_]](
-    implicit F: Eff[F],
+    implicit F: DecEff[F],
     error: ExtruderErrors[F]
   ): TypesafeConfigDecoder[F, ConfigValue] =
     mkDecoder(resolve[F, ConfigValue]((path, settings, data) => lookup(_.getValue(settings.pathToString(path)), data)))
 
   implicit def dataListDecoder[F[_]](
-    implicit F: Eff[F],
+    implicit F: DecEff[F],
     error: ExtruderErrors[F]
   ): TypesafeConfigDecoder[F, ConfigList] =
     mkDecoder(resolve[F, ConfigList]((path, settings, data) => lookup(_.getList(settings.pathToString(path)), data)))
 
   implicit def dataObjectDecoder[F[_]](
-    implicit F: Eff[F],
+    implicit F: DecEff[F],
     error: ExtruderErrors[F]
   ): TypesafeConfigDecoder[F, ConfigObject] =
     mkDecoder(
@@ -168,19 +173,21 @@ trait BaseTypesafeConfigDecoders
         f(path, settings, default, data)
     }
 
-  override def loadInput[F[_]](implicit F: Eff[F]): F[TConfig] = F.catchNonFatal(ConfigFactory.load())
+  override def loadInput[F[_]](implicit F: DecEff[F]): F[TConfig] = F.catchNonFatal(ConfigFactory.load())
 }
 
-trait TypesafeConfigDecoder[F[_], T] extends Decoder[F, Settings, T, TConfig]
+trait TypesafeConfigDecoder[F[_], T] extends DecoderT[F, Settings, T, TConfig]
 
 object TypesafeConfigDecoder extends TypesafeConfigDecoders
 
 trait TypesafeConfigEncoders extends BaseTypesafeConfigEncoders {
-  override type Eff[F[_]] = ExtruderMonadError[F]
+  override type EncDefault[A] = Validation[A]
+  override type EncEff[F[_]] = MonadError[F, Throwable]
 }
 
 trait SafeTypesafeConfigEncoders extends BaseTypesafeConfigEncoders {
-  override type Eff[F[_]] = ExtruderSync[F]
+  override type EncDefault[A] = EvalValidation[A]
+  override type EncEff[F[_]] = Sync[F]
 }
 
 trait BaseTypesafeConfigEncoders
@@ -193,24 +200,25 @@ trait BaseTypesafeConfigEncoders
     with TypesafeConfigCommon {
   override type OutputData = TConfig
   override type EncodeData = Config
-  override type Enc[F[_], T] = TypesafeConfigEncoder[F, T]
+  override type EncT[F[_], T] = TypesafeConfigEncoder[F, T]
+  override type EncEff[F[_]] <: MonadError[F, Throwable]
 
   override protected val monoid: Monoid[Config] = BaseTypesafeConfigEncoders.monoid
 
   override protected def writeValue[F[_]](path: List[String], settings: Settings, value: String)(
-    implicit F: Eff[F]
+    implicit F: EncEff[F]
   ): F[Config] =
     F.pure(List(ConfigTypes(settings.pathToString(path), value)))
 
   override protected def finalizeOutput[F[_]](namespace: List[String], settings: Settings, inter: Config)(
-    implicit F: Eff[F]
+    implicit F: EncEff[F]
   ): F[TConfig] =
     F.catchNonFatal(inter.map(toConfig).foldLeft[TConfig](ConfigFactory.empty())((a, b) => b.withFallback(a)))
 
   implicit def traversableObjectEncoder[F[_], T, FF[T] <: TraversableOnce[T]](
-    implicit encoder: Enc[F, T],
+    implicit encoder: EncT[F, T],
     refute: Refute[Show[T]],
-    F: Eff[F]
+    F: EncEff[F]
   ): TypesafeConfigEncoder[F, FF[T]] = mkEncoder[F, FF[T]] { (path, settings, value) =>
     Traverse[List]
       .sequence[F, Config](value.toList.map(encoder.write(List.empty, settings, _)))
@@ -219,23 +227,23 @@ trait BaseTypesafeConfigEncoders
 
   implicit def traversableEncoder[F[_], T, FF[T] <: TraversableOnce[T]](
     implicit shows: Show[T],
-    F: Eff[F]
+    F: EncEff[F]
   ): TypesafeConfigEncoder[F, FF[T]] =
     mkEncoder { (path, settings, value) =>
       F.pure(List(ConfigTypes(settings.pathToString(path), value.map(shows.show).toList)))
     }
 
-  implicit def dataValueEncoder[F[_]](implicit F: Eff[F]): TypesafeConfigEncoder[F, ConfigValue] =
+  implicit def dataValueEncoder[F[_]](implicit F: EncEff[F]): TypesafeConfigEncoder[F, ConfigValue] =
     mkEncoder { (path, settings, value) =>
       F.pure(List(ConfigTypes(settings.pathToString(path), value)))
     }
 
-  implicit def dataListEncoder[F[_]](implicit F: Eff[F]): TypesafeConfigEncoder[F, ConfigList] =
+  implicit def dataListEncoder[F[_]](implicit F: EncEff[F]): TypesafeConfigEncoder[F, ConfigList] =
     mkEncoder { (path, settings, value) =>
       F.pure(List(ConfigTypes(settings.pathToString(path), value)))
     }
 
-  implicit def dataObjectEncoder[F[_]](implicit F: Eff[F]): TypesafeConfigEncoder[F, ConfigObject] =
+  implicit def dataObjectEncoder[F[_]](implicit F: EncEff[F]): TypesafeConfigEncoder[F, ConfigObject] =
     mkEncoder { (path, settings, value) =>
       F.pure(List(ConfigTypes(settings.pathToString(path), value)))
     }
@@ -253,7 +261,7 @@ object BaseTypesafeConfigEncoders {
   }
 }
 
-trait TypesafeConfigEncoder[F[_], T] extends Encoder[F, Settings, T, Config]
+trait TypesafeConfigEncoder[F[_], T] extends EncoderT[F, Settings, T, Config]
 
 object TypesafeConfigEncoder extends TypesafeConfigEncoders
 

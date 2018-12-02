@@ -1,5 +1,7 @@
 package extruder.refined
 
+import cats.MonadError
+import cats.syntax.either._
 import eu.timepit.refined._
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.boolean._
@@ -14,6 +16,7 @@ import eu.timepit.refined.scalacheck.string._
 import eu.timepit.refined.scalacheck.char._
 import eu.timepit.refined.scalacheck.any._
 import extruder.core._
+import extruder.data.Validation
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.{Assertion, EitherValues, FunSuite, Matchers}
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
@@ -25,6 +28,10 @@ class RefinedInstancesSpec
     with Matchers
     with MapEncoders
     with MapDecoders {
+
+  override type DecEff[F[_]] = MonadError[F, Throwable]
+  override type EncEff[F[_]] = MonadError[F, Throwable]
+
   type ZeroToOne = Not[Less[W.`0.0`.T]] And Not[Greater[W.`1.0`.T]]
   type RegexMatch = MatchesRegex[W.`"[^0-9]+"`.T]
 
@@ -57,14 +64,14 @@ class RefinedInstancesSpec
     forAll(
       (v: T) =>
         assert((for {
-          encoded <- encode[T](v)
-          decoded <- decode[T](encoded)
+          encoded <- encodeF[Validation](v)
+          decoded <- decodeF[Validation, T](encoded)
         } yield decoded).right.value === v)
     )
 
   def failEncodeDecode[T, V](gen: Gen[V])(implicit decoder: MapDecoder[Validation, T]): Assertion =
     forAll(gen) { src =>
-      val failure = decode[T](Map("" -> src.toString)).left.value
+      val failure = decodeF[Validation, T](Map("" -> src.toString)).left.value
       (failure.toList should have).size(1)
       failure.toList.head.message.toLowerCase should include("predicate")
     }

@@ -1,5 +1,6 @@
 package extruder.aws
 
+import cats.Monad
 import cats.data.{OptionT, ValidatedNel}
 import com.amazonaws.auth.{AWSCredentials, AWSCredentialsProvider, BasicAWSCredentials}
 import eu.timepit.refined._
@@ -9,13 +10,12 @@ import eu.timepit.refined.collection.Size
 import eu.timepit.refined.numeric.Interval
 import eu.timepit.refined.string.MatchesRegex
 import extruder.core.{MultiParser, MultiShow, Parser}
-import extruder.effect.ExtruderMonadError
 import extruder.refined._
 
 trait AwsCredentialsInstances {
   import AwsCredentialsInstances._
 
-  implicit def credentialsParser[F[_]: ExtruderMonadError]: MultiParser[F, AWSCredentials] =
+  implicit def credentialsParser[F[_]: Monad]: MultiParser[F, AWSCredentials] =
     new MultiParser[F, AWSCredentials] {
       private val idParser: Parser[AwsId] = Parser[AwsId]
       private val secretParser: Parser[AwsSecret] = Parser[AwsSecret]
@@ -34,7 +34,7 @@ trait AwsCredentialsInstances {
             .map { case (i, s) => new BasicAWSCredentials(i.value, s.value) }
     }
 
-  implicit def credentialsProviderParser[F[_]: ExtruderMonadError]: MultiParser[F, AWSCredentialsProvider] =
+  implicit def credentialsProviderParser[F[_]: Monad]: MultiParser[F, AWSCredentialsProvider] =
     credentialsParser.map(
       credentials =>
         new AWSCredentialsProvider {

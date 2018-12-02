@@ -16,7 +16,7 @@ class PrometheusRegistrySpec extends FunSuite with GeneratorDrivenPropertyChecks
   case class X(a: String, b: Int)
 
   def encodeNamespaced: Assertion = forAll { (value: Int, name: String) =>
-    val reg = new PrometheusRegistry().encode[IO, Int](List(name), value).unsafeRunSync()
+    val reg = new PrometheusRegistry().encodeF[IO](List(name), value).unsafeRunSync()
     assert(
       reg
         .getSampleValue(snakeCaseTransformation(name), Array("metric_type"), Array("gauge")) === value.toDouble
@@ -24,7 +24,7 @@ class PrometheusRegistrySpec extends FunSuite with GeneratorDrivenPropertyChecks
   }
 
   def encodeObject: Assertion = forAll { metrics: Metrics =>
-    val reg = new PrometheusRegistry().encode[IO, Metrics](metrics).unsafeRunSync
+    val reg = new PrometheusRegistry().encodeF[IO](metrics).unsafeRunSync
     assert(
       reg
         .getSampleValue(snakeCaseTransformation("a"), Array("metric_type"), Array("counter")) === metrics.a.value.toDouble
@@ -38,7 +38,7 @@ class PrometheusRegistrySpec extends FunSuite with GeneratorDrivenPropertyChecks
   }
 
   def encodeDimensionalObject: Assertion = forAll { stats: Stats =>
-    val reg = new PrometheusRegistry().encode[IO, Stats](stats).unsafeRunSync()
+    val reg = new PrometheusRegistry().encodeF[IO](stats).unsafeRunSync()
     assert(
       reg
         .getSampleValue(snakeCaseTransformation("requests"), Array("metric_type", "metrics"), Array("counter", "a")) === stats.requests.a.value.toDouble

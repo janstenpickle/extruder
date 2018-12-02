@@ -1,8 +1,8 @@
 package extruder.metrics.prometheus
 
-import cats.syntax.either._
+import cats.effect.Sync
 import cats.syntax.functor._
-import extruder.effect.ExtruderAsync
+import extruder.cats.effect.EvalValidation
 import extruder.metrics.MetricEncoder
 import extruder.metrics.data.{MetricType, Metrics, Numbers}
 import extruder.metrics.dimensional.{DimensionalMetric, DimensionalMetricSettings}
@@ -11,8 +11,9 @@ import io.prometheus.client.{Collector, CollectorRegistry, Counter, Gauge}
 import scala.collection.concurrent.TrieMap
 
 trait RegistryEncoders extends PrometheusEncoders {
-  override type Enc[F[_], T] = RegistryMetricsEncoder[F, T]
-  override type Eff[F[_]] = ExtruderAsync[F]
+  override type EncDefault[A] = EvalValidation[A]
+  override type EncT[F[_], T] = RegistryMetricsEncoder[F, T]
+  override type EncEff[F[_]] = Sync[F]
 
   override protected def mkEncoder[F[_], T](f: (List[String], Sett, T) => F[Metrics]): RegistryMetricsEncoder[F, T] =
     new RegistryMetricsEncoder[F, T] {
@@ -37,7 +38,7 @@ class PrometheusRegistry(
 
   private def makeKey(metric: DimensionalMetric): String = (metric.labelNames + metric.name).mkString("_").toLowerCase
 
-  override protected def makeCounter[F[_]](metric: DimensionalMetric)(implicit F: Eff[F]): F[Collector] = {
+  override protected def makeCounter[F[_]](metric: DimensionalMetric)(implicit F: EncEff[F]): F[Collector] = {
     def newCounter: Counter =
       Counter
         .build(metric.name, Help)
@@ -45,36 +46,36 @@ class PrometheusRegistry(
         .create()
         .register(registry)
 
-    def incrementCounter: Either[Throwable, Collector] = Either.catchNonFatal {
+    def incrementCounter: F[Collector] = F.catchNonFatal {
       val counter = counters.getOrElseUpdate(makeKey(metric), newCounter)
 
       metric.values.foreach { case (l, v) => counter.labels(l: _*).inc(Numbers.toDouble(v)) }
       counter
     }
 
-    F.async(cb => cb(incrementCounter))
+    F.suspend(incrementCounter)
   }
 
-  override protected def makeGauge[F[_]](metric: DimensionalMetric)(implicit F: Eff[F]): F[Collector] = {
+  override protected def makeGauge[F[_]](metric: DimensionalMetric)(implicit F: EncEff[F]): F[Collector] = {
     def newGauge: Gauge =
       Gauge
         .build(metric.name, Help)
-        .labelNames(metric.labelNames.toSeq: _*)
+        .labelNames(metric.labelNames: _*)
         .create()
         .register(registry)
 
-    def setGauge: Either[Throwable, Collector] = Either.catchNonFatal {
+    def setGauge: F[Collector] = F.catchNonFatal {
       val gauge = gauges.getOrElseUpdate(makeKey(metric), newGauge)
 
       metric.values.foreach { case (l, v) => gauge.labels(l: _*).set(Numbers.toDouble(v)) }
       gauge
     }
 
-    F.async(cb => cb(setGauge))
+    F.suspend(setGauge)
   }
 
   override protected def finalizeOutput[F[_]](namespace: List[String], settings: Sett, inter: EncodeData)(
-    implicit F: Eff[F]
+    implicit F: EncEff[F]
   ): F[CollectorRegistry] =
     buildCollectors(namespaceName, namespace, settings, inter, defaultLabels, defaultMetricType).map(_ => registry)
 }

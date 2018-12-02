@@ -2,11 +2,13 @@ package extruder.examples
 
 import java.net.URL
 
+import cats.Id
 import cats.data.EitherT
 import cats.effect.IO
 import cats.instances.all._
-import extruder.core.MapSource._
-import extruder.core.ValidationErrors
+import extruder.cats.effect.{EffectValidation, EvalValidation}
+import extruder.core.MapSource.{decode, decodeF, encode, encodeF}
+import extruder.data.{Validation, ValidationErrors, ValidationT}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -38,6 +40,7 @@ object Simple extends App {
     "cc.a" -> "sdfsf",
     "cc.e.cc3.a" -> "test3",
     "cc.d.cc2.z.cc3.a" -> "testing",
+    "cc.d.cc2.dfs" -> "100",
     "cc3.a" -> "hello",
     "cc.f" -> "2, 3",
     "cc.dur" -> "Inf",
@@ -47,11 +50,13 @@ object Simple extends App {
     "thingimpl.t" -> "sadfsf"
   )
 
-  type EitherIO[A] = EitherT[IO, ValidationErrors, A]
+  type Ev[A] = EffectValidation[IO, A]
 
-  println(decode[CC](config))
-  println(decode[Try, CC](config))
-  println(decode[Future, CC](config))
-  println(decode[IO, CC](config))
-  println(decode[EitherIO, CC](config))
+  //println(decode[CC](Map.empty[String, String]))
+  // println(decode[Try, CC](config))
+//  println(decode[Future, CC](config))
+//  println(decode[IO, CC](config))
+  println(decodeF[Ev, CC](config).value.unsafeRunSync())
+//  printlntln(decodeF[EvalValidation, CC](Map.empty).value.value)
+//  println(encode("sdfs"))
 }

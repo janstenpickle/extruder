@@ -1,20 +1,20 @@
 package extruder.metrics.dimensional
 
-import cats.Eq
 import cats.data.NonEmptyList
-import cats.instances.string._
 import cats.syntax.either._
-import extruder.core.{Encode, ValidationError, ValidationFailure}
-import extruder.effect.ExtruderMonadError
+import cats.instances.string._
+import cats.{Eq, MonadError}
+import extruder.core.Encode
+import extruder.data.{Validation, ValidationError, ValidationFailure}
 import extruder.metrics.MetricEncodersSpec.{Dimensions, RequestCount, StatusCode}
 import extruder.metrics._
 import extruder.metrics.data._
 import org.scalacheck.ScalacheckShapeless._
+import org.scalatest.Matchers._
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{Assertion, EitherValues, FunSuite}
 import shapeless.Coproduct
 import utest.compileError
-import org.scalatest.Matchers._
 
 class DimensionalMetricEncodersSpec
     extends FunSuite
@@ -25,9 +25,10 @@ class DimensionalMetricEncodersSpec
   import DimensionalMetricEncodersSpec._
   import extruder.metrics.MetricEncodersSpec._
 
-  override type Enc[F[_], T] = TestDimensionalMetricEncoder[F, T]
+  override type EncDefault[A] = Validation[A]
+  override type EncT[F[_], T] = TestDimensionalMetricEncoder[F, T]
   override type OutputData = Iterable[DimensionalMetric]
-  override type Eff[F[_]] = ExtruderMonadError[F]
+  override type EncEff[F[_]] = MonadError[F, Throwable]
   override type Sett = DimensionalMetricSettings
 
   override def defaultSettings: DimensionalMetricSettings = new DimensionalMetricSettings {}
@@ -40,7 +41,7 @@ class DimensionalMetricEncodersSpec
     }
 
   override protected def finalizeOutput[F[_]](namespace: List[String], settings: Sett, inter: Metrics)(
-    implicit F: ExtruderMonadError[F]
+    implicit F: MonadError[F, Throwable]
   ): F[Iterable[DimensionalMetric]] =
     buildMetrics(Some("namespace"), namespace, settings, inter, Map.empty, MetricType.Counter)
 
@@ -59,17 +60,17 @@ class DimensionalMetricEncodersSpec
   test("Fails to compile an object with different metric value types")(testDifferentValueTypeFail)
 
   def testObject: Assertion = forAll { (c: Both) =>
-    val metrics = encode[Both](c).right.value
+    val metrics = encode(c).right.value
     assert((metrics.size === 1) && metrics.head.values.size === c.b.statusCode.values.size + 3)
   }
 
   def noLabel: Assertion = forAll { (m: Map[String, Int]) =>
-    val metrics = encode[Map[String, Int]](m).right.value
+    val metrics = encode(m).right.value
     assert((metrics.size === m.size) && metrics.forall(_.values.head._1.head.isEmpty))
   }
 
   def withLabel: Assertion = forAll { (es: EncoderStats) =>
-    val metrics = encode[EncoderStats](es).right.value
+    val metrics = encode(es).right.value
     assert((metrics.size === es.`type`.lastOption.fold(0)(_ => 1)) && metrics.headOption.fold[Boolean](1 === 1) {
       metric =>
         metric.name === "encoder_stats"
@@ -77,7 +78,7 @@ class DimensionalMetricEncodersSpec
   }
 
   def status: Assertion = forAll { (a: All) =>
-    val metrics = encode[All](a).right.value
+    val metrics = encode(a).right.value
     val short: Short = 1
     val status = metrics.filter(_.metricType == MetricType.Status).head
     assert(
@@ -89,7 +90,7 @@ class DimensionalMetricEncodersSpec
   }
 
   def testMultiDimensional: Assertion = forAll { data: DimensionalData =>
-    val metrics = encode[DimensionalData](List("ns"), data).right.value
+    val metrics = encode(List("ns"), data).right.value
     assert(
       (metrics.size === data.data.headOption.fold(0)(_ => 1)) &&
         (
@@ -100,12 +101,12 @@ class DimensionalMetricEncodersSpec
   }
 
   def testResetNamespace: Assertion = forAll { (rq: Reset) =>
-    val metrics = encode[Reset](rq).right.value
+    val metrics = encode(rq).right.value
     assert((metrics.size === 2) && (metrics.map(_.name) === List("b", "a")))
   }
 
   def testStatus: Assertion = forAll { (stats: EncoderStats2) =>
-    val metrics = encode[EncoderStats2](stats).right.value
+    val metrics = encode(stats).right.value
     val short: Short = 1
     (metrics.map(_.name) should contain)
       .theSameElementsAs(List("http_requests", defaultSettings.labelTransform(stats.jobStatus)))
@@ -116,7 +117,7 @@ class DimensionalMetricEncodersSpec
   }
 
   def testErrors: Assertion = forAll { (stats: EncoderStats3) =>
-    val metrics = encode[EncoderStats3](stats).right.value
+    val metrics = encode(stats).right.value
 
     val errors = metrics.collectFirst { case m: DimensionalMetric if m.name == "errors" => m.values }.get
     assert((metrics.size === 2) && (errors.size === 1) && (errors.head._2 === Coproduct[Numbers](stats.errors.size)))
@@ -124,7 +125,7 @@ class DimensionalMetricEncodersSpec
 
   def testFailure: Assertion = forAll { (fail: Fail) =>
     assert(
-      encode[Fail](fail).left.value ===
+      encode(fail).left.value ===
         NonEmptyList.of(
           ValidationFailure(
             "Multiple metric types for the following metrics, please ensure there is just one: 'a' -> 'Timer, Counter'"
@@ -137,10 +138,10 @@ class DimensionalMetricEncodersSpec
     assert(
       Either
         .catchNonFatal(
-          compileError("encode[extruder.core.Validation, DifferentTypes](dt)").check(
+          compileError("encodeF[extruder.data.Validation](dt)").check(
             "",
-            "could not find implicit value for parameter encoder: DimensionalMetricEncodersSpec.this.Enc" +
-              "[extruder.core.Validation,extruder.metrics.dimensional.DimensionalMetricEncodersSpec.DifferentTypes]"
+            "could not find implicit value for parameter encoder: DimensionalMetricEncodersSpec.this.EncT" +
+              "[extruder.data.Validation,extruder.metrics.dimensional.DimensionalMetricEncodersSpec.DifferentTypes]"
           )
         )
         .isRight
@@ -151,10 +152,10 @@ class DimensionalMetricEncodersSpec
     assert(
       Either
         .catchNonFatal(
-          compileError("encode[extruder.core.Validation, DifferentTypes2](dt)").check(
+          compileError("encodeF[extruder.data.Validation](dt)").check(
             "",
-            "could not find implicit value for parameter encoder: DimensionalMetricEncodersSpec.this.Enc" +
-              "[extruder.core.Validation,extruder.metrics.dimensional.DimensionalMetricEncodersSpec.DifferentTypes2]"
+            "could not find implicit value for parameter encoder: DimensionalMetricEncodersSpec.this.EncT" +
+              "[extruder.data.Validation,extruder.metrics.dimensional.DimensionalMetricEncodersSpec.DifferentTypes2]"
           )
         )
         .isRight

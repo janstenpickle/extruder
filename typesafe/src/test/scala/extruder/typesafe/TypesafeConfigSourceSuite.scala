@@ -1,15 +1,15 @@
 package extruder.typesafe
 
-import cats.Eq
+import cats.{Eq, MonadError}
 import cats.data.NonEmptyList
 import cats.instances.all._
 import cats.syntax.either._
 import cats.kernel.laws.discipline.MonoidTests
 import com.typesafe.config.{ConfigFactory, ConfigList, ConfigObject, ConfigValue, Config => TConfig}
 import extruder.core.TestCommon._
-import extruder.core.ValidationCatsInstances._
+import extruder.data.ValidationCatsInstances._
 import extruder.core._
-import extruder.effect.ExtruderMonadError
+import extruder.data.{Missing, ValidationException, ValidationFailure}
 import extruder.typesafe.BaseTypesafeConfigEncoders._
 import extruder.typesafe.TypesafeConfigSourceSuite._
 import extruder.typesafe.IntermediateTypes._
@@ -35,7 +35,7 @@ class TypesafeConfigSourceSuite
     ConfigFactory.parseMap(config)
   }
 
-  override def loadInput[F[_]](implicit F: ExtruderMonadError[F]): F[TConfig] =
+  override def loadInput[F[_]](implicit F: MonadError[F, Throwable]): F[TConfig] =
     F.catchNonFatal(convertData(caseClassData))
 
   test("Can convert ConfigValue") { test[ConfigValue](configValueGen) }

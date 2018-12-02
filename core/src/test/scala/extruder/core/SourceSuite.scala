@@ -4,11 +4,13 @@ import java.net.URL
 
 import cats.data.{NonEmptyList, OptionT, ValidatedNel}
 import cats.instances.all._
+import cats.syntax.functor._
+import cats.syntax.flatMap._
 import cats.kernel.laws.discipline.MonoidTests
-import cats.{Eq, Monad}
+import cats.{Eq, FlatMap, Monad, MonadError}
 import extruder.core.TestCommon._
-import extruder.core.ValidationCatsInstances._
-import extruder.effect.ExtruderMonadError
+import extruder.data.Validation
+import extruder.data.ValidationCatsInstances._
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalacheck.Gen.Choose
 import org.scalacheck.ScalacheckShapeless._
@@ -35,7 +37,9 @@ abstract class SourceSuite[A](monoidTests: MonoidTests[A]#RuleSet)
     with DerivedDecoders
     with DecodeTypes =>
 
-  type Eff[F[_]] = ExtruderMonadError[F]
+  override type DecEff[F[_]] = MonadError[F, Throwable]
+  override type EncEff[F[_]] = MonadError[F, Throwable]
+
   override type OutputData = InputData
 
   val supportsEmptyNamespace: Boolean = true
@@ -75,10 +79,10 @@ abstract class SourceSuite[A](monoidTests: MonoidTests[A]#RuleSet)
   test("Can load data defaults with standard sync decode") { testDefaultDecode }
 
   def testNumeric[T: Numeric](
-    implicit encoder: Enc[Validation, T],
-    decoder: Dec[Validation, T],
-    listEncoder: Enc[Validation, List[T]],
-    listDecoder: Dec[Validation, List[T]],
+    implicit encoder: EncT[Validation, T],
+    decoder: DecT[Validation, T],
+    listEncoder: EncT[Validation, List[T]],
+    listDecoder: DecT[Validation, List[T]],
     tEq: Eq[T],
     choose: Choose[T]
   ): Assertion = {
@@ -87,10 +91,10 @@ abstract class SourceSuite[A](monoidTests: MonoidTests[A]#RuleSet)
   }
 
   def testType[T](gen: Gen[T])(
-    implicit encoder: Enc[Validation, T],
-    decoder: Dec[Validation, T],
-    listEncoder: Enc[Validation, List[T]],
-    listDecoder: Dec[Validation, List[T]],
+    implicit encoder: EncT[Validation, T],
+    decoder: DecT[Validation, T],
+    listEncoder: EncT[Validation, List[T]],
+    listDecoder: DecT[Validation, List[T]],
     tEq: Eq[T]
   ): Assertion = {
     test(gen)
@@ -101,44 +105,46 @@ abstract class SourceSuite[A](monoidTests: MonoidTests[A]#RuleSet)
 
   def testList[T, F[T] <: TraversableOnce[T]](
     gen: Gen[F[T]]
-  )(implicit encoder: Enc[Validation, F[T]], decoder: Dec[Validation, F[T]]): Assertion =
+  )(implicit encoder: EncT[Validation, F[T]], decoder: DecT[Validation, F[T]]): Assertion =
     forAll(gen, namespaceGen) { (value, namespace) =>
       assert((for {
-        encoded <- encode[F[T]](namespace, value)
-        decoded <- decode[F[T]](namespace, encoded)
+        encoded <- encodeF[Validation](namespace, value)
+        decoded <- decodeF[Validation, F[T]](namespace, encoded)
       } yield decoded).map(_.toList === value.filter(_.toString.trim.nonEmpty).toList).right.value)
     }
 
   def testNonEmptyList[T](
     gen: Gen[T]
-  )(implicit encoder: Enc[Validation, NonEmptyList[T]], decoder: Dec[Validation, NonEmptyList[T]]): Assertion =
+  )(implicit encoder: EncT[Validation, NonEmptyList[T]], decoder: DecT[Validation, NonEmptyList[T]]): Assertion =
     forAll(nonEmptyListGen(gen), namespaceGen) { (value, namespace) =>
       assert((for {
-        encoded <- encode[NonEmptyList[T]](namespace, value)
-        decoded <- decode[NonEmptyList[T]](namespace, encoded)
+        encoded <- encodeF[Validation](namespace, value)
+        decoded <- decodeF[Validation, NonEmptyList[T]](namespace, encoded)
       } yield decoded).map(_.toList === value.filter(_.toString.trim.nonEmpty)).right.value)
     }
 
   def test[T](gen: Gen[T])(
-    implicit encoder: Enc[Validation, T],
-    decoder: Dec[Validation, T],
+    implicit encoder: EncT[Validation, T],
+    decoder: DecT[Validation, T],
     teq: Eq[T],
     equals: Eq[Validation[T]]
   ): Assertion = {
-    val F: Eff[Validation] = ExtruderMonadError[Validation]
+    val F: FlatMap[Validation] = FlatMap[Validation]
     forAll(gen, namespaceGen) { (value, namespace) =>
-      def eqv(encoded: Validation[OutputData], decoded: InputData => Validation[T]): Boolean =
-        equals.eqv(F.flatMap(encoded)(decoded), Right(value))
+      def eqv(encoded: Validation[OutputData], decoded: InputData => Validation[T]): Boolean = {
+        val x = F.flatMap(encoded)(decoded)
+        equals.eqv(F.flatMap(encoded)(decoded), Validation(Right(value)))
+      }
 
-      assert(eqv(encode[T](namespace, value), decode[T](namespace, _)))
-      assert(if (supportsEmptyNamespace) eqv(encode[T](value), decode[T]) else true)
+      assert(eqv(encodeF[Validation](namespace, value), decodeF[Validation, T](namespace, _)))
+      assert(if (supportsEmptyNamespace) eqv(encodeF[Validation](value), decodeF[Validation, T].apply) else true)
     }
   }
 
   def testDefaults: Assertion =
     forAll(Gen.alphaNumStr, Gen.posNum[Int], Gen.posNum[Long]) { (s, i, l) =>
       assert(
-        decode[CaseClass](
+        decodeF[Validation, CaseClass](
           convertData(
             Map(List("CaseClass", "s") -> s, List("CaseClass", "i") -> i.toString, List("CaseClass", "l") -> l.toString)
               .map {
@@ -152,8 +158,8 @@ abstract class SourceSuite[A](monoidTests: MonoidTests[A]#RuleSet)
     }
 
   def testDefaultDecode(implicit cvEq: Eq[Validation[CaseClass]]): Assertion = {
-    val test1 = cvEq.eqv(decode[CaseClass], Right(expectedCaseClass))
-    val test2 = cvEq.eqv(decode[CaseClass](List.empty), Right(expectedCaseClass))
+    val test1 = cvEq.eqv(decodeF[Validation, CaseClass].apply, Validation(Right(expectedCaseClass)))
+    val test2 = cvEq.eqv(decodeF[Validation, CaseClass](List.empty), Validation(Right(expectedCaseClass)))
     assert(test1)
     assert(test2)
   }

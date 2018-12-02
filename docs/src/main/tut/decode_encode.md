@@ -19,15 +19,16 @@ import cats.data.EitherT
 import cats.effect.IO
 import extruder.core._
 import extruder.core.MapSource._
+import extruder.data._
 import scala.util.Try
 import cats.instances.all._
 
-decode[IO, String](List("a"), Map("a" -> "b")) // returns IO("b")
-decode[Try, String](List("a"), Map("a" -> "b")) // returns Try("b")
+decodeF[IO, String](List("a"), Map("a" -> "b")) // returns IO("b")
+decodeF[Try, String](List("a"), Map("a" -> "b")) // returns Try("b")
 
 // Type alias for EitherT monad transformer
 type EitherTIO[A] = EitherT[IO, ValidationErrors, A]
-decode[EitherTIO, String](List("a"), Map("a" -> "b")) // returns EitherT[IO, ValidationErrors, String](IO(Right("b")))
+decodeF[EitherTIO, String](List("a"), Map("a" -> "b")) // returns EitherT[IO, ValidationErrors, String](IO(Right("b")))
 ```
 
 # Implementing Your Own Target Monads

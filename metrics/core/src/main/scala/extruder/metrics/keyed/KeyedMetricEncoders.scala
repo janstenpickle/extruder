@@ -5,7 +5,7 @@ import extruder.metrics.data._
 
 trait KeyedMetricEncoders extends MetricEncoders {
   protected def buildMetrics[F[_]](settings: Sett, inter: Metrics, defaultMetricType: MetricType)(
-    implicit F: Eff[F]
+    implicit F: EncEff[F]
   ): F[Iterable[KeyedMetric]] =
     F.pure(
       inter

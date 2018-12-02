@@ -1,9 +1,11 @@
 package extruder.core
 
-import cats.Eq
 import cats.data.NonEmptyList
 import cats.instances.all._
-import cats.syntax.either._
+import cats.syntax.flatMap._
+import cats.syntax.functor._
+import cats.{Eq, MonadError}
+import extruder.data.{Validation, ValidationError, ValidationFailure}
 import org.scalacheck.Gen
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{Assertion, EitherValues, FunSuite, Matchers}
@@ -20,30 +22,32 @@ class FailingSourceSuite
     with MapEncoders {
   import FailingSourceSuite._
   import TestCommon._
-  import ValidationCatsInstances._
+
+  override type DecEff[F[_]] = MonadError[F, Throwable]
+  override type EncEff[F[_]] = MonadError[F, Throwable]
 
   override protected def finalizeOutput[F[_]](namespace: List[String], settings: Sett, data: Map[String, String])(
-    implicit F: Eff[F]
+    implicit F: EncEff[F]
   ): F[Map[String, String]] =
-    if (data.keys.forall(_.contains(finalizeFailKey))) F.validationFailure(finalizeFailMessage)
+    if (data.keys.forall(_.contains(finalizeFailKey))) F.raiseError(new RuntimeException(finalizeFailMessage))
     else F.pure(data)
 
   override protected def prepareInput[F[_]](namespace: List[String], settings: Sett, data: Map[String, String])(
-    implicit F: Eff[F]
+    implicit F: DecEff[F]
   ): F[Map[String, String]] =
-    if (data.keys.forall(_.contains(prepareFailKey))) F.validationFailure(prepareFailMessage)
+    if (data.keys.forall(_.contains(prepareFailKey))) F.raiseError(new RuntimeException(prepareFailMessage))
     else F.pure(data)
 
   override protected def lookupValue[F[_]](path: List[String], settings: Sett, data: Map[String, String])(
-    implicit F: Eff[F]
+    implicit F: DecEff[F]
   ): F[Option[String]] =
     if (path.contains(okNamespace)) F.pure(data.get(settings.pathToString(path)))
-    else F.validationFailure(lookupFailMessage)
+    else F.raiseError(new RuntimeException(lookupFailMessage))
 
   override protected def writeValue[F[_]](path: List[String], settings: Sett, value: String)(
-    implicit F: Eff[F]
+    implicit F: EncEff[F]
   ): F[Map[String, String]] =
-    if (path.contains(okNamespace)) F.validationFailure(writeFailMessage)
+    if (path.contains(okNamespace)) F.raiseError(new RuntimeException(writeFailMessage))
     else F.pure(Map(settings.pathToString(path) -> value))
 
   test("Lookup in the data source fails") { testLookupFail(Gen.alphaNumStr) }
@@ -55,7 +59,7 @@ class FailingSourceSuite
   test("The type specified for a sealed trait implementation is invalid") {
     assert(
       cnilDecoder[Validation].read(List.empty, defaultSettings, None, Map.empty) ===
-        implicitly[Eff[Validation]].validationFailure(
+        implicitly[ExtruderErrors[Validation]].validationFailure(
           s"Could not find specified implementation of sealed type at path '${defaultSettings.pathToStringWithType(List.empty)}'"
         )
     )
@@ -63,7 +67,7 @@ class FailingSourceSuite
 
   test("The value specified for a duration is invalid") {
     assert(
-      decode[FiniteDuration](List(okNamespace), Map(okNamespace -> "Inf")) === Left(
+      decodeF[Validation, FiniteDuration](List(okNamespace), Map(okNamespace -> "Inf")) === Left(
         NonEmptyList.of(
           ValidationFailure(
             s"Could not parse value 'Inf' at '$okNamespace': Could not parse value 'Inf' as a valid duration for type 'FiniteDuration'"
@@ -77,7 +81,7 @@ class FailingSourceSuite
     forAll(Gen.alphaNumStr.suchThat(_.length > 1))(
       value =>
         assert(
-          decode[Char](List(okNamespace), Map(okNamespace -> value)) === Left(
+          decodeF[Validation, Char](List(okNamespace), Map(okNamespace -> value)) === Left(
             NonEmptyList.of(ValidationFailure(s"Could not parse value '$value' at '$okNamespace': Not a valid Char"))
           )
       )
@@ -86,17 +90,13 @@ class FailingSourceSuite
 
   test("Preparation of the data source fails") {
     forAll { value: String =>
-      assert(
-        decode[String](Map(prepareFailKey -> value)) === Left(NonEmptyList.of(ValidationFailure(prepareFailMessage)))
-      )
+      assert(decodeF[Validation, String](Map(prepareFailKey -> value)).left.value.head.message === prepareFailMessage)
     }
   }
 
   test("Finalization of the data sink fails") {
     forAll { value: String =>
-      assert(
-        encode[String](List(finalizeFailKey), value) === Left(NonEmptyList.of(ValidationFailure(finalizeFailMessage)))
-      )
+      assert(encodeF[Validation](List(finalizeFailKey), value).left.value.head.message === finalizeFailMessage)
     }
 
   }
@@ -104,12 +104,12 @@ class FailingSourceSuite
   def testLookupFail[T](
     gen: Gen[T]
   )(implicit encoder: MapEncoder[Validation, T], decoder: MapDecoder[Validation, T]): Assertion =
-    test[T](gen, _ === NonEmptyList.of(ValidationFailure(lookupFailMessage)))
+    test[T](gen, _.head.message === lookupFailMessage)
 
   def testWriteFail[T](
     gen: Gen[T]
   )(implicit encoder: MapEncoder[Validation, T], decoder: MapDecoder[Validation, T]): Assertion =
-    test[T](gen, _ === NonEmptyList.of(ValidationFailure(writeFailMessage)), Some(okNamespace))
+    test[T](gen, _.head.message === writeFailMessage, Some(okNamespace))
 
   def test[T](gen: Gen[T], expected: NonEmptyList[ValidationError] => Boolean, namespacePrefix: Option[String] = None)(
     implicit encoder: MapEncoder[Validation, T],
@@ -118,8 +118,8 @@ class FailingSourceSuite
     forAll(gen, namespaceGen) { (value, namespace) =>
       val ns = namespacePrefix.fold(namespace)(namespace :+ _)
       assert(expected((for {
-        encoded <- encode[T](ns, value)
-        decoded <- decode[T](ns, encoded)
+        encoded <- encodeF[Validation](ns, value)
+        decoded <- decodeF[Validation, T](ns, encoded)
       } yield decoded).left.value))
     }
 
