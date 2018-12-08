@@ -3,9 +3,10 @@ import sbt.Keys.libraryDependencies
 
 val catsVer = "1.5.0"
 val catsEffectVer = "1.0.0"
+val disciplineVer = "0.9.0"
 val prometheusVer = "0.4.0"
 val refinedVer = "0.9.2"
-val scalaCheckVer = "1.13.5"
+val scalaCheckVer = "1.13.2"
 val scalaCheckShapelessVer = "1.1.8"
 val scalaTestVer = "3.0.5"
 
@@ -46,6 +47,7 @@ val commonSettings = Seq(
   },
   bintrayReleaseOnPublish := true,
   coverageMinimum := 80,
+  coverageHighlighting := true,
   releaseCrossBuild := true,
   scalafmtOnCompile := true,
   scalafmtTestOnCompile := true,
@@ -54,26 +56,63 @@ val commonSettings = Seq(
   logBuffered in Test := false
 )
 
-lazy val core = (project in file("core")).settings(
-  commonSettings ++
-    Seq(
-      name := "extruder-core",
-      libraryDependencies ++= Seq(
-        "io.estatico" %% "newtype" % "0.4.2",
-        ("org.typelevel" %% "cats-core" % catsVer).exclude("org.scalacheck", "scalacheck"),
-        ("org.typelevel" %% "mouse"     % "0.18").exclude("org.scalacheck", "scalacheck"),
-        ("com.chuusai"   %% "shapeless" % "2.3.3").exclude("org.scalacheck", "scalacheck"),
-        "org.scalatest" %% "scalatest" % scalaTestVer % Test,
-        ("org.typelevel" %% "cats-effect-laws" % catsEffectVer).exclude("org.scalacheck", "scalacheck"),
-        ("org.typelevel" %% "discipline"       % "0.10.0" % Test)
-          .exclude("org.scalacheck", "scalacheck"),
-        ("com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % scalaCheckShapelessVer % Test)
-          .exclude("org.scalacheck", "scalacheck")
-      ),
-      publishArtifact in Test := true,
-      coverageEnabled.in(Test, test) := true
-    )
-)
+lazy val core = (project in file("core"))
+  .settings(
+    commonSettings ++
+      Seq(
+        name := "extruder-core",
+        libraryDependencies ++= Seq(
+          "io.estatico"    %% "newtype"    % "0.4.2",
+          "org.typelevel"  %% "cats-core"  % catsVer,
+          "org.typelevel"  %% "cats-laws"  % catsVer,
+          "org.typelevel"  %% "mouse"      % "0.18",
+          "com.chuusai"    %% "shapeless"  % "2.3.3",
+          "org.scalatest"  %% "scalatest"  % scalaTestVer % Test,
+          "org.scalacheck" %% "scalacheck" % scalaCheckVer % Test,
+          "org.typelevel"  %% "discipline" % disciplineVer % Test,
+          ("com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % scalaCheckShapelessVer % Test)
+            .exclude("org.scalacheck", "scalacheck")
+        ),
+        publishArtifact in Test := true,
+        coverageEnabled.in(Test, test) := true,
+        unmanagedSourceDirectories in Test ++= Seq(
+          baseDirectory.value / "src" / "laws",
+          baseDirectory.value / "src" / "tests"
+        )
+      )
+  )
+
+lazy val laws = (project in file("laws"))
+  .settings(
+    commonSettings ++
+      Seq(
+        name := "extruder-laws",
+        libraryDependencies ++= Seq(
+          "org.scalatest"              %% "scalatest"                 % scalaTestVer,
+          "org.typelevel"              %% "cats-laws"                 % catsVer,
+          "org.typelevel"              %% "discipline"                % disciplineVer,
+          "com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % scalaCheckShapelessVer
+        ),
+        coverageEnabled.in(Test, test) := true
+      )
+  )
+  .dependsOn(core)
+
+lazy val tests = (project in file("tests"))
+  .settings(
+    commonSettings ++
+      Seq(
+        name := "extruder-tests",
+        libraryDependencies ++= Seq(
+          "org.scalatest"              %% "scalatest"                 % scalaTestVer           % Test,
+          "com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % scalaCheckShapelessVer % Test
+        ),
+        coverageEnabled.in(Test, test) := true
+      )
+  )
+  .dependsOn(testkit % "test")
+
+lazy val testkit = project.dependsOn(core, laws).settings(commonSettings).settings(moduleName := "extruder-testkit")
 
 lazy val catsEffect = (project in file("cats-effect"))
   .settings(
@@ -81,15 +120,15 @@ lazy val catsEffect = (project in file("cats-effect"))
       Seq(
         name := "extruder-cats-effect",
         libraryDependencies ++= Seq(
-          ("org.typelevel" %% "cats-effect" % catsEffectVer).exclude("org.scalacheck", "scalacheck"),
-          "org.scalatest" %% "scalatest" % scalaTestVer % Test,
-          ("org.typelevel" %% "cats-effect-laws" % catsEffectVer).exclude("org.scalacheck", "scalacheck"),
-          ("org.typelevel" %% "discipline"       % "0.10.0" % Test)
-            .exclude("org.scalacheck", "scalacheck")
+          "org.typelevel"              %% "cats-effect"               % catsEffectVer,
+          "org.scalatest"              %% "scalatest"                 % scalaTestVer % Test,
+          "org.typelevel"              %% "cats-effect-laws"          % catsEffectVer,
+          "org.typelevel"              %% "discipline"                % disciplineVer % Test,
+          "com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % scalaCheckShapelessVer % Test
         )
       )
   )
-  .dependsOn(core)
+  .dependsOn(core, laws)
 
 lazy val systemSources = (project in file("system-sources"))
   .settings(commonSettings ++ Seq(name := "extruder-system-sources"))
@@ -108,6 +147,7 @@ lazy val aws = (project in file("aws"))
       Seq(
         name := "extruder-aws",
         libraryDependencies ++= Seq(
+          "eu.timepit"     %% "refined"            % refinedVer,
           "com.amazonaws"  % "aws-java-sdk-core"   % "1.11.354",
           "org.scalatest"  %% "scalatest"          % scalaTestVer % Test,
           "org.scalacheck" %% "scalacheck"         % scalaCheckVer % Test,
@@ -116,7 +156,7 @@ lazy val aws = (project in file("aws"))
         coverageEnabled.in(Test, test) := true
       )
   )
-  .dependsOn(core, refined)
+  .dependsOn(core)
 
 lazy val typesafe = (project in file("typesafe"))
   .settings(
@@ -131,7 +171,7 @@ lazy val typesafe = (project in file("typesafe"))
         coverageEnabled.in(Test, test) := true
       )
   )
-  .dependsOn(core % "compile->compile;test->test", catsEffect)
+  .dependsOn(core, laws % "test->compile")
 
 lazy val metricsCore = (project in file("metrics/core"))
   .settings(
@@ -143,8 +183,7 @@ lazy val metricsCore = (project in file("metrics/core"))
           "org.scalacheck"             %% "scalacheck"                % scalaCheckVer          % Test,
           "com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % scalaCheckShapelessVer % Test,
           "com.lihaoyi"                %% "utest"                     % "0.6.3"                % Test,
-          ("org.typelevel" %% "discipline" % "0.9.0" % Test)
-            .exclude("org.scalacheck", "scalacheck")
+          "org.typelevel"              %% "discipline"                % disciplineVer          % Test
         ),
         coverageEnabled.in(Test, test) := true
       )
@@ -184,7 +223,7 @@ lazy val spectator = (project in file("metrics/spectator"))
         coverageEnabled.in(Test, test) := true
       )
   )
-  .dependsOn(metricsCore)
+  .dependsOn(metricsCore, catsEffect)
 
 lazy val dropwizard = (project in file("metrics/dropwizard"))
   .settings(
@@ -216,7 +255,7 @@ lazy val refined = (project in file("refined"))
         coverageEnabled.in(Test, test) := true
       )
   )
-  .dependsOn(core % "compile->compile;test->test")
+  .dependsOn(core, laws % "test->compile")
 
 lazy val root = (project in file("."))
   .settings(
@@ -228,7 +267,19 @@ lazy val root = (project in file("."))
         libraryDependencies := libraryDependencies.all(aggregateCompile).value.flatten
       )
   )
-  .aggregate(core, catsEffect, aws, typesafe, systemSources, refined, metricsCore, dropwizard, prometheus, spectator)
+  .aggregate(
+    core,
+    tests,
+    catsEffect,
+    aws,
+    typesafe,
+    systemSources,
+    refined,
+    metricsCore,
+    dropwizard,
+    prometheus,
+    spectator
+  )
 
 lazy val aggregateCompile =
   ScopeFilter(inProjects(core), inConfigurations(Compile))

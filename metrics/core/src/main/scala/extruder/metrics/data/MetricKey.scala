@@ -3,7 +3,7 @@ package extruder.metrics.data
 import cats.{Applicative, Monad}
 import cats.syntax.applicative._
 import cats.syntax.flatMap._
-import extruder.core.{ExtruderErrors, MapEncoder, Settings, Show}
+import extruder.core._
 
 sealed trait MetricKey {
   def name: String
@@ -74,7 +74,7 @@ object MetricKey {
     settings: Settings,
     dimensions: A,
     metricType: Option[MetricType]
-  )(implicit enc: MapEncoder[F, A]): F[MetricKey] =
+  )(implicit enc: EncoderT[F, Settings, A, Map[String, String]]): F[MetricKey] =
     enc.write(List.empty, settings, dimensions).flatMap(apply[F](path, _, metricType))
 
   def apply[F[_]: Applicative](path: List[String], dimension: (String, String), metricType: Option[MetricType])(

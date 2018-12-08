@@ -2,29 +2,40 @@ package extruder
 
 import _root_.cats.data.{EitherT, NonEmptyList}
 import _root_.cats.instances.all._
+import _root_.cats.syntax.applicative._
 import _root_.cats.syntax.either._
 import _root_.cats.syntax.flatMap._
-import _root_.cats.{Apply, Monad, MonadError}
-import extruder.core.ExtruderErrors
+import _root_.cats.{Apply, Eq, Monad, MonadError}
 import _root_.io.estatico.newtype.macros.newsubtype
-import _root_.shapeless.LowPriority
+import extruder.core.ExtruderErrors
+import extruder.data.ValidationError.{Missing, ValidationException, ValidationFailure}
 
 package object data {
   type ValidationErrors = NonEmptyList[ValidationError]
+  object ValidationErrors {
+    def exception(message: String, ex: Throwable): ValidationErrors = NonEmptyList.of(ValidationException(message, ex))
+    def exception(ex: Throwable): ValidationErrors = NonEmptyList.of(ValidationException(ex))
+    def failure(message: String): ValidationErrors = NonEmptyList.of(ValidationFailure(message))
+    def missing(message: String): ValidationErrors = NonEmptyList.of(Missing(message))
+  }
 
   @newsubtype case class Validation[A](a: Either[ValidationErrors, A])
 
   object Validation {
-    implicit val extruderStdInstancesForValidation: MonadError[Validation, Throwable] =
+    implicit def extruderStdEqForValidation[A: Eq]: Eq[Validation[A]] = Eq.by(_.a)
+
+    implicit def extruderStdInstancesForValidation(
+      implicit toThrowable: ValidationErrorsToThrowable
+    ): MonadError[Validation, Throwable] =
       new MonadError[Validation, Throwable] {
         def F: MonadError[Either[ValidationErrors, ?], ValidationErrors] =
           MonadError[Either[ValidationErrors, ?], ValidationErrors]
 
         override def raiseError[A](e: Throwable): Validation[A] =
-          Validation(Left(NonEmptyList.of(ValidationException(e))))
+          Validation(Left(ValidationErrors.exception(e)))
 
         override def handleErrorWith[A](fa: Validation[A])(f: Throwable => Validation[A]): Validation[A] =
-          fa.a.fold(e => f(extruder.core.errorsToThrowable(e)), a => Validation(Right(a)))
+          fa.a.fold(e => f(toThrowable.convertErrors(e)), a => Validation(Right(a)))
 
         override def flatMap[A, B](fa: Validation[A])(f: A => Validation[B]): Validation[B] =
           Validation(F.flatMap(fa.a)(f.andThen(_.a)))
@@ -43,13 +54,13 @@ package object data {
       }
 
     implicit val extruderErrorsForValidation: ExtruderErrors[Validation] = new ExtruderErrors[Validation] {
-      override def missing[A](message: String): Validation[A] = Validation(Left(NonEmptyList.of(Missing(message))))
+      override def missing[A](message: String): Validation[A] = Validation(Left(ValidationErrors.missing(message)))
       override def validationFailure[A](message: String): Validation[A] =
-        Validation(Left(NonEmptyList.of(ValidationFailure(message))))
+        Validation(Left(ValidationErrors.failure(message)))
       override def validationException[A](message: String, ex: Throwable): Validation[A] =
-        Validation(Left(NonEmptyList.of(ValidationException(message, ex))))
+        Validation(Left(ValidationErrors.exception(message, ex)))
       override def fallback[A](a: Validation[A])(thunk: => Validation[A]): Validation[A] =
-        a.a.fold(_ => thunk, v => Validation(Right(v)))
+        a.a.fold(_ => thunk, a => Validation(Right(a)))
     }
 
     protected val apply: Apply[Validation] = new Apply[Validation] {
@@ -70,9 +81,11 @@ package object data {
   object ValidationT extends LowPriorityValidationTInstances {
 
     implicit def extruderStdInstancesForValidationT[F[_]](
-      implicit F: MonadError[F, Throwable]
+      implicit F: MonadError[F, Throwable],
+      tt: ValidationErrorsToThrowable
     ): MonadError[ValidationT[F, ?], Throwable] = new ValidationTMonadError[F] {
       def FF: Monad[F] = F
+      def toThrowable: ValidationErrorsToThrowable = tt
 
       override def raiseError[A](e: Throwable): ValidationT[F, A] =
         ValidationT(EitherT[F, ValidationErrors, A](F.raiseError(e)))
@@ -81,17 +94,36 @@ package object data {
         ValidationT(EitherT(F.handleErrorWith(fa.a.value)(f.andThen(_.a.value))))
     }
 
+    implicit def extruderErrorsForValidationT[F[_]: Monad]: ExtruderErrors[ValidationT[F, ?]] =
+      new ExtruderErrors[ValidationT[F, ?]] {
+        override def missing[A](message: String): ValidationT[F, A] =
+          ValidationT[F, A](EitherT.leftT[F, A](ValidationErrors.missing(message)))
+        override def validationFailure[A](message: String): ValidationT[F, A] =
+          ValidationT[F, A](EitherT.leftT[F, A](ValidationErrors.failure(message)))
+        override def validationException[A](message: String, ex: Throwable): ValidationT[F, A] =
+          ValidationT[F, A](EitherT.leftT[F, A](ValidationErrors.exception(message, ex)))
+        override def fallback[A](fa: ValidationT[F, A])(thunk: => ValidationT[F, A]): ValidationT[F, A] =
+          ValidationT(EitherT(fa.a.fold(_ => thunk.a.value, a => Either.right[ValidationErrors, A](a).pure[F]).flatten))
+      }
+
   }
 
   trait LowPriorityValidationTInstances {
+    implicit def extruderStdEqForValidationT[F[_], A](
+      implicit ev: Eq[EitherT[F, ValidationErrors, A]]
+    ): Eq[ValidationT[F, A]] = Eq.by(_.a)
+
     implicit def extruderStdInstancesForValidationTFromMonad[F[_]](
-      implicit F: Monad[F]
+      implicit F: Monad[F],
+      tt: ValidationErrorsToThrowable
     ): MonadError[ValidationT[F, ?], Throwable] = new ValidationTMonadError[F] {
       def FF: Monad[F] = F
+      def toThrowable: ValidationErrorsToThrowable = tt
     }
 
     trait ValidationTMonadError[F[_]] extends MonadError[ValidationT[F, ?], Throwable] {
       implicit def FF: Monad[F]
+      def toThrowable: ValidationErrorsToThrowable
 
       def FFF: MonadError[EitherT[F, ValidationErrors, ?], ValidationErrors] =
         MonadError[EitherT[F, ValidationErrors, ?], ValidationErrors]
@@ -110,7 +142,7 @@ package object data {
         ValidationT(
           EitherT(
             fa.a
-              .fold(e => f(extruder.core.errorsToThrowable(e)), a => ValidationT[F, A](FFF.pure(a)))
+              .fold(e => f(toThrowable.convertErrors(e)), a => ValidationT[F, A](FFF.pure(a)))
               .flatMap(_.a.value)
           )
         )

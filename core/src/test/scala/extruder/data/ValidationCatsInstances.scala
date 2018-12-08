@@ -10,22 +10,22 @@ object ValidationCatsInstances {
     Gen
       .nonEmptyListOf(
         Gen.oneOf(
-          Gen.alphaNumStr.map(Missing(_)),
-          Gen.alphaNumStr.map(ValidationFailure(_)),
-          Gen.alphaNumStr.map(str => ValidationException(new RuntimeException(str)))
+          Gen.alphaNumStr.map(ValidationError.missing),
+          Gen.alphaNumStr.map(ValidationError.failure),
+          Gen.alphaNumStr.map(str => ValidationError.exception(new RuntimeException(str)))
         )
       )
       .map(l => NonEmptyList.of(l.head, l.tail: _*))
   )
 
-  implicit def validationEq[A: Eq]: Eq[Validation[A]] = Eq.by(_.a)
+  implicit def arb[A](implicit arb: Arbitrary[A]): Arbitrary[Validation[A]] =
+    Arbitrary(arb.arbitrary.map(a => Validation(Right(a))))
 
-  implicit def validationTEq[F[_], A](implicit eq: Eq[F[Either[ValidationErrors, A]]]): Eq[ValidationT[F, A]] =
-    Eq.by(_.a)
+  implicit def validationEq[A: Eq]: Eq[Validation[A]] = Eq.by(_.a)
 
   implicit val validationErrorsEq: Eq[ValidationError] = Eq.by(_.toString)
 
-  implicit val vCogen: Cogen[ValidationErrors] = Cogen[String].contramap(_.toString)
+  // implicit val vCogen: Cogen[ValidationErrors] = Cogen[String].contramap(_.toString)
 
   implicit val thEq: Eq[Throwable] = Eq.by(_.getMessage)
 }

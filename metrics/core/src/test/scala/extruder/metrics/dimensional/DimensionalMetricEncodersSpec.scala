@@ -2,10 +2,11 @@ package extruder.metrics.dimensional
 
 import cats.data.NonEmptyList
 import cats.syntax.either._
+import cats.syntax.functor._
 import cats.instances.string._
-import cats.{Eq, MonadError}
-import extruder.core.Encode
-import extruder.data.{Validation, ValidationError, ValidationFailure}
+import cats.{Applicative, Eq, MonadError}
+import extruder.core.{DataSource, Encode, ExtruderErrors}
+import extruder.data.{Finalize, Validation, ValidationError, ValidationErrors}
 import extruder.metrics.MetricEncodersSpec.{Dimensions, RequestCount, StatusCode}
 import extruder.metrics._
 import extruder.metrics.data._
@@ -16,34 +17,10 @@ import org.scalatest.{Assertion, EitherValues, FunSuite}
 import shapeless.Coproduct
 import utest.compileError
 
-class DimensionalMetricEncodersSpec
-    extends FunSuite
-    with GeneratorDrivenPropertyChecks
-    with EitherValues
-    with DimensionalMetricEncoders
-    with Encode {
+class DimensionalMetricEncodersSpec extends FunSuite with GeneratorDrivenPropertyChecks with EitherValues {
   import DimensionalMetricEncodersSpec._
   import extruder.metrics.MetricEncodersSpec._
-
-  override type EncDefault[A] = Validation[A]
-  override type EncT[F[_], T] = TestDimensionalMetricEncoder[F, T]
-  override type OutputData = Iterable[DimensionalMetric]
-  override type EncEff[F[_]] = MonadError[F, Throwable]
-  override type Sett = DimensionalMetricSettings
-
-  override def defaultSettings: DimensionalMetricSettings = new DimensionalMetricSettings {}
-
-  override protected def mkEncoder[F[_], T](
-    f: (List[String], Sett, T) => F[Metrics]
-  ): TestDimensionalMetricEncoder[F, T] =
-    new TestDimensionalMetricEncoder[F, T] {
-      override def write(path: List[String], settings: Sett, in: T): F[Metrics] = f(path, settings, in)
-    }
-
-  override protected def finalizeOutput[F[_]](namespace: List[String], settings: Sett, inter: Metrics)(
-    implicit F: MonadError[F, Throwable]
-  ): F[Iterable[DimensionalMetric]] =
-    buildMetrics(Some("namespace"), namespace, settings, inter, Map.empty, MetricType.Counter)
+  import TestDimensionalEncoders._
 
   test("Can encode an object")(testObject)
   test("Can encode a map where each key becomes a metric name and the namespace is empty")(noLabel)
@@ -59,14 +36,18 @@ class DimensionalMetricEncodersSpec
   test("Fails to compile an object with different numeric types")(testDifferentNumericTypeFail)
   test("Fails to compile an object with different metric value types")(testDifferentValueTypeFail)
 
+  val counterSettings = new DimensionalMetricSettings {
+    override def defaultMetricType: MetricType = MetricType.Counter
+  }
+
   def testObject: Assertion = forAll { (c: Both) =>
-    val metrics = encode(c).right.value
+    val metrics = encode(counterSettings, c).right.value
     assert((metrics.size === 1) && metrics.head.values.size === c.b.statusCode.values.size + 3)
   }
 
   def noLabel: Assertion = forAll { (m: Map[String, Int]) =>
     val metrics = encode(m).right.value
-    assert((metrics.size === m.size) && metrics.forall(_.values.head._1.head.isEmpty))
+    assert((metrics.size === m.size) && (metrics.forall(_.values.head._1.size === 1)))
   }
 
   def withLabel: Assertion = forAll { (es: EncoderStats) =>
@@ -127,7 +108,7 @@ class DimensionalMetricEncodersSpec
     assert(
       encode(fail).left.value ===
         NonEmptyList.of(
-          ValidationFailure(
+          ValidationError.failure(
             "Multiple metric types for the following metrics, please ensure there is just one: 'a' -> 'Timer, Counter'"
           )
         )
@@ -140,8 +121,10 @@ class DimensionalMetricEncodersSpec
         .catchNonFatal(
           compileError("encodeF[extruder.data.Validation](dt)").check(
             "",
-            "could not find implicit value for parameter encoder: DimensionalMetricEncodersSpec.this.EncT" +
-              "[extruder.data.Validation,extruder.metrics.dimensional.DimensionalMetricEncodersSpec.DifferentTypes]"
+            "could not find implicit value for parameter encoder: extruder.core.EncoderT" +
+              "[extruder.data.Validation,extruder.metrics.dimensional.DimensionalMetricEncodersSpec.TestDimensionalEncoders.Sett," +
+              "extruder.metrics.dimensional.DimensionalMetricEncodersSpec.DifferentTypes," +
+              "extruder.metrics.dimensional.DimensionalMetricEncodersSpec.TestDimensionalEncoders.EncodeData]"
           )
         )
         .isRight
@@ -154,8 +137,10 @@ class DimensionalMetricEncodersSpec
         .catchNonFatal(
           compileError("encodeF[extruder.data.Validation](dt)").check(
             "",
-            "could not find implicit value for parameter encoder: DimensionalMetricEncodersSpec.this.EncT" +
-              "[extruder.data.Validation,extruder.metrics.dimensional.DimensionalMetricEncodersSpec.DifferentTypes2]"
+            "could not find implicit value for parameter encoder: extruder.core.EncoderT" +
+              "[extruder.data.Validation,extruder.metrics.dimensional.DimensionalMetricEncodersSpec.TestDimensionalEncoders.Sett," +
+              "extruder.metrics.dimensional.DimensionalMetricEncodersSpec.DifferentTypes2," +
+              "extruder.metrics.dimensional.DimensionalMetricEncodersSpec.TestDimensionalEncoders.EncodeData]"
           )
         )
         .isRight
@@ -188,7 +173,16 @@ object DimensionalMetricEncodersSpec {
 
   case class DimensionalData(data: Map[Dimensions, Int])
 
-  trait TestDimensionalMetricEncoder[F[_], T] extends MetricEncoder[F, DimensionalMetricSettings, T]
+//  trait TestDimensionalMetricEncoder[F[_], T] extends MetricEncoder[F, DimensionalMetricSettings, T]
 
   implicit val validationErrorEq: Eq[ValidationError] = Eq.by(_.message)
+
+  object TestDimensionalEncoders extends Encode with DimensionalMetricEncoderInstances with DataSource {
+    override type EncodeData = Metrics
+    override type OutputData = Iterable[DimensionalMetric]
+    override type EncodeDefault[A] = Validation[A]
+    override type Sett = DimensionalMetricSettings
+    override def defaultSettings: Sett =
+      new DimensionalMetricSettings {}
+  }
 }
