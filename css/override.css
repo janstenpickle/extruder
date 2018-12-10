@@ -1,0 +1,30 @@
+.technologies {
+	display: none;
+}
+
+.jumbotron {
+  background-image: none;
+}
+
+.sidebar-nav > .sidebar-brand a .brand-wrapper {
+  background-size: 36px 36px !important;
+}
+
+#site-header .navbar-wrapper .brand .icon-wrapper {
+  width: 36px;
+  background-size: 100%;
+}
+
+#markdown-toc::before {
+    font-weight: bold;
+}
+
+#markdown-toc ul {
+    list-style: decimal;
+}
+
+#markdown-toc {
+    padding: 1.5em;
+    list-style: decimal;
+    display: inline-block;
+}
