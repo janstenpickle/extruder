@@ -5,13 +5,14 @@ import cats.syntax.functor._
 import cats.kernel.Monoid
 import cats.{Monad, Traverse}
 import extruder.data.StringWriter
-import shapeless.{LowPriority, Refute}
+import shapeless.{<:!<, LowPriority, Refute}
 
 trait ShowEncoderTInstances {
   implicit def showEncoder[F[_], A, S, O](
     implicit shows: Show[A],
     writer: StringWriter[F, S, O],
     refute: Refute[MultiShow[A]],
+    neOpt: A <:!< Option[_],
     lp: LowPriority
   ): EncoderT[F, S, A, O] =
     EncoderT.make { (path, settings, in) =>

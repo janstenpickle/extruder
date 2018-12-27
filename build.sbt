@@ -5,7 +5,7 @@ val catsVer = "1.5.0"
 val catsEffectVer = "1.0.0"
 val disciplineVer = "0.9.0"
 val prometheusVer = "0.4.0"
-val refinedVer = "0.9.2"
+val refinedVer = "0.9.3"
 val scalaCheckVer = "1.13.2"
 val scalaCheckShapelessVer = "1.1.8"
 val scalaTestVer = "3.0.5"
@@ -248,6 +248,7 @@ lazy val refined = (project in file("refined"))
         name := "extruder-refined",
         libraryDependencies ++= Seq(
           "eu.timepit"     %% "refined"            % refinedVer,
+          "eu.timepit"     %% "refined-shapeless"  % refinedVer,
           "eu.timepit"     %% "refined-scalacheck" % refinedVer % Test,
           "org.scalatest"  %% "scalatest"          % scalaTestVer % Test,
           "org.scalacheck" %% "scalacheck"         % scalaCheckVer % Test

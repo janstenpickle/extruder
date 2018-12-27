@@ -35,12 +35,14 @@ trait Shows extends LowPriorityShows {
   implicit val byteShow: Show[Byte] = fromCatsShow(catsStdShowForByte)
   implicit val booleanShow: Show[Boolean] = fromCatsShow(catsStdShowForBoolean)
   implicit val urlShow: Show[URL] = fromCatsShow(CatsShow.fromToString[URL])
-  implicit def durationShow[T <: Duration]: Show[T] =
-    fromCatsShow(CatsShow.show[T] {
+  implicit def durationShow[A <: Duration]: Show[A] =
+    fromCatsShow(CatsShow.show[A] {
       case x: Duration if x == Duration.Inf => "Inf"
       case x: Duration if x == Duration.MinusInf => "MinusInf"
       case x: Any => x.toString
     })
+
+  implicit def optionalShow[A](implicit ev: Show[A]): Show[Option[A]] = Show.by(_.fold("")(ev.show))
 
   def traversableBuilder[T, F[_], FF[T] <: TraversableOnce[T]](
     concat: TraversableOnce[String] => String

@@ -3,11 +3,15 @@ package extruder.examples
 import java.net.URL
 
 import cats.{Applicative, Id}
-import cats.data.{EitherT, Ior}
+import cats.data.{EitherT, Ior, NonEmptyList}
 import cats.effect.{IO, Timer}
 import com.typesafe.config.ConfigFactory
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.types.string.NonEmptyString
+import eu.timepit.refined.types.numeric.PosInt
 import extruder.core.DecoderT
 import extruder.data.Transform
+import extruder.meta.{MetaInfo, Primitive, ReprTable}
 //import cats.instances.all._
 import extruder.cats.effect.{EffectValidation, EvalValidation}
 import extruder.core.{EncoderT, Settings}
@@ -20,24 +24,27 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.util.Try
 import cats.syntax.applicative._
 
+import eu.timepit.refined.collection.NonEmpty
+
 import com.typesafe.config.Config
 
 //import extruder.map._
 
 import extruder.typesafe._
 import extruder.map.instances._
+import extruder.refined._
 
 import scala.collection.JavaConverters._
 
 case class CC(
   a: String = "test",
   b: String = "test2",
-  c: Int,
+  c: PosInt,
   d: CC2,
   e: CC3,
   f: Set[Int],
   dur: Duration,
-  finDur: FiniteDuration
+  //  finDur: FiniteDuration
 )
 case class CC2(x: String = "test4", y: Option[Int] = Some(232), z: CC3, dfs: Long)
 case class CC3(a: Option[String])
@@ -94,11 +101,19 @@ object Simple extends App {
 
 //  println(encodeCombinedF[Validation](extruder.map.datasource)(CC3(Some("dfds"))))
 
-  println(
-    extruder.map.datasource
-      .decodeF[Validation, CC]
-      .combine(extruder.map.datasource)((config, config.updated("cc.c", "ewfwnfwoef")))
-  )
+//  println(
+//    extruder.map.datasource
+//      .decodeF[Validation, CC]
+//      .combine(extruder.map.datasource)((config, config.updated("cc.c", "ewfwnfwoef")))
+//  )
+
+  println(ReprTable.asTable[CC](List.empty, defaultSettings))
+
+  implicitly[MetaInfo[NonEmptyList[Int]]]
+
+  implicitly[Primitive[String]]
+
+  implicitly[MetaInfo[NonEmptyString]]
 
   implicit val timer = IO.timer(ExecutionContext.global)
 }

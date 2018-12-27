@@ -1,6 +1,6 @@
 package extruder.laws
 
-import cats.data.NonEmptyList
+import cats.data.{Chain, NonEmptyChain, NonEmptyList, NonEmptyVector}
 import cats.{Eq, Monad, Monoid}
 import extruder.core.{DecoderT, EncoderT, ExtruderErrors, Settings}
 import extruder.data.Transform
@@ -17,9 +17,18 @@ trait EncoderDecoderGenericTests[F[_], S <: Settings, E, D, O] extends EncoderDe
     eqFOptA: Eq[F[Option[A]]],
     optEncoder: EncoderT[F, S, Option[A], E],
     optDecoder: DecoderT[F, S, Option[A], O],
+    eqFChainA: Eq[F[Chain[A]]],
     eqFNelA: Eq[F[NonEmptyList[A]]],
+    eqFNevA: Eq[F[NonEmptyVector[A]]],
+    eqFNecA: Eq[F[NonEmptyChain[A]]],
+    chainEncoder: EncoderT[F, S, Chain[A], E],
+    chainDecoder: DecoderT[F, S, Chain[A], O],
     nelEncoder: EncoderT[F, S, NonEmptyList[A], E],
     nelDecoder: DecoderT[F, S, NonEmptyList[A], O],
+    nevEncoder: EncoderT[F, S, NonEmptyVector[A], E],
+    nevDecoder: DecoderT[F, S, NonEmptyVector[A], O],
+    necEncoder: EncoderT[F, S, NonEmptyChain[A], E],
+    necDecoder: DecoderT[F, S, NonEmptyChain[A], O],
     multiShowEncoder: EncoderT[F, S, (A, B), E],
     multiShowDecoder: DecoderT[F, S, (A, B), O],
     eqFTuple: Eq[F[(A, B)]],
