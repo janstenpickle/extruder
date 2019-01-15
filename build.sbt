@@ -1,21 +1,21 @@
 import microsites._
 import sbt.Keys.libraryDependencies
 
-val catsVer = "1.5.0"
-val catsEffectVer = "1.0.0"
+val catsVer = "1.6.0"
+val catsEffectVer = "1.2.0"
 val disciplineVer = "0.9.0"
-val prometheusVer = "0.4.0"
-val refinedVer = "0.9.3"
+val prometheusVer = "0.6.0"
+val refinedVer = "0.9.4"
 val scalaCheckVer = "1.13.2"
 val scalaCheckShapelessVer = "1.1.8"
 val scalaTestVer = "3.0.5"
 
 val commonSettings = Seq(
   organization := "extruder",
-  scalaVersion := "2.12.7",
-  crossScalaVersions := Seq("2.11.12", "2.12.7"),
-  addCompilerPlugin(("org.spire-math"  % "kind-projector" % "0.9.8").cross(CrossVersion.binary)),
-  addCompilerPlugin(("org.scalamacros" % "paradise"       % "2.1.0").cross(CrossVersion.full)),
+  scalaVersion := "2.12.8",
+  crossScalaVersions := Seq("2.11.12", "2.12.8"),
+  addCompilerPlugin(("org.spire-math"  % "kind-projector" % "0.9.9").cross(CrossVersion.binary)),
+  addCompilerPlugin(("org.scalamacros" % "paradise"       % "2.1.1").cross(CrossVersion.full)),
   scalacOptions ++= Seq(
     "-unchecked",
     "-feature",
@@ -65,7 +65,7 @@ lazy val core = (project in file("core"))
           "io.estatico"    %% "newtype"    % "0.4.2",
           "org.typelevel"  %% "cats-core"  % catsVer,
           "org.typelevel"  %% "cats-laws"  % catsVer,
-          "org.typelevel"  %% "mouse"      % "0.18",
+          "org.typelevel"  %% "mouse"      % "0.20",
           "com.chuusai"    %% "shapeless"  % "2.3.3",
           "org.scalatest"  %% "scalatest"  % scalaTestVer % Test,
           "org.scalacheck" %% "scalacheck" % scalaCheckVer % Test,
@@ -148,7 +148,7 @@ lazy val aws = (project in file("aws"))
         name := "extruder-aws",
         libraryDependencies ++= Seq(
           "eu.timepit"     %% "refined"            % refinedVer,
-          "com.amazonaws"  % "aws-java-sdk-core"   % "1.11.354",
+          "com.amazonaws"  % "aws-java-sdk-core"   % "1.11.490",
           "org.scalatest"  %% "scalatest"          % scalaTestVer % Test,
           "org.scalacheck" %% "scalacheck"         % scalaCheckVer % Test,
           "eu.timepit"     %% "refined-scalacheck" % refinedVer % Test
@@ -214,8 +214,8 @@ lazy val spectator = (project in file("metrics/spectator"))
       Seq(
         name := "extruder-metrics-spectator",
         libraryDependencies ++= Seq(
-          "com.netflix.spectator"      % "spectator-api"              % "0.65.1",
-          "com.netflix.spectator"      % "spectator-reg-servo"        % "0.65.1" % Test,
+          "com.netflix.spectator"      % "spectator-api"              % "0.83.0",
+          "com.netflix.spectator"      % "spectator-reg-servo"        % "0.83.0" % Test,
           "org.scalatest"              %% "scalatest"                 % scalaTestVer % Test,
           "org.scalacheck"             %% "scalacheck"                % scalaCheckVer % Test,
           "com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % scalaCheckShapelessVer % Test
@@ -271,6 +271,7 @@ lazy val root = (project in file("."))
   .aggregate(
     core,
     tests,
+    laws,
     catsEffect,
     aws,
     typesafe,
@@ -329,11 +330,9 @@ lazy val docSettings = commonSettings ++ Seq(
     "-doc-root-content",
     (resourceDirectory.in(Compile).value / "rootdoc.txt").getAbsolutePath
   ),
-//  scalacOptions ~=
-//    _.filterNot(Set("-Yno-predef")),
   git.remoteRepo := "git@github.com:janstenpickle/extruder.git",
   unidocProjectFilter in (ScalaUnidoc, unidoc) :=
-    inAnyProject -- inProjects(root, examples),
+    inAnyProject -- inProjects(root, examples, laws),
   includeFilter in makeSite := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.svg" | "*.js" | "*.swf" | "*.yml" | "*.md"
 )
 

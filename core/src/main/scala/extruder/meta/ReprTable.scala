@@ -24,7 +24,9 @@ object ReprTable {
     case _: Any => ""
   }
 
-  def asTable[A](namespace: List[String], settings: Settings)(implicit meta: MetaInfo[A]): String = {
+  def asTable[A: MetaInfo](settings: Settings): String = asTable(List.empty, settings)
+
+  def asTable[A: MetaInfo](namespace: List[String], settings: Settings): String = {
     val reprs = asRepr[A](namespace, settings)
     val maxKeyLength = maxLength(KeyCol, p => settings.pathToString(p.path), reprs)
     val maxRequiredLength = maxLength(RequiredCol, p => convertRequired(p.required), reprs)

@@ -5,15 +5,23 @@ import cats.syntax.functor._
 import cats.syntax.flatMap._
 import extruder.instances.DecoderTInstances
 
-trait DecoderT[F[_], S, A, C] {
-  def read(path: List[String], settings: S, default: Option[A], input: C): F[A]
+/**
+  * Reads value `A` from input `I`, wrapping result in functor `F`.
+  *
+  * @tparam F Functor in which to wrap return type
+  * @tparam S Settings to use when decoding
+  * @tparam A Decoded type
+  * @tparam I Input data
+  */
+trait DecoderT[F[_], S, A, I] {
+  def read(path: List[String], settings: S, default: Option[A], input: I): F[A]
 
-  def imap[B](f: A => B)(g: B => A)(implicit F: Functor[F]): DecoderT[F, S, B, C] = DecoderT.make[F, S, B, C] {
+  def imap[B](f: A => B)(g: B => A)(implicit F: Functor[F]): DecoderT[F, S, B, I] = DecoderT.make[F, S, B, I] {
     (path, settings, default, input) =>
       read(path, settings, default.map(g), input).map(f)
   }
 
-  def imapResult[B](f: A => F[B])(g: B => A)(implicit F: FlatMap[F]): DecoderT[F, S, B, C] = DecoderT.make[F, S, B, C] {
+  def imapResult[B](f: A => F[B])(g: B => A)(implicit F: FlatMap[F]): DecoderT[F, S, B, I] = DecoderT.make[F, S, B, I] {
     (path, settings, default, input) =>
       read(path, settings, default.map(g), input).flatMap(f)
   }
@@ -22,7 +30,7 @@ trait DecoderT[F[_], S, A, C] {
 object DecoderT
     extends DecoderTInstances
     with ParserDecoderTInstances
-    with StringMapDecoderTInstances
+    with MapDecoderTInstances
     with DerivedDecoderTInstances
     with GenericDecoderTInstances
     with CombinedDecoderTInstances {

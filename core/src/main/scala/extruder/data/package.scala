@@ -7,7 +7,7 @@ import _root_.cats.syntax.either._
 import _root_.cats.syntax.flatMap._
 import _root_.cats.{Apply, Eq, Monad, MonadError}
 import _root_.io.estatico.newtype.macros.newsubtype
-import extruder.core.ExtruderErrors
+import extruder.core.{ExtruderErrors, ValidationErrorsToThrowable}
 import extruder.data.ValidationError.{Missing, ValidationException, ValidationFailure}
 
 package object data {

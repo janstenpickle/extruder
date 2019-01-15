@@ -10,11 +10,15 @@ sealed trait BaseMetaInfo {
 }
 
 trait MetaInfo[A] extends BaseMetaInfo
+
 object MetaInfo
     extends PrimitiveMetaInfoInstances
     with CollectionMetaInfoInstances
     with ProductMetaInfoInstances
     with UnionMetaInfoInstances {
+
+  def apply[A](implicit metaInfo: MetaInfo[A]): MetaInfo[A] = metaInfo
+
   implicit def optionalMetaInfo[A: Typeable](implicit ev: MetaInfo[A]): MetaInfo[Option[A]] = new Optional[A] {
     override def value: MetaInfo[A] = ev
     override def typeable: Typeable[Option[A]] = Typeable[Option[A]]

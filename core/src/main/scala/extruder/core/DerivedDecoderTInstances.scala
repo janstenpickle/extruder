@@ -4,7 +4,6 @@ import cats.{Functor, Monad}
 import cats.data.{Chain, NonEmptyChain, NonEmptyList, NonEmptyVector}
 import cats.syntax.flatMap._
 import cats.syntax.functor._
-import extruder.data.HasValue
 import shapeless.{Lazy, Refute}
 
 trait DerivedDecoderTInstances {
@@ -41,8 +40,6 @@ trait DerivedDecoderTInstances {
       )
   }
 
-  //decoder.value.imap(NonEmptyChain.fromNonEmptyList)(_.toNonEmptyList)
-
   implicit def optionalDecoder[F[_], T, S, D](
     implicit decoder: Lazy[DecoderT[F, S, T, D]],
     F: Monad[F],
@@ -50,8 +47,8 @@ trait DerivedDecoderTInstances {
     hasValue: HasValue[F, S, D],
     refute: Refute[MultiParser[F, T]]
   ): DecoderT[F, S, Option[T], D] = DecoderT.make[F, S, Option[T], D] { (path, settings, default, data) =>
-    val decoded = decoder.value.read(path, settings, None, data).map(Option(_))
-    val lookedUp = hasValue(path, settings, data)
+    lazy val decoded = decoder.value.read(path, settings, None, data).map(Option(_))
+    lazy val lookedUp = hasValue(path, settings, data)
 
     error.fallback[Option[T]](decoded) {
       lookedUp.flatMap { lu =>

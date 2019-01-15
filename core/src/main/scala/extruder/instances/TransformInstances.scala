@@ -1,6 +1,7 @@
 package extruder.instances
+
 import cats.Functor
-import extruder.data.Transform
+import extruder.core.Transform
 
 trait TransformInstances {
   implicit def extruderStdInstancesForPrepare[F[_]: Functor, S, I]: Functor[Transform[F, S, I, ?]] =

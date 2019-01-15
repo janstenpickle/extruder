@@ -3,7 +3,7 @@ package extruder.meta
 import extruder.core.Show
 import extruder.meta.Product.MetaInfoWithDefault
 import shapeless.labelled.FieldType
-import shapeless.{Witness, _}
+import shapeless._
 
 import scala.reflect.runtime.universe.TypeTag
 

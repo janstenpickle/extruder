@@ -1,6 +1,13 @@
-package extruder.data
-import extruder.data.ValidationError.ValidationException
+package extruder.core
 
+import extruder.data.ValidationError.ValidationException
+import extruder.data.{ValidationError, ValidationErrors}
+
+/**
+  * Converts a single or collection of validation errors to a throwable
+  *
+  * May be used with cats-effect or when performing an unsafe invocation
+  */
 trait ValidationErrorsToThrowable {
   def convertError(error: ValidationError): Throwable
   def convertErrors(errors: ValidationErrors): Throwable

@@ -1,8 +1,7 @@
 package extruder.laws
 
 import cats.{Eq, Monad, Monoid}
-import extruder.core.{DecoderT, EncoderT, ExtruderErrors, Settings}
-import extruder.data.Transform
+import extruder.core._
 import org.scalacheck.Prop.forAll
 import org.scalacheck.{Arbitrary, Prop}
 import org.typelevel.discipline.Laws

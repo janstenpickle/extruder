@@ -8,8 +8,7 @@ import cats.syntax.functor._
 import cats.{ApplicativeError, Monad, MonadError, Traverse}
 import com.typesafe.config.ConfigException.Missing
 import com.typesafe.config._
-import extruder.core._
-import extruder.data.{HasValue, LoadInput, Prune, StringReader}
+import extruder.core.{LoadInput, _}
 import shapeless.Refute
 
 import scala.collection.JavaConverters._

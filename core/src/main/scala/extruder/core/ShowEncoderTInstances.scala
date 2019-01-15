@@ -4,7 +4,6 @@ import cats.instances.list._
 import cats.syntax.functor._
 import cats.kernel.Monoid
 import cats.{Monad, Traverse}
-import extruder.data.StringWriter
 import shapeless.{<:!<, LowPriority, Refute}
 
 trait ShowEncoderTInstances {

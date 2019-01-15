@@ -1,34 +1,25 @@
-package extruder.data
+package extruder.core
 
 import cats.kernel.Monoid
 import cats.syntax.applicative._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.{FlatMap, Monad}
-import extruder.core.ExtruderErrors
-import shapeless.LowPriority
 
+/**
+  * Loads input data `I` with some side effect represented by functor `F`.
+  *
+  * @tparam F functor in which to wrap the result
+  * @tparam I input data type
+  */
 trait LoadInput[F[_], I] {
   def load: F[I]
 }
 
-object LoadInput {
+object LoadInput extends LowPriorityLoadInput {
   def apply[F[_], I](implicit loadInput: LoadInput[F, I]): LoadInput[F, I] = loadInput
 
-  implicit def combinedLoad[F[_]: FlatMap, I0, I1](
-    implicit ev0: LoadInput[F, I0],
-    ev1: LoadInput[F, I1],
-    lp: LowPriority
-  ): LoadInput[F, (I0, I1)] =
-    new LoadInput[F, (I0, I1)] {
-      override def load: F[(I0, I1)] =
-        for {
-          i0 <- ev0.load
-          i1 <- ev1.load
-        } yield (i0, i1)
-    }
-
-  implicit def combinedLoad[F[_]: Monad, I0, I1](
+  implicit def combinedLoadWithFallback[F[_]: Monad, I0, I1](
     implicit ev0: LoadInput[F, I0],
     ev1: LoadInput[F, I1],
     monoid0: Monoid[I0],
@@ -43,4 +34,18 @@ object LoadInput {
         } yield (i0, i1)
     }
 
+}
+
+trait LowPriorityLoadInput {
+  implicit def combinedLoad[F[_]: FlatMap, I0, I1](
+    implicit ev0: LoadInput[F, I0],
+    ev1: LoadInput[F, I1]
+  ): LoadInput[F, (I0, I1)] =
+    new LoadInput[F, (I0, I1)] {
+      override def load: F[(I0, I1)] =
+        for {
+          i0 <- ev0.load
+          i1 <- ev1.load
+        } yield (i0, i1)
+    }
 }

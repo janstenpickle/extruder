@@ -6,7 +6,7 @@ import cats.syntax.functor._
 import cats.instances.string._
 import cats.{Applicative, Eq, MonadError}
 import extruder.core.{DataSource, Encode, ExtruderErrors}
-import extruder.data.{Finalize, Validation, ValidationError, ValidationErrors}
+import extruder.data.{Validation, ValidationError, ValidationErrors}
 import extruder.metrics.MetricEncodersSpec.{Dimensions, RequestCount, StatusCode}
 import extruder.metrics._
 import extruder.metrics.data._
@@ -172,8 +172,6 @@ object DimensionalMetricEncodersSpec {
   case class Fail(one: Counter, two: Timer)
 
   case class DimensionalData(data: Map[Dimensions, Int])
-
-//  trait TestDimensionalMetricEncoder[F[_], T] extends MetricEncoder[F, DimensionalMetricSettings, T]
 
   implicit val validationErrorEq: Eq[ValidationError] = Eq.by(_.message)
 

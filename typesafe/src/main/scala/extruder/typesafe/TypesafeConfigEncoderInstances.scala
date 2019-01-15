@@ -5,8 +5,7 @@ import cats.syntax.applicative._
 import cats.syntax.functor._
 import cats.{Applicative, Monad, MonadError, Monoid, Traverse}
 import com.typesafe.config.{ConfigFactory, ConfigList, ConfigObject, ConfigValue, Config => TConfig}
-import extruder.core.{EncoderT, Settings, Show}
-import extruder.data.{StringWriter, Transform}
+import extruder.core._
 import extruder.typesafe.IntermediateTypes.{toConfig, Config, ConfigTypes}
 import shapeless.Refute
 

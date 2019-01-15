@@ -1,7 +1,7 @@
 package extruder.cats.effect
 
 import cats.data.EitherT
-import cats.{effect, Functor, MonadError}
+import cats.{Functor, MonadError}
 import cats.effect.{CancelToken, Concurrent, Fiber => CFiber}
 import cats.syntax.flatMap._
 import cats.syntax.functor._

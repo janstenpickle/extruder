@@ -3,7 +3,6 @@ package extruder.metrics.dimensional
 import cats.Applicative
 import cats.data.NonEmptyList
 import extruder.core._
-import extruder.data.Finalize
 import extruder.metrics.MetricEncoderInstances
 import extruder.metrics.data._
 import shapeless.{Generic, HList, Refute}
@@ -95,13 +94,13 @@ trait DimensionalMetricEncoderInstances extends MetricEncoderInstances {
   ): EncoderTRefute[T, S, Metrics] =
     new EncoderTRefute[T, S, Metrics] {}
 
-  implicit def dimensionalMetricsFinalizer[F[_]: Applicative: ExtruderErrors, S <: DimensionalMetricSettings]: Finalize[
+  implicit def dimensionalMetricsTransform[F[_]: Applicative: ExtruderErrors, S <: DimensionalMetricSettings]: Transform[
     F,
     S,
     Metrics,
     Iterable[DimensionalMetric]
   ] =
-    new Finalize[F, S, Metrics, Iterable[DimensionalMetric]] {
+    new Transform[F, S, Metrics, Iterable[DimensionalMetric]] {
       override def run(namespace: List[String], settings: S, inputData: Metrics): F[Iterable[DimensionalMetric]] =
         buildMetrics[F, S](namespace, settings, inputData)
     }

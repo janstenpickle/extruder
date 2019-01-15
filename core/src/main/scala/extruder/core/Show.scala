@@ -8,6 +8,14 @@ import extruder.instances.ShowInstances
 
 import scala.concurrent.duration.Duration
 
+/**
+  * Encode value `A` as a string
+  *
+  * Implicit `EncoderT` instances will be constructed from every `Shows` instance where
+  * a `StringWriter` instance also exists.
+  *
+  * @tparam A value to encode
+  */
 trait Show[A] {
   def show(a: A): String
   def contramap[B](f: B => A): Show[B] = Show.make((show _).compose(f))

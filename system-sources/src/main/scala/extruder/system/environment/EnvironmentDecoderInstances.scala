@@ -2,8 +2,7 @@ package extruder.system.environment
 import java.util
 
 import cats.{Applicative, MonadError}
-import extruder.core.Settings
-import extruder.data.{LoadInput, Transform}
+import extruder.core.{LoadInput, Settings, Transform}
 import extruder.map.MapDecoderInstances
 
 import scala.collection.JavaConverters._

@@ -25,7 +25,5 @@ object ValidationCatsInstances {
 
   implicit val validationErrorsEq: Eq[ValidationError] = Eq.by(_.toString)
 
-  // implicit val vCogen: Cogen[ValidationErrors] = Cogen[String].contramap(_.toString)
-
   implicit val thEq: Eq[Throwable] = Eq.by(_.getMessage)
 }

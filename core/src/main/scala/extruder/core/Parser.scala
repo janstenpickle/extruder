@@ -17,6 +17,14 @@ import scala.concurrent.duration.Duration
 import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}
 
+/**
+  * Parse value `A` from a string
+  *
+  * Implicit `DeocderT` instances will be constructed from every `Parser` instance where
+  * a `StringReader` instance also exists.
+  *
+  * @tparam A output value
+  */
 trait Parser[A] {
   def parse: String => Either[String, A]
   def parseNel: String => ValidatedNel[String, A] = parse.andThen(_.toValidatedNel)
@@ -26,7 +34,7 @@ trait Parser[A] {
 
 object Parser extends Parsers with ParserInstances {
   def apply[A](f: String => Either[String, A]): Parser[A] = new Parser[A] {
-    override def parse: String => Either[String, A] = f
+    override val parse: String => Either[String, A] = f
   }
 
   def apply[A](implicit parser: Parser[A]): Parser[A] = parser

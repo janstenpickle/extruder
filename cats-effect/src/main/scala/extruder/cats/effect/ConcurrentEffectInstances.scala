@@ -4,7 +4,8 @@ import cats.{Functor, MonadError}
 import cats.data.EitherT
 import cats.effect._
 import cats.syntax.either._
-import extruder.data.{ValidationErrors, ValidationErrorsToThrowable, ValidationT}
+import extruder.core.ValidationErrorsToThrowable
+import extruder.data.{ValidationErrors, ValidationT}
 
 trait ConcurrentEffectInstances extends ConcurrentInstances with EffectInstances {
   implicit def effectValidationConcurrentEffect[F[_]: ConcurrentEffect](

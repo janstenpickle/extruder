@@ -5,8 +5,7 @@ import cats.instances.list._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.syntax.traverse._
-import extruder.core.ExtruderErrors
-import extruder.data.Finalize
+import extruder.core.{ExtruderErrors, Transform}
 import extruder.metrics.data.{MetricType, Metrics, Numbers}
 import extruder.metrics.dimensional.{DimensionalMetric, DimensionalMetricEncoderInstances}
 import io.prometheus.client.{Collector, Counter, Gauge}
@@ -49,19 +48,21 @@ trait PrometheusPushEncoderInstances extends DimensionalMetricEncoderInstances {
       }
     }
 
-  implicit def prometheusPushFinalize[F[_], S <: PrometheusPushMetricSettings](
+  implicit def prometheusPushTransform[F[_], S <: PrometheusPushMetricSettings](
     implicit F: Sync[F],
-    dimensionalFinalize: Finalize[F, S, Metrics, Iterable[DimensionalMetric]]
-  ): Finalize[F, S, Metrics, Unit] =
-    new Finalize[F, S, Metrics, Unit] {
+    dimensionalTransform: Transform[F, S, Metrics, Iterable[DimensionalMetric]]
+  ): Transform[F, S, Metrics, Unit] =
+    new Transform[F, S, Metrics, Unit] {
       override def run(namespace: List[String], settings: S, inputData: Metrics): F[Unit] =
-        dimensionalFinalize.flatMapResult(buildCollectors[F, S](settings)).run(namespace, settings, inputData).flatMap {
-          collectors =>
+        dimensionalTransform
+          .flatMapResult(buildCollectors[F, S](settings))
+          .run(namespace, settings, inputData)
+          .flatMap { collectors =>
             collectors
               .traverse(
                 collector => F.suspend[Unit](F.catchNonFatal(settings.pushGateway.push(collector, settings.jobName)))
               )
               .void
-        }
+          }
     }
 }

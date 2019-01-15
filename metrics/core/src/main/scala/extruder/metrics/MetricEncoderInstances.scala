@@ -3,8 +3,7 @@ package extruder.metrics
 import cats.instances.list._
 import cats.syntax.functor._
 import cats.{Applicative, Monad, Monoid, Traverse}
-import extruder.core._
-import extruder.data.StringWriter
+import extruder.core.{StringWriter, _}
 import extruder.map.MapEncoderInstances
 import extruder.metrics.data._
 import extruder.metrics.syntax.timer._

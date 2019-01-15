@@ -7,7 +7,6 @@ import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.{Monad, Monoid}
 import extruder.core._
-import extruder.data.{LoadInput, Transform}
 import shapeless.Lazy
 
 trait EncoderDecoderLaws[F[_], S <: Settings, E, D, O] extends DecoderLaws[F, S, E, D, O] {
@@ -118,7 +117,12 @@ trait EncoderDecoderLaws[F[_], S <: Settings, E, D, O] extends DecoderLaws[F, S,
           case Ior.Left(_) => errors.validationFailure("Ior is left")
         }
       }
-      decoded <- decode.combine(decode)(path)(DecoderT[F, (S, S), A, (O, O)], F, loadInput, implicitly)
+      decoded <- decode.combine(decode)(path)(
+        DecoderT[F, (S, S), A, (O, O)],
+        F,
+        loadInput,
+        Transform[F, (S, S), (D, D), (O, O)]
+      )
     } yield decoded) <-> F.pure(a)
   }
 
@@ -131,7 +135,7 @@ trait EncoderDecoderLaws[F[_], S <: Settings, E, D, O] extends DecoderLaws[F, S,
         errors.validationFailure("Fail")
     }
 
-    implicit val prepareLazy: Transform[F, S, D, Lazy[O]] = Transform.by[F, S, D, O, Lazy[O]](Lazy(_))
+    implicit val transformLazy: Transform[F, S, D, Lazy[O]] = Transform.by[F, S, D, O, Lazy[O]](Lazy(_))
 
     val encode = new EncodePartiallyAppliedWithDefaultSettings[F, S, E, D] {
       override protected def defaultSettings: S = settings
@@ -154,7 +158,12 @@ trait EncoderDecoderLaws[F[_], S <: Settings, E, D, O] extends DecoderLaws[F, S,
           case Ior.Left(_) => errors.validationFailure("Ior is left")
         }
       }
-      decoded <- decodeLazy.combine(decode)(path)(DecoderT[F, (S, S), A, (O, Lazy[O])], F, loadInput, implicitly)
+      decoded <- decodeLazy.combine(decode)(path)(
+        DecoderT[F, (S, S), A, (O, Lazy[O])],
+        F,
+        loadInput,
+        Transform[F, (S, S), (D, D), (O, Lazy[O])]
+      )
     } yield decoded) <-> F.pure(a)
   }
 }

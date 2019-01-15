@@ -21,6 +21,7 @@ class ParserShowSuite extends FunSuite with Discipline {
   checkAll("Double", ParserShowTests[Double].parserShow)
   checkAll("Float", ParserShowTests[Float].parserShow)
   checkAll("Short", ParserShowTests[Short].parserShow)
+  checkAll("Byte", ParserShowTests[Byte].parserShow)
   checkAll("Boolean", ParserShowTests[Boolean].parserShow)
   checkAll("URL", ParserShowTests[URL].parserShow)
   checkAll("Duration", ParserShowTests[Duration].parserShow)

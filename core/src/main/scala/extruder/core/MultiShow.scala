@@ -2,6 +2,15 @@ package extruder.core
 
 import extruder.instances.MultiShowInstances
 
+/**
+  * Converts value `A` into a `Map[String, String]` where each element in the map represents encoded
+  * parameters of `A`.
+  *
+  * Implicit `EncoderT` instances will be constructed from every `MultiShow` instance where
+  * a `StringWriter` instance also exists.
+  *
+  * @tparam A input value to be converted into a `Map[String, String]`
+  */
 trait MultiShow[A] { outer =>
   def show(a: A): Map[List[String], String]
   def contramap[B](f: B => A): MultiShow[B] = new MultiShow[B] {

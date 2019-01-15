@@ -5,6 +5,13 @@ import shapeless.LowPriority
 
 import scala.util.{Failure, Success, Try}
 
+/**
+  * Church encoding of errors which Extruder may raise for functor type `F`.
+  *
+  * Implicit instances may be derived from a cats `ApplicativeError[F, Throwable]`
+  *
+  * @tparam F functor type
+  */
 trait ExtruderErrors[F[_]] {
   def missing[A](message: String): F[A]
   def validationFailure[A](message: String): F[A]

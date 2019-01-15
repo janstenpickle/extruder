@@ -2,7 +2,6 @@ package extruder.metrics.spectator
 
 import com.netflix.spectator.api.Registry
 import com.netflix.spectator.servo.ServoRegistry
-import extruder.cats.effect.EvalValidation
 import extruder.metrics.data.{CounterValue, GaugeValue}
 import extruder.metrics.snakeCaseTransformation
 import org.scalacheck.ScalacheckShapeless._
@@ -23,7 +22,6 @@ class SpectatorRegistrySpec extends FunSuite with GeneratorDrivenPropertyChecks 
   def settings: SpectatorMetricSettings = new SpectatorMetricSettings {
     override val registry: Registry = new ServoRegistry()
   }
-  spectatorFinalizer[EvalValidation, SpectatorMetricSettings]
 
   def encodeNamespaced: Assertion = forAll { (value: Int, name: String) =>
     val reg: Registry = encode(List(name), settings, value).value.value.right.value

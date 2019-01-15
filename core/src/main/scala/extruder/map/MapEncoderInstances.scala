@@ -2,8 +2,7 @@ package extruder.map
 
 import cats.syntax.applicative._
 import cats.{Applicative, Monoid}
-import extruder.core.Settings
-import extruder.data.StringWriter
+import extruder.core.{Settings, StringWriter}
 
 trait MapEncoderInstances {
   implicit def mapEncoderStringWriter[F[_]: Applicative]: StringWriter[F, Settings, Map[String, String]] =

@@ -27,7 +27,7 @@ The following primitive types are provided by the [`PrimitiveDecoders`](https://
 The following code shows how an integer value may be decoded and encoded from the [map data source](https://github.com/janstenpickle/extruder/blob/master/core/src/main/scala/extruder/core/Map.scala).
 
 ```tut:silent
-import extruder.core.MapSource._
+import extruder.map._
 
 decode[Int](List("some", "int"), Map("some.int" -> "23"))
 
@@ -38,7 +38,7 @@ encode[Int](List("some", "int"), 23)
 When encoding or decoding a case class the name of the case class is automatically included in the namespace, so there is not always a need to provide one:
 
 ```tut:silent
-import extruder.core.MapSource._
+import extruder.map._
 
 case class Example(defaultedString: String = "default", configuredString: String, optionalString: Option[String])
 
@@ -66,7 +66,7 @@ encode[Example](List("name", "space"), Example(configuredString = "configured", 
 Case classes may be nested within on another. The key in the data must contain the complete path to the final primitive value:
 
 ```tut:silent
-import extruder.core.MapSource._
+import extruder.map._
 
 case class NestedTwo(value: String)
 case class NestedOne(value: String, nested: NestedTwo)
@@ -85,7 +85,7 @@ decode[Example](config)
 Extruder also supports resolution of sealed type members. In order to pick the implementation of the specified trait to decode a `type` value must be provided:
 
 ```tut:silent
-import extruder.core.MapSource._
+import extruder.map._
 
 sealed trait Sealed
 case object ExampleObj extends Sealed
@@ -112,7 +112,7 @@ encode[Example](Example(ExampleCC(1)))
 As implied in the above examples the configuration keys are dot (`.`) separated and all lowercase. This is configurable by creating a new implicit instance of `Hints` for the configuration source.
 
 ```tut:silent
-import extruder.core.MapSource._
+import extruder.meta.ReprTable
 import extruder.core.Settings
 
 val settings: Settings = new Settings {
@@ -121,7 +121,7 @@ val settings: Settings = new Settings {
 
 case class Example(defaultedString: String = "default", configuredString: String, optionalString: Option[String])
 
-println(parameters[Example](settings))
+println(ReprTable.asTable[Example](settings))
 ```
 Changing the `pathToString` implementation will change the expected configuration keys:
 ```
@@ -140,7 +140,7 @@ The [Utils](https://github.com/janstenpickle/extruder/blob/master/core/src/main/
 
 **Cyclical references**
 ```scala
-import extruder.system.SystemPropertiesSource._
+import extruder.system.systemproperties._
 
 case class Example(e: Example)
 

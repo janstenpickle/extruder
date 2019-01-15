@@ -11,7 +11,7 @@ trait CollectionMetaInfoInstances {
     implicit ev: MetaInfo[A],
     cbf: CanBuildFrom[F[A], A, F[A]],
     tag: TypeTag[F[A]],
-    tpe: Typeable[F[A]],
+    tpe: Typeable[F[A]]
   ): Collection[F, A] = new Collection[F, A] {
     override val elements: MetaInfo[A] = ev
     override val collectionType: String = tag.tpe.typeSymbol.name.toString

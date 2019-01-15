@@ -1,7 +1,7 @@
 package extruder.meta
 
 import shapeless.labelled.FieldType
-import shapeless.{Witness, _}
+import shapeless._
 
 import scala.reflect.runtime.universe.TypeTag
 
@@ -33,12 +33,11 @@ trait UnionMetaInfoInstances {
     tag: TypeTag[A],
     tpe: Typeable[A],
     ev: Lazy[DerivedUnion[Repr]],
-//    refutePrimitive: Refute[Primitive[A]],
     neOpt: A <:!< Option[_],
     neCol: A <:!< TraversableOnce[_]
   ): Union[A] = new Union[A] {
     override val `type`: String = tag.tpe.typeSymbol.name.toString
     override val options: Set[BaseMetaInfo] = ev.value.options
-    override def typeable: Typeable[A] = tpe
+    override val typeable: Typeable[A] = tpe
   }
 }

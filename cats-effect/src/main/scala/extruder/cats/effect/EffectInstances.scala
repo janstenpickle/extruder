@@ -5,7 +5,8 @@ import cats.effect.{Async, Effect, IO, SyncIO}
 import cats.syntax.either._
 import cats.syntax.functor._
 import cats.{Functor, MonadError}
-import extruder.data.{ValidationErrors, ValidationErrorsToThrowable, ValidationT}
+import extruder.core.ValidationErrorsToThrowable
+import extruder.data.{ValidationErrors, ValidationT}
 
 import scala.util.Either
 

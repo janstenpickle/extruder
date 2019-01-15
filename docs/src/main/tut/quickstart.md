@@ -5,6 +5,9 @@ Add the following to your `build.sbt`:
 resolvers += Resolver.bintrayRepo("janstenpickle", "maven")
 libraryDependencies += "extruder" %% "extruder" % "0.9.1"
 
+// only if you require support for cats-effect instances
+libraryDependencies += "extruder" %% "extruder-cats-effect" % "0.9.1"
+
 // only if you require support for Typesafe config
 libraryDependencies += "extruder" %% "extruder-typesafe" % "0.9.1"
 
@@ -34,8 +37,8 @@ See the page on [decoding and encoding](decode_encode.html) for more information
 import cats.data.EitherT
 import cats.effect.IO
 import extruder.core._
-import extruder.core.MapSource._
 import extruder.data._
+import extruder.map._
 
 case class ApplicationConfig(default: Int = 100, noDefault: String, optional: Option[Double])
 

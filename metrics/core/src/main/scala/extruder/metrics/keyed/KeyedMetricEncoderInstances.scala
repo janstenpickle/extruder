@@ -1,9 +1,9 @@
 package extruder.metrics.keyed
 
 import cats.Applicative
-import extruder.data.Finalize
-import extruder.metrics.{MetricEncoderInstances, MetricSettings}
+import extruder.core.Transform
 import extruder.metrics.data._
+import extruder.metrics.{MetricEncoderInstances, MetricSettings}
 
 trait KeyedMetricEncoderInstances extends MetricEncoderInstances {
   protected def buildMetrics[F[_], S <: MetricSettings](settings: S, inter: Metrics)(
@@ -32,10 +32,10 @@ trait KeyedMetricEncoderInstances extends MetricEncoderInstances {
         .toList
     )
 
-  implicit def keyedMetricsFinalize[F[_]: Applicative, S <: MetricSettings]: Finalize[F, S, Metrics, Iterable[
+  implicit def keyedMetricsTransform[F[_]: Applicative, S <: MetricSettings]: Transform[F, S, Metrics, Iterable[
     KeyedMetric
   ]] =
-    new Finalize[F, S, Metrics, Iterable[KeyedMetric]] {
+    new Transform[F, S, Metrics, Iterable[KeyedMetric]] {
       override def run(namespace: List[String], settings: S, inputData: Metrics): F[Iterable[KeyedMetric]] =
         buildMetrics[F, S](settings, inputData)
     }

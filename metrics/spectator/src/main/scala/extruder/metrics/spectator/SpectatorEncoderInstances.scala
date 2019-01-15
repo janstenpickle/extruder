@@ -6,7 +6,7 @@ import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.syntax.traverse._
 import com.netflix.spectator.api.Registry
-import extruder.data.Finalize
+import extruder.core.Transform
 import extruder.metrics.data.{MetricType, Metrics, Numbers}
 import extruder.metrics.dimensional.{DimensionalMetric, DimensionalMetricEncoderInstances}
 
@@ -40,11 +40,11 @@ trait SpectatorEncoderInstances extends DimensionalMetricEncoderInstances {
     F.suspend(setGauges)
   }
 
-  implicit def spectatorFinalizer[F[_], S <: SpectatorMetricSettings](
+  implicit def spectatorTransform[F[_], S <: SpectatorMetricSettings](
     implicit F: Sync[F],
-    dimensionalFinalize: Finalize[F, S, Metrics, Iterable[DimensionalMetric]]
-  ): Finalize[F, S, Metrics, Registry] =
-    new Finalize[F, S, Metrics, Registry] {
+    dimensionalFinalize: Transform[F, S, Metrics, Iterable[DimensionalMetric]]
+  ): Transform[F, S, Metrics, Registry] =
+    new Transform[F, S, Metrics, Registry] {
       override def run(namespace: List[String], settings: S, inputData: Metrics): F[Registry] =
         dimensionalFinalize.run(namespace, settings, inputData).flatMap { metrics =>
           metrics.toList

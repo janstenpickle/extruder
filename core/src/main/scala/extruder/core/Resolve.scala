@@ -1,7 +1,5 @@
 package extruder.core
 import cats.{Applicative, Monad, Traverse}
-import extruder.data.StringReader
-
 import cats.instances.option._
 import cats.syntax.flatMap._
 import cats.syntax.functor._

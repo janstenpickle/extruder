@@ -3,8 +3,7 @@ package extruder.system.systemproperties
 import java.util.Properties
 
 import cats.{Applicative, MonadError}
-import extruder.core.Settings
-import extruder.data.{LoadInput, Transform}
+import extruder.core.{LoadInput, Settings, Transform}
 import extruder.map.MapDecoderInstances
 
 import scala.collection.JavaConverters._
@@ -15,7 +14,7 @@ trait SystemPropertiesDecoderInstances extends MapDecoderInstances {
       override def load: F[Properties] = F.catchNonFatal(System.getProperties)
     }
 
-  implicit def systemPropertiesDecoderPrepareInput[F[_]: Applicative]: Transform[
+  implicit def systemPropertiesDecoderTransformInput[F[_]: Applicative]: Transform[
     F,
     Settings,
     Properties,

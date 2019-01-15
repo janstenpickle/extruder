@@ -3,20 +3,19 @@ package extruder.core
 import cats.syntax.flatMap._
 import cats.FlatMap
 import cats.data.Ior
-import extruder.data.Transform
 
 trait EncodePartiallyApplied[F[_], S, E, O] {
   def apply[A](
     namespace: List[String],
     settings: S,
     value: A
-  )(implicit F: FlatMap[F], encoder: EncoderT[F, S, A, E], finalizer: Transform[F, S, E, O]): F[O] =
-    encoder.write(namespace, settings, value).flatMap(finalizer.run(namespace, settings, _))
+  )(implicit F: FlatMap[F], encoder: EncoderT[F, S, A, E], transform: Transform[F, S, E, O]): F[O] =
+    encoder.write(namespace, settings, value).flatMap(transform.run(namespace, settings, _))
 
   def apply[A](
     settings: S,
     value: A
-  )(implicit F: FlatMap[F], encoder: EncoderT[F, S, A, E], finalizer: Transform[F, S, E, O]): F[O] =
+  )(implicit F: FlatMap[F], encoder: EncoderT[F, S, A, E], transform: Transform[F, S, E, O]): F[O] =
     apply(List.empty, settings, value)
 
   def combine[S1, E1, O1]: EncodePartiallyApplied[F, (S1, S), Ior[E1, E], Ior[O1, O]] =
@@ -34,12 +33,12 @@ trait EncodePartiallyAppliedWithDefaultSettings[F[_], S, E, O] extends EncodePar
   def apply[A](
     namespace: List[String],
     value: A
-  )(implicit F: FlatMap[F], encoder: EncoderT[F, S, A, E], finalizer: Transform[F, S, E, O]): F[O] =
+  )(implicit F: FlatMap[F], encoder: EncoderT[F, S, A, E], transform: Transform[F, S, E, O]): F[O] =
     apply(namespace, defaultSettings, value)
 
   def apply[A](
     value: A
-  )(implicit F: FlatMap[F], encoder: EncoderT[F, S, A, E], finalizer: Transform[F, S, E, O]): F[O] =
+  )(implicit F: FlatMap[F], encoder: EncoderT[F, S, A, E], transform: Transform[F, S, E, O]): F[O] =
     apply(List.empty, defaultSettings, value)
 
   def combine[S1, E1, O1](settings: S1): EncodePartiallyAppliedWithDefaultSettings[F, (S1, S), Ior[E1, E], Ior[O1, O]] =

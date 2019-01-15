@@ -6,7 +6,7 @@ import cats.effect._
 import cats.syntax.either._
 import cats.syntax.flatMap._
 import cats.{Eval, Monad, MonadError}
-import extruder.core.ExtruderErrors
+import extruder.core.{ExtruderErrors, ValidationErrorsToThrowable}
 import extruder.data._
 import io.estatico.newtype.macros.newsubtype
 

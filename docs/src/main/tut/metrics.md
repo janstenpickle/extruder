@@ -1,7 +1,7 @@
 ---
 layout: docs
 title:  "Metrics"
-position: 6
+position: 7
 ---
 * TOC
 {:toc}

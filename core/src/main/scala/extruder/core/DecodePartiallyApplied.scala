@@ -2,26 +2,25 @@ package extruder.core
 
 import cats.FlatMap
 import cats.syntax.flatMap._
-import extruder.data.{LoadInput, Transform}
 
 trait DecodePartiallyApplied[F[_], A, S, D, I] {
   def apply(namespace: List[String], settings: S, input: I)(
     implicit decoder: DecoderT[F, S, A, D],
     F: FlatMap[F],
-    prepare: Transform[F, S, I, D]
-  ): F[A] = prepare.run(namespace, settings, input).flatMap(decoder.read(namespace, settings, None, _))
+    transform: Transform[F, S, I, D]
+  ): F[A] = transform.run(namespace, settings, input).flatMap(decoder.read(namespace, settings, None, _))
 
   def apply(
     settings: S,
     input: I
-  )(implicit decoder: DecoderT[F, S, A, D], F: FlatMap[F], prepare: Transform[F, S, I, D]): F[A] =
+  )(implicit decoder: DecoderT[F, S, A, D], F: FlatMap[F], transform: Transform[F, S, I, D]): F[A] =
     apply(List.empty, settings, input)
 
   def apply(namespace: List[String], settings: S)(
     implicit decoder: DecoderT[F, S, A, D],
     F: FlatMap[F],
     loadInput: LoadInput[F, I],
-    prepare: Transform[F, S, I, D]
+    transform: Transform[F, S, I, D]
   ): F[A] =
     loadInput.load.flatMap(apply(namespace, settings, _))
 
@@ -29,7 +28,7 @@ trait DecodePartiallyApplied[F[_], A, S, D, I] {
     implicit decoder: DecoderT[F, S, A, D],
     F: FlatMap[F],
     loadInput: LoadInput[F, I],
-    prepare: Transform[F, S, I, D]
+    transform: Transform[F, S, I, D]
   ): F[A] =
     loadInput.load.flatMap(apply(settings, _))
 
@@ -50,29 +49,29 @@ trait DecodePartiallyAppliedWithDefaultSettings[F[_], A, S, D, I] extends Decode
   def apply(
     namespace: List[String],
     input: I
-  )(implicit decoder: DecoderT[F, S, A, D], F: FlatMap[F], prepare: Transform[F, S, I, D]): F[A] =
+  )(implicit decoder: DecoderT[F, S, A, D], F: FlatMap[F], transform: Transform[F, S, I, D]): F[A] =
     apply(namespace, defaultSettings, input)
 
-  def apply(input: I)(implicit decoder: DecoderT[F, S, A, D], F: FlatMap[F], prepare: Transform[F, S, I, D]): F[A] =
+  def apply(input: I)(implicit decoder: DecoderT[F, S, A, D], F: FlatMap[F], transform: Transform[F, S, I, D]): F[A] =
     apply(List.empty, defaultSettings, input)
 
   def apply(namespace: List[String])(
     implicit decoder: DecoderT[F, S, A, D],
     F: FlatMap[F],
     loadInput: LoadInput[F, I],
-    prepare: Transform[F, S, I, D]
+    transform: Transform[F, S, I, D]
   ): F[A] =
     loadInput.load.flatMap(apply(namespace, _))
 
-  def apply(
+  def apply()(
     implicit decoder: DecoderT[F, S, A, D],
     F: FlatMap[F],
     loadInput: LoadInput[F, I],
-    prepare: Transform[F, S, I, D]
+    transform: Transform[F, S, I, D]
   ): F[A] =
     apply(List.empty)
 
-  def combine[S1, D1, I1](settings: S1): DecodePartiallyApplied[F, A, (S1, S), (D1, D), (I1, I)] =
+  def combine[S1, D1, I1](settings: S1): DecodePartiallyAppliedWithDefaultSettings[F, A, (S1, S), (D1, D), (I1, I)] =
     new DecodePartiallyAppliedWithDefaultSettings[F, A, (S1, S), (D1, D), (I1, I)] {
       override protected def defaultSettings: (S1, S) = (settings, outer.defaultSettings)
     }

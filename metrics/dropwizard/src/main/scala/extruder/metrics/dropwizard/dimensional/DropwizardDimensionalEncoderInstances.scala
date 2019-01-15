@@ -5,7 +5,7 @@ import cats.instances.list._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.syntax.traverse._
-import extruder.data.Finalize
+import extruder.core.Transform
 import extruder.metrics.data.{MetricType, Metrics, Numbers}
 import extruder.metrics.dimensional.{DimensionalMetric, DimensionalMetricEncoderInstances}
 import extruder.metrics.dropwizard.{SimpleGauge, SimpleGaugeSupplier}
@@ -36,13 +36,13 @@ trait DropwizardDimensionalEncoderInstances extends DimensionalMetricEncoderInst
       }
     })
 
-  implicit def dropwizardDimensionalFinalize[F[_], S <: DropwizardDimensionalMetricSettings](
+  implicit def dropwizardDimensionalTransform[F[_], S <: DropwizardDimensionalMetricSettings](
     implicit F: Sync[F],
-    dimensionalFinalize: Finalize[F, S, Metrics, Iterable[DimensionalMetric]]
-  ): Finalize[F, S, Metrics, MetricRegistry] =
-    new Finalize[F, S, Metrics, MetricRegistry] {
+    dimensionalTransform: Transform[F, S, Metrics, Iterable[DimensionalMetric]]
+  ): Transform[F, S, Metrics, MetricRegistry] =
+    new Transform[F, S, Metrics, MetricRegistry] {
       override def run(namespace: List[String], settings: S, inputData: Metrics): F[MetricRegistry] =
-        dimensionalFinalize.run(namespace, settings, inputData).flatMap { metrics =>
+        dimensionalTransform.run(namespace, settings, inputData).flatMap { metrics =>
           metrics.toList
             .traverse { metric =>
               metric.metricType match {

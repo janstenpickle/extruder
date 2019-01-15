@@ -2,8 +2,7 @@ package extruder.map
 
 import cats.Applicative
 import cats.syntax.applicative._
-import extruder.core.Settings
-import extruder.data.{Prune, StringReader}
+import extruder.core.{Prune, Settings, StringReader}
 
 trait MapDecoderInstances {
   implicit def mapDecoderStringReader[F[_]: Applicative, S <: Settings]: StringReader[F, S, Map[String, String]] =
