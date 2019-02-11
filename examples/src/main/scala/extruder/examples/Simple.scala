@@ -2,21 +2,24 @@ package extruder.examples
 
 import java.net.URL
 
-import cats.data.EitherT
 import cats.effect.IO
-import cats.instances.all._
-import extruder.core.MapSource._
-import extruder.core.ValidationErrors
+import cats.instances.future._
+import cats.instances.try_._
+import eu.timepit.refined.types.numeric.PosInt
+import extruder.cats.effect.{EffectValidation, EvalValidation}
+import extruder.map._
+import extruder.refined._
+
+import scala.concurrent.Future
+import scala.concurrent.duration._
+import scala.util.Try
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-import scala.concurrent.duration.{Duration, FiniteDuration}
-import scala.util.Try
 
 case class CC(
   a: String = "test",
   b: String = "test2",
-  c: Int,
+  c: PosInt,
   d: CC2,
   e: CC3,
   f: Set[Int],
@@ -38,6 +41,7 @@ object Simple extends App {
     "cc.a" -> "sdfsf",
     "cc.e.cc3.a" -> "test3",
     "cc.d.cc2.z.cc3.a" -> "testing",
+    "cc.d.cc2.dfs" -> "100",
     "cc3.a" -> "hello",
     "cc.f" -> "2, 3",
     "cc.dur" -> "Inf",
@@ -47,11 +51,12 @@ object Simple extends App {
     "thingimpl.t" -> "sadfsf"
   )
 
-  type EitherIO[A] = EitherT[IO, ValidationErrors, A]
+  type Ev[A] = EffectValidation[IO, A]
 
-  println(decode[CC](config))
-  println(decode[Try, CC](config))
-  println(decode[Future, CC](config))
-  println(decode[IO, CC](config))
-  println(decode[EitherIO, CC](config))
+  println(decode[CC](Map.empty[String, String]))
+  println(decodeF[Try, CC](config))
+  println(decodeF[Future, CC](config))
+  println(decodeF[IO, CC](config).unsafeRunSync())
+  println(decodeF[Ev, CC](config).value.unsafeRunSync())
+  println(decodeF[EvalValidation, CC](Map.empty[String, String]).value.value)
 }

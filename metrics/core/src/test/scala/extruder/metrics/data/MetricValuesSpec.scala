@@ -4,15 +4,12 @@ import cats.Eq
 import cats.instances.all._
 import cats.kernel.laws.discipline.MonoidTests
 import org.scalacheck.ScalacheckShapeless._
-import org.specs2.Specification
-import org.specs2.specification.core.SpecStructure
-import org.typelevel.discipline.specs2.Discipline
+import org.scalatest.FunSuite
+import org.typelevel.discipline.scalatest.Discipline
 
-class MetricValuesSpec extends Specification with Discipline {
+class MetricValuesSpec extends FunSuite with Discipline {
   import MetricValuesSpec._
-
-  override def is: SpecStructure =
-    checkAll("Metric values monoid", MonoidTests[MetricValues[CounterValue, String, Int]].monoid)
+  checkAll("Metric values monoid", MonoidTests[MetricValues[CounterValue, String, Int]].monoid)
 }
 
 object MetricValuesSpec {

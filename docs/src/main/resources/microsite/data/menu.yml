@@ -7,7 +7,9 @@ options:
     url: decode_encode.html
   - title: Extending a Data Source
     url: extending.html
-  - title: Implementing a Data Source
-    url: config.html
+  - title: Type Classes
+    url: typeclasses.html
+  - title: Data Types
+    url: datatypes.html
   - title: Extruder Metrics
     url: metrics.html

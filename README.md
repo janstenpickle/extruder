@@ -2,7 +2,7 @@
 
 # Extruder
 
-[![Typelevel Incubator](https://img.shields.io/badge/typelevel-incubator-green.svg)](http://typelevel.org/projects) [![Build Status](https://travis-ci.org/janstenpickle/extruder.svg?branch=master)](https://travis-ci.org/janstenpickle/extruder) [![codecov](https://codecov.io/gh/janstenpickle/extruder/branch/master/graph/badge.svg)](https://codecov.io/gh/janstenpickle/extruder)
+[![Typelevel Incubator](https://img.shields.io/badge/typelevel-incubator-green.svg)](http://typelevel.org/projects) [![Build Status](https://travis-ci.org/janstenpickle/extruder.svg?branch=master)](https://travis-ci.org/janstenpickle/extruder)
 
 This library uses [shapeless](https://github.com/milessabin/shapeless) and [cats](https://github.com/typelevel/cats) to provide a neat syntax to instantiate Scala case classes from a data source.
 
@@ -23,25 +23,25 @@ This library uses [shapeless](https://github.com/milessabin/shapeless) and [cats
 Add the following to your `build.sbt`:
 ```scala
 resolvers += Resolver.bintrayRepo("janstenpickle", "maven")
-libraryDependencies += "extruder" %% "extruder" % "0.9.2"
+libraryDependencies += "extruder" %% "extruder" % "0.9.1"
 
 // only if you require support for Typesafe config
-libraryDependencies += "extruder" %% "extruder-typesafe" % "0.9.2"
+libraryDependencies += "extruder" %% "extruder-typesafe" % "0.9.1"
 
 // only if you require support for refined types
-libraryDependencies += "extruder" %% "extruder-refined" % "0.9.2"
+libraryDependencies += "extruder" %% "extruder-refined" % "0.9.1"
 
 // only if you require support for AWS config
-libraryDependencies += "extruder" %% "extruder-aws" % "0.9.2"
+libraryDependencies += "extruder" %% "extruder-aws" % "0.9.1"
 
 // only if you require support for prometheus encoders
-libraryDependencies += "extruder" %% "extruder-metrics-prometheus" % "0.9.2"
+libraryDependencies += "extruder" %% "extruder-metrics-prometheus" % "0.9.1"
 
 // only if you require support for dropwizard encoders
-libraryDependencies += "extruder" %% "extruder-metrics-dropwizard" % "0.9.2"
+libraryDependencies += "extruder" %% "extruder-metrics-dropwizard" % "0.9.1"
 
 // only if you require support for spectator encoders
-libraryDependencies += "extruder" %% "extruder-metrics-spectator" % "0.9.2"
+libraryDependencies += "extruder" %% "extruder-metrics-spectator" % "0.9.1"
 ```
 
 # Participation

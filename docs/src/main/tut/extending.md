@@ -5,30 +5,28 @@ position: 4
 ---
 ## Extending an Existing Data Source
 
-Say you wanted to add a resolver for a certain type it is possible to extend an existing implementation of a data source to parse the new type. Below is an example adding a new decoder for `URL`:
+Say you wanted to add a resolver for a certain type it is possible to extend an existing implementation of a data source to parse the new type. Below is an example adding a new decoder for `URL`  from a datasource of `Map[String, String]`:
 
 ```tut:silent
+import cats.Applicative
 import cats.effect.IO
 import cats.syntax.either._
 import cats.syntax.validated._
 import java.net.URL
 import extruder.core._
 
-trait WithURL extends MapSource {
-  implicit def urlDecoder[F[_], E](implicit F: Eff[F]): MapDecoder[F, URL] =
-    mkDecoder[F, URL]((path, settings, default, src) =>
-      (src.get(settings.pathToString(path)), default) match {
-        case (Some(v), _) => Either.catchNonFatal(new URL(v)).fold(ex =>
-            F.validationException(ex.getMessage, ex),
-            F.pure
-          )
+trait WithURL {
+  implicit def urlMapDecoder[F[_], S <: Settings](implicit F: Applicative[F], error: ExtruderErrors[F]): DecoderT[F, S, URL, Map[String, String]] =
+    DecoderT.make[F, S, URL, Map[String, String]]((path, settings, default, input) =>
+      (input.get(settings.pathToString(path)), default) match {
+        case (Some(v), _) => error.fromEitherThrowable(Either.catchNonFatal(new URL(v)))
         case (None, Some(url)) => F.pure(url)
-        case _ => F.missing(s"Could not find value for ${settings.pathToString(path)}")
+        case _ => error.missing(s"Could not find value for ${settings.pathToString(path)}")
       }
     )
 
-  implicit def urlEncoder[F[_], E](implicit F: Eff[F]): MapEncoder[F, URL] =
-    mkEncoder[F, URL]((path, settings, value) =>
+  implicit def urlEncoder[F[_], S <: Settings](implicit F: Applicative[F]): EncoderT[F, S, URL, Map[String, String]]  =
+    EncoderT.make[F, S, URL, Map[String, String]]((path, settings, value) =>
       F.pure(Map(settings.pathToString(path) -> value.toString))
     )
 }
@@ -36,9 +34,7 @@ trait WithURL extends MapSource {
 object WithURL extends WithURL
 ```
 
-This is a fairly verbose implementation which repeats some of the abstracted functionality found in `PrimitiveDecoders` and `PrimitiveEncoders`, it must also be implemented for each data type.
-
-This functionality can be implemented more simply and so that it works for all backends which implement the `PrimitiveDecoders` and `PrimitiveEncoders` traits:
+This is a fairly verbose implementation which repeats some of the abstracted functionality found in `ParserDecoderTInstances` and `ShowEncoderTInstances`, it must also be implemented for each data type.
 
 ```tut:silent
 import cats.syntax.either._
@@ -50,7 +46,7 @@ object WithURL {
     Either.catchNonFatal(new URL(url))
   )
 
-  implicit val urlShow: Show[URL] = new Show(_.toString)
+  implicit val urlShow: Show[URL] = Show.make(_.toString)
 }
 ```
 
