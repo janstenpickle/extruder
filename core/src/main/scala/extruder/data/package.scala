@@ -60,7 +60,7 @@ package object data {
       override def validationException[A](message: String, ex: Throwable): Validation[A] =
         Validation(Left(ValidationErrors.exception(message, ex)))
       override def fallback[A](a: Validation[A])(thunk: => Validation[A]): Validation[A] =
-        a.a.fold(_ => thunk, a => Validation(Right(a)))
+        a.a.fold(errs => Validation(thunk.a.leftMap(_ ++ errs.toList)), a => Validation(Right(a)))
     }
 
     protected val apply: Apply[Validation] = new Apply[Validation] {

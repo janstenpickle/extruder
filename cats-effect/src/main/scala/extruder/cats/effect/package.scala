@@ -5,6 +5,7 @@ import cats.effect.ExitCase.{Completed, Error}
 import cats.effect._
 import cats.syntax.either._
 import cats.syntax.flatMap._
+import cats.syntax.functor._
 import cats.{Eval, Monad, MonadError}
 import extruder.core.{ExtruderErrors, ValidationErrorsToThrowable}
 import extruder.data._
@@ -24,7 +25,14 @@ package object effect {
       override def validationException[A](message: String, ex: Throwable): EvalValidation[A] =
         EvalValidation(EitherT.leftT[Eval, A](ValidationErrors.exception(message, ex)))
       override def fallback[A](fa: EvalValidation[A])(thunk: => EvalValidation[A]): EvalValidation[A] =
-        EvalValidation(EitherT(fa.a.value.flatMap(_.fold(_ => thunk.a.value, a => Eval.later(Right(a))))))
+        EvalValidation(
+          EitherT(
+            fa.a.value
+              .flatMap(
+                _.fold(errs => Eval.later(thunk.a.value.value.leftMap(_ ++ errs.toList)), a => Eval.later(Right(a)))
+              )
+          )
+        )
     }
   }
 
@@ -103,7 +111,11 @@ package object effect {
         override def validationException[A](message: String, ex: Throwable): EffectValidation[F, A] =
           EffectValidation(EitherT.leftT[F, A](ValidationErrors.exception(message, ex)))
         override def fallback[A](fa: EffectValidation[F, A])(thunk: => EffectValidation[F, A]): EffectValidation[F, A] =
-          EffectValidation(EitherT(fa.a.value.flatMap(_.fold(_ => thunk.a.value, a => F.pure(Right(a))))))
+          EffectValidation(
+            EitherT(
+              fa.a.value.flatMap(_.fold(errs => thunk.a.value.map(_.leftMap(_ ++ errs.toList)), a => F.pure(Right(a))))
+            )
+          )
       }
   }
 }

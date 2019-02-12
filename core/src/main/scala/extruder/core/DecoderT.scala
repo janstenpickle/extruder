@@ -34,7 +34,7 @@ object DecoderT
     with DerivedDecoderTInstances
     with GenericDecoderTInstances
     with CombinedDecoderTInstances {
-  def make[F[_]: Functor, S, A, C](f: (List[String], S, Option[A], C) => F[A]): DecoderT[F, S, A, C] =
+  def make[F[_], S, A, C](f: (List[String], S, Option[A], C) => F[A]): DecoderT[F, S, A, C] =
     new DecoderT[F, S, A, C] {
       override def read(path: List[String], settings: S, default: Option[A], input: C): F[A] =
         f(path, settings, default, input)

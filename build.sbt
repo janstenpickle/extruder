@@ -3,6 +3,7 @@ import sbt.Keys.libraryDependencies
 
 val catsVer = "1.6.0"
 val catsEffectVer = "1.2.0"
+val circeVersion = "0.11.1"
 val disciplineVer = "0.9.0"
 val prometheusVer = "0.6.0"
 val refinedVer = "0.9.4"
@@ -139,7 +140,7 @@ lazy val examples = (project in file("examples"))
     commonSettings ++
       Seq(name := "extruder-examples", publishArtifact := false)
   )
-  .dependsOn(systemSources, typesafe, refined)
+  .dependsOn(systemSources, typesafe, refined, circe)
 
 lazy val aws = (project in file("aws"))
   .settings(
@@ -152,6 +153,20 @@ lazy val aws = (project in file("aws"))
           "org.scalatest"  %% "scalatest"          % scalaTestVer % Test,
           "org.scalacheck" %% "scalacheck"         % scalaCheckVer % Test,
           "eu.timepit"     %% "refined-scalacheck" % refinedVer % Test
+        ),
+        coverageEnabled.in(Test, test) := true
+      )
+  )
+  .dependsOn(core)
+
+lazy val circe = (project in file("circe"))
+  .settings(
+    commonSettings ++
+      Seq(
+        name := "extruder-circe",
+        libraryDependencies ++= Seq(
+          "io.circe"      %% "circe-core" % circeVersion,
+          "org.scalatest" %% "scalatest"  % scalaTestVer % Test
         ),
         coverageEnabled.in(Test, test) := true
       )
@@ -275,6 +290,7 @@ lazy val root = (project in file("."))
     catsEffect,
     aws,
     typesafe,
+    circe,
     systemSources,
     refined,
     metricsCore,
@@ -337,13 +353,14 @@ lazy val docSettings = commonSettings ++ Seq(
 )
 
 lazy val docs = project
-  .dependsOn(core, systemSources, typesafe, refined, metricsCore)
+  .dependsOn(core, systemSources, circe, typesafe, refined, metricsCore)
   .settings(
     moduleName := "extruder-docs",
     name := "Extruder docs",
     publish := (()),
     publishLocal := (()),
-    publishArtifact := false
+    publishArtifact := false,
+    libraryDependencies += "io.circe" %% "circe-generic" % circeVersion
   )
   .settings(docSettings)
   .enablePlugins(ScalaUnidocPlugin)

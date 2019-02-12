@@ -159,10 +159,10 @@ trait EncoderDecoderLaws[F[_], S <: Settings, E, D, O] extends DecoderLaws[F, S,
         }
       }
       decoded <- decodeLazy.combine(decode)(path)(
-        DecoderT[F, (S, S), A, (O, Lazy[O])],
+        DecoderT[F, (S, S), A, (Lazy[O], O)],
         F,
         loadInput,
-        Transform[F, (S, S), (D, D), (O, Lazy[O])]
+        Transform[F, (S, S), (D, D), (Lazy[O], O)]
       )
     } yield decoded) <-> F.pure(a)
   }
