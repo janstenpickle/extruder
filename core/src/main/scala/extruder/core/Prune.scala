@@ -1,5 +1,7 @@
 package extruder.core
 
+import extruder.data.PathElement
+
 /**
   * Used to constrain a data source `I` to a certain path, returning the constrained data source with a copy of
   * all of its keys.
@@ -11,7 +13,7 @@ package extruder.core
   * @tparam I Data to read from and return
   */
 trait Prune[F[_], S, I] {
-  def prune(path: List[String], settings: S, data: I): F[Option[(List[String], I)]]
+  def prune(path: List[PathElement], settings: S, data: I): F[Option[(List[String], I)]]
 }
 
 object Prune {

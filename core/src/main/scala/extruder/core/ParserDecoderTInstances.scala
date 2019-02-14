@@ -5,6 +5,7 @@ import cats.instances.option._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.{Monad, Traverse}
+import extruder.data.PathElement
 
 trait ParserDecoderTInstances extends Resolve {
 
@@ -42,13 +43,13 @@ trait ParserDecoderTInstances extends Resolve {
         } yield result
     )
 
-  private def multiParse[F[_], T, S, I](parser: MultiParser[F, T], path: List[String], settings: S, data: I)(
+  private def multiParse[F[_], T, S, I](parser: MultiParser[F, T], path: List[PathElement], settings: S, data: I)(
     implicit F: Monad[F],
     reader: StringReader[F, S, I],
     error: ExtruderErrors[F]
   ): F[Option[T]] =
     parser
-      .parse(p => OptionT(reader.lookup(path ++ p, settings, data)))
+      .parse(p => OptionT(reader.lookup(path ++ p.map(PathElement.Standard), settings, data)))
       .value
       .flatMap(
         v =>

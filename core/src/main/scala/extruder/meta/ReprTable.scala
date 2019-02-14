@@ -1,6 +1,7 @@
 package extruder.meta
 
 import extruder.core.Settings
+import extruder.data.PathElement
 import extruder.meta.Repr._
 
 object ReprTable {
@@ -27,8 +28,8 @@ object ReprTable {
   def asTable[A: MetaInfo](settings: Settings): String = asTable(List.empty, settings)
 
   def asTable[A: MetaInfo](namespace: List[String], settings: Settings): String = {
-    val reprs = asRepr[A](namespace, settings)
-    val maxKeyLength = maxLength(KeyCol, p => settings.pathToString(p.path), reprs)
+    val reprs = asRepr[A](namespace.map(PathElement.Standard), settings)
+    val maxKeyLength = maxLength(KeyCol, p => settings.pathElementListToString(p.path), reprs)
     val maxRequiredLength = maxLength(RequiredCol, p => convertRequired(p.required), reprs)
     val maxTypeLength = maxLength(TypeCol, _.`type`, reprs)
     val maxDefaultLength = maxLength(DefaultCol, _.default.getOrElse(""), reprs)
@@ -43,7 +44,7 @@ object ReprTable {
     val rows = reprs.foldLeft("") { (acc, p) =>
       acc + leftAlignFormat
         .format(
-          settings.pathToString(p.path),
+          settings.pathElementListToString(p.path),
           convertRequired(p.required),
           p.`type`,
           p.default.getOrElse(""),

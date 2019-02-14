@@ -157,7 +157,7 @@ lazy val aws = (project in file("aws"))
         coverageEnabled.in(Test, test) := true
       )
   )
-  .dependsOn(core)
+  .dependsOn(core, laws)
 
 lazy val circe = (project in file("circe"))
   .settings(

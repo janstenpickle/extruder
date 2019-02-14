@@ -4,6 +4,7 @@ import cats.FlatMap
 import cats.data.Ior
 import cats.syntax.flatMap._
 import cats.syntax.functor._
+import extruder.data.PathElement
 import shapeless.LowPriority
 
 trait CombinedEncoderTInstances {
@@ -12,7 +13,7 @@ trait CombinedEncoderTInstances {
     ev1: EncoderT[F, S1, A, O1],
     error: ExtruderErrors[F]
   ): EncoderT[F, (S0, S1), A, Ior[O0, O1]] = new EncoderT[F, (S0, S1), A, Ior[O0, O1]] {
-    override def write(path: List[String], settings: (S0, S1), in: A): F[Ior[O0, O1]] = {
+    override def write(path: List[PathElement], settings: (S0, S1), in: A): F[Ior[O0, O1]] = {
       lazy val both: F[Ior[O0, O1]] = for {
         o0 <- ev0.write(path, settings._1, in)
         o1 <- ev1.write(path, settings._2, in)
@@ -32,7 +33,7 @@ trait CombinedEncoderTInstances {
     ev1: EncoderT[F, S1, A, O1],
     lp: LowPriority
   ): EncoderT[F, (S0, S1), A, Ior[O0, O1]] = new EncoderT[F, (S0, S1), A, Ior[O0, O1]] {
-    override def write(path: List[String], settings: (S0, S1), in: A): F[Ior[O0, O1]] =
+    override def write(path: List[PathElement], settings: (S0, S1), in: A): F[Ior[O0, O1]] =
       for {
         o0 <- ev0.write(path, settings._1, in)
         o1 <- ev1.write(path, settings._2, in)

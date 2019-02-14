@@ -11,6 +11,7 @@ import org.scalacheck.ScalacheckShapeless._
 trait EncoderDecoderGenericTests[F[_], S <: Settings, E, D, O] extends EncoderDecoderMapTests[F, S, E, D, O] {
   def genericEncodeDecode[A: Arbitrary, B: Arbitrary](
     implicit eqFA: Eq[F[A]],
+    eqFListA: Eq[F[List[A]]],
     encoder: EncoderT[F, S, A, E],
     decoder: DecoderT[F, S, A, O],
     eqFOptA: Eq[F[Option[A]]],
@@ -28,6 +29,7 @@ trait EncoderDecoderGenericTests[F[_], S <: Settings, E, D, O] extends EncoderDe
     nevDecoder: DecoderT[F, S, NonEmptyVector[A], O],
     necEncoder: EncoderT[F, S, NonEmptyChain[A], E],
     necDecoder: DecoderT[F, S, NonEmptyChain[A], O],
+    listDecoder: DecoderT[F, S, List[A], O],
     multiShowEncoder: EncoderT[F, S, (A, B), E],
     multiShowDecoder: DecoderT[F, S, (A, B), O],
     eqFTuple: Eq[F[(A, B)]],

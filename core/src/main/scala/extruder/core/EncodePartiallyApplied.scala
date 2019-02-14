@@ -3,6 +3,7 @@ package extruder.core
 import cats.syntax.flatMap._
 import cats.FlatMap
 import cats.data.Ior
+import extruder.data.PathElement
 
 trait EncodePartiallyApplied[F[_], S, E, O] {
 
@@ -22,8 +23,10 @@ trait EncodePartiallyApplied[F[_], S, E, O] {
     namespace: List[String],
     settings: S,
     value: A
-  )(implicit F: FlatMap[F], encoder: EncoderT[F, S, A, E], transform: Transform[F, S, E, O]): F[O] =
-    encoder.write(namespace, settings, value).flatMap(transform.run(namespace, settings, _))
+  )(implicit F: FlatMap[F], encoder: EncoderT[F, S, A, E], transform: Transform[F, S, E, O]): F[O] = {
+    val newNamespace = namespace.map(PathElement.Standard)
+    encoder.write(newNamespace, settings, value).flatMap(transform.run(newNamespace, settings, _))
+  }
 
   /**
     * Encode a value A as output data O

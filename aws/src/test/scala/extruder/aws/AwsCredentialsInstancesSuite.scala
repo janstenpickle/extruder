@@ -12,8 +12,8 @@ import extruder.core.{MultiParser, MultiShow}
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{Assertion, EitherValues, FunSuite}
 
-class AwsCredentialsInstancesSpec extends FunSuite with GeneratorDrivenPropertyChecks with EitherValues {
-  import AwsCredentialsInstancesSpec._
+class AwsCredentialsInstancesSuite extends FunSuite with GeneratorDrivenPropertyChecks with EitherValues {
+  import AwsCredentialsInstancesSuite._
 
   test("Parses valid ID and Key values")(passes)
   test("Returns none when no data is available")(isNoneNoData)
@@ -85,7 +85,7 @@ class AwsCredentialsInstancesSpec extends FunSuite with GeneratorDrivenPropertyC
 
 }
 
-object AwsCredentialsInstancesSpec {
+object AwsCredentialsInstancesSuite {
   val validId = "AKIAIOSFODNN7EXAMPLE"
   val validSecret = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
   val validData = Map(List(AwsId) -> validId, List(AwsSecret) -> validSecret)

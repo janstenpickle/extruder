@@ -1,5 +1,7 @@
 package extruder.core
 
+import extruder.data.PathElement
+
 /**
   * Write a string to output data `O` wrapped in functor `F`.
   *
@@ -8,7 +10,7 @@ package extruder.core
   * @tparam O
   */
 trait StringWriter[F[_], S, O] {
-  def write(path: List[String], settings: S, value: String): F[O]
+  def write(path: List[PathElement], settings: S, value: String): F[O]
 }
 
 object StringWriter {

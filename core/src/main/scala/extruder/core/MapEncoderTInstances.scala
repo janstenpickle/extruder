@@ -4,6 +4,7 @@ import cats.{Monad, Monoid}
 import cats.instances.list._
 import cats.syntax.functor._
 import cats.syntax.traverse._
+import extruder.data.PathElement
 import shapeless.{LowPriority, Refute}
 
 trait MapEncoderTInstances {
@@ -21,7 +22,7 @@ trait MapEncoderTInstances {
     refute: Refute[MultiShow[V]]
   ): EncoderT[F, S, Map[K, V], O] = EncoderT.make[F, S, Map[K, V], O] { (path, settings, value) =>
     value.toList
-      .traverse { case (k, v) => valueEncoder.write(path :+ keyShow.show(k), settings, v) }
+      .traverse { case (k, v) => valueEncoder.write(path :+ PathElement.Standard(keyShow.show(k)), settings, v) }
       .map(monoid.combineAll)
   }
 }

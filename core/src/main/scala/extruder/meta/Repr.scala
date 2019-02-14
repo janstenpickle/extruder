@@ -1,35 +1,39 @@
 package extruder.meta
 
 import extruder.core.Settings
+import extruder.data.PathElement
 
 sealed trait Repr {
-  def path: List[String]
+  def path: List[PathElement]
   def `type`: String
   def required: Boolean
   def default: Option[String]
 }
 
 object Repr {
-  case class StableRepr(path: List[String], `type`: String, required: Boolean, default: Option[String]) extends Repr
+  case class StableRepr(path: List[PathElement], `type`: String, required: Boolean, default: Option[String])
+      extends Repr
   case class UnionRepr(
-    path: List[String],
+    path: List[PathElement],
     `type`: String,
     required: Boolean,
     default: Option[String],
     parentType: String
   ) extends Repr
 
-  def asRepr[A](namespace: List[String], settings: Settings)(implicit ev: MetaInfo[A]): List[Repr] = {
-    def unwrap(path: List[String], acc: List[Repr], metaInfo: BaseMetaInfo, required: Boolean, default: Option[String])(
-      make: (List[String], String, Boolean, Option[String]) => Repr
-    ): List[Repr] =
+  def asRepr[A](namespace: List[PathElement], settings: Settings)(implicit ev: MetaInfo[A]): List[Repr] = {
+    def unwrap(
+      path: List[PathElement],
+      acc: List[Repr],
+      metaInfo: BaseMetaInfo,
+      required: Boolean,
+      default: Option[String]
+    )(make: (List[PathElement], String, Boolean, Option[String]) => Repr): List[Repr] =
       metaInfo match {
         case product: Product[_] =>
           product.children.toList.flatMap {
             case (param, child) =>
-              val newPath =
-                if (settings.includeClassNameInPath) path ++ List(product.`type`, param)
-                else path :+ param
+              val newPath = path ++ List(PathElement.ClassName(product.`type`), PathElement.Standard(param))
               unwrap(newPath, acc, child.metaInfo, required, child.default)(make)
           }
         case union: Union[_] =>

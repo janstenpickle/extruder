@@ -6,6 +6,7 @@ import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.syntax.traverse._
 import extruder.core.Transform
+import extruder.data.PathElement
 import extruder.metrics.data.{MetricType, Metrics, Numbers}
 import extruder.metrics.dropwizard.{SimpleGauge, SimpleGaugeSupplier}
 import extruder.metrics.keyed.{KeyedMetric, KeyedMetricEncoderInstances}
@@ -30,7 +31,7 @@ trait DropwizardKeyedEncoderInstances extends KeyedMetricEncoderInstances {
     keyedTransform: Transform[F, S, Metrics, Iterable[KeyedMetric]]
   ): Transform[F, S, Metrics, MetricRegistry] =
     new Transform[F, S, Metrics, MetricRegistry] {
-      override def run(namespace: List[String], settings: S, inputData: Metrics): F[MetricRegistry] =
+      override def run(namespace: List[PathElement], settings: S, inputData: Metrics): F[MetricRegistry] =
         keyedTransform.run(namespace, settings, inputData).flatMap { metrics =>
           metrics.toList
             .traverse { metric =>

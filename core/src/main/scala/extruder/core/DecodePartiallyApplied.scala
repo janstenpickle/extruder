@@ -2,6 +2,7 @@ package extruder.core
 
 import cats.FlatMap
 import cats.syntax.flatMap._
+import extruder.data.PathElement
 
 trait DecodePartiallyApplied[F[_], A, S, D, I] {
 
@@ -16,11 +17,14 @@ trait DecodePartiallyApplied[F[_], A, S, D, I] {
     * @param transform implicit transform instance to convert from input I to decode data D
     * @return decoded value A, wrapping in functor F
     */
-  def apply(namespace: List[String], settings: S, input: I)(
-    implicit decoder: DecoderT[F, S, A, D],
-    F: FlatMap[F],
-    transform: Transform[F, S, I, D]
-  ): F[A] = transform.run(namespace, settings, input).flatMap(decoder.read(namespace, settings, None, _))
+  def apply(
+    namespace: List[String],
+    settings: S,
+    input: I
+  )(implicit decoder: DecoderT[F, S, A, D], F: FlatMap[F], transform: Transform[F, S, I, D]): F[A] = {
+    val newNamespace = namespace.map(PathElement.Standard)
+    transform.run(newNamespace, settings, input).flatMap(decoder.read(newNamespace, settings, None, _))
+  }
 
   /**
     * Decode a value A from input data I

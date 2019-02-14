@@ -2,6 +2,7 @@ package extruder.metrics.keyed
 
 import cats.Applicative
 import extruder.core.Transform
+import extruder.data.PathElement
 import extruder.metrics.data._
 import extruder.metrics.{MetricEncoderInstances, MetricSettings}
 
@@ -36,7 +37,7 @@ trait KeyedMetricEncoderInstances extends MetricEncoderInstances {
     KeyedMetric
   ]] =
     new Transform[F, S, Metrics, Iterable[KeyedMetric]] {
-      override def run(namespace: List[String], settings: S, inputData: Metrics): F[Iterable[KeyedMetric]] =
+      override def run(namespace: List[PathElement], settings: S, inputData: Metrics): F[Iterable[KeyedMetric]] =
         buildMetrics[F, S](settings, inputData)
     }
 }

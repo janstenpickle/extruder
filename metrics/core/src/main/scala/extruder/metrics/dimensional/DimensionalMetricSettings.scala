@@ -1,6 +1,5 @@
 package extruder.metrics.dimensional
 
-import extruder.metrics.data.MetricType
 import extruder.metrics.{snakeCaseTransformation, MetricSettings}
 
 trait DimensionalMetricSettings extends MetricSettings {

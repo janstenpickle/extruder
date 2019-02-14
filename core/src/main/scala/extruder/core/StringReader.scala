@@ -1,5 +1,7 @@
 package extruder.core
 
+import extruder.data.PathElement
+
 /**
   * Read a string from input `I` at a path, returning an optional string wrapped in functor `F`.
   *
@@ -10,7 +12,7 @@ package extruder.core
   * @tparam I input data to read from
   */
 trait StringReader[F[_], S, I] {
-  def lookup(path: List[String], settings: S, data: I): F[Option[String]]
+  def lookup(path: List[PathElement], settings: S, data: I): F[Option[String]]
 }
 
 object StringReader {

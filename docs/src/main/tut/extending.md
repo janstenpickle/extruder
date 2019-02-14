@@ -18,16 +18,16 @@ import extruder.core._
 trait WithURL {
   implicit def urlMapDecoder[F[_], S <: Settings](implicit F: Applicative[F], error: ExtruderErrors[F]): DecoderT[F, S, URL, Map[String, String]] =
     DecoderT.make[F, S, URL, Map[String, String]]((path, settings, default, input) =>
-      (input.get(settings.pathToString(path)), default) match {
+      (input.get(settings.pathElementListToString(path)), default) match {
         case (Some(v), _) => error.fromEitherThrowable(Either.catchNonFatal(new URL(v)))
         case (None, Some(url)) => F.pure(url)
-        case _ => error.missing(s"Could not find value for ${settings.pathToString(path)}")
+        case _ => error.missing(s"Could not find value for ${settings.pathElementListToString(path)}")
       }
     )
 
   implicit def urlEncoder[F[_], S <: Settings](implicit F: Applicative[F]): EncoderT[F, S, URL, Map[String, String]]  =
     EncoderT.make[F, S, URL, Map[String, String]]((path, settings, value) =>
-      F.pure(Map(settings.pathToString(path) -> value.toString))
+      F.pure(Map(settings.pathElementListToString(path) -> value.toString))
     )
 }
 

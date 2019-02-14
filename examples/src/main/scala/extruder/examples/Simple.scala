@@ -10,11 +10,10 @@ import extruder.cats.effect.{EffectValidation, EvalValidation}
 import extruder.map._
 import extruder.refined._
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.Try
-
-import scala.concurrent.ExecutionContext.Implicits.global
 
 case class CC(
   a: String = "test",
@@ -51,8 +50,36 @@ object Simple extends App {
     "thingimpl.t" -> "sadfsf"
   )
 
+  val config1 = Map(
+    "cc.a" -> "sdfsf",
+    "cc.e.cc3.a" -> "test3",
+    "cc.d.cc2.z.cc3.a" -> "testing",
+    "cc.d.cc2.dfs" -> "100",
+    "cc3.a" -> "hello",
+    "cc.f" -> "2, 3",
+    "cc.dur" -> "Inf",
+    "cc.findur" -> "22 days",
+    "thingimpl.t" -> "sadfsf"
+  )
+
+  val config2 = Map(
+    "cc.c" -> "2000",
+    "cc.a" -> "sdfsf",
+    "cc.e.cc3.a" -> "test3",
+    "cc.d.cc2.z.cc3.a" -> "testing",
+    "cc.d.cc2.dfs" -> "100",
+    "cc3.a" -> "hello",
+    "cc.dur" -> "Inf",
+    "cc.findur" -> "22 days",
+    "ccimpl2.a" -> "sdfds",
+    "ccimpl2.b" -> "34",
+    "thingimpl.t" -> "sadfsf"
+  )
+
   type Ev[A] = EffectValidation[IO, A]
 
+  println(decode[CC].combine(decode[CC])((config1, config2)))
+  println(encode.combine(encode)(CC3(Some("xzf"))))
   println(decode[CC](Map.empty[String, String]))
   println(decodeF[Try, CC](config))
   println(decodeF[Future, CC](config))

@@ -2,6 +2,7 @@ package extruder.core
 
 import cats.Applicative
 import cats.kernel.Monoid
+import extruder.data.PathElement
 import shapeless._
 import shapeless.labelled.FieldType
 
@@ -27,7 +28,7 @@ trait GenericEncoderTInstances {
       }
 
       F.ap2(F.pure[(D, D) => D](monoid.combine))(
-        typeEncode.value.write(settings.pathWithType(path), settings, key.value.name),
+        typeEncode.value.write(path :+ PathElement.Type, settings, key.value.name),
         chooseEncoder
       )
     }
@@ -45,7 +46,7 @@ trait GenericEncoderTInstances {
     EncoderT.make[F, S, T, D]((path, settings, value) => underlying.value.write(path, settings, gen.to(value)))
 
   private[core] trait DerivedEncoder[F[_], T, Repr <: HList, S, D] {
-    def write(path: List[String], settings: S, value: Repr): F[D]
+    def write(path: List[PathElement], settings: S, value: Repr): F[D]
   }
 
   implicit def hNilDerivedEncoder[F[_], T, S, D](
@@ -53,7 +54,7 @@ trait GenericEncoderTInstances {
     monoid: Monoid[D]
   ): DerivedEncoder[F, T, HNil, S, D] =
     new DerivedEncoder[F, T, HNil, S, D] {
-      override def write(path: List[String], settings: S, value: HNil): F[D] = F.pure(monoid.empty)
+      override def write(path: List[PathElement], settings: S, value: HNil): F[D] = F.pure(monoid.empty)
     }
 
   implicit def hConsDerivedEncoder[F[_], T, K <: Symbol, V, TailRepr <: HList, S, D](
@@ -64,17 +65,17 @@ trait GenericEncoderTInstances {
     tailEncoder: Lazy[DerivedEncoder[F, T, TailRepr, S, D]]
   ): DerivedEncoder[F, T, FieldType[K, V] :: TailRepr, S, D] =
     new DerivedEncoder[F, T, FieldType[K, V] :: TailRepr, S, D] {
-      override def write(path: List[String], settings: S, value: FieldType[K, V] :: TailRepr): F[D] = {
+      override def write(path: List[PathElement], settings: S, value: FieldType[K, V] :: TailRepr): F[D] = {
         val fieldName = key.value.name
 
         F.ap2(F.pure[(D, D) => D](monoid.combine))(
-          encoder.value.write(path :+ fieldName, settings, value.head),
+          encoder.value.write(path :+ PathElement.Standard(fieldName), settings, value.head),
           tailEncoder.value.write(path, settings, value.tail)
         )
       }
     }
 
-  implicit def productEncoder[F[_], T, GenRepr <: HList, S <: Settings, D](
+  implicit def productEncoder[F[_], T, GenRepr <: HList, S, D](
     implicit gen: LabelledGeneric.Aux[T, GenRepr],
     tag: TypeTag[T],
     encoder: Lazy[DerivedEncoder[F, T, GenRepr, S, D]],
@@ -82,13 +83,9 @@ trait GenericEncoderTInstances {
     refute: Refute[EncoderTRefute[T, S, D]],
     refuteShow: Refute[Show[T]],
     refuteMultiShow: Refute[MultiShow[T]]
-  ): EncoderT[F, S, T, D] = {
-    lazy val className: String = tag.tpe.typeSymbol.name.toString
+  ): EncoderT[F, S, T, D] =
     EncoderT.make[F, S, T, D] { (path, settings, value) =>
-      val newPath =
-        if (settings.includeClassNameInPath) path :+ className
-        else path
+      val newPath = path :+ PathElement.ClassName(tag.tpe.typeSymbol.name.toString)
       encoder.value.write(newPath, settings, gen.to(value))
     }
-  }
 }

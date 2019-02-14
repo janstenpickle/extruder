@@ -5,6 +5,7 @@ import cats.syntax.applicative._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.{Applicative, FlatMap, Functor}
+import extruder.data.PathElement
 import extruder.instances.TransformInstances
 import shapeless.LowPriority
 
@@ -21,14 +22,14 @@ import shapeless.LowPriority
   * @tparam O output data
   */
 trait Transform[F[_], S, I, O] { outer =>
-  def run(namespace: List[String], settings: S, input: I): F[O]
+  def run(namespace: List[PathElement], settings: S, input: I): F[O]
   def map[O0](f: O => O0)(implicit F: Functor[F]): Transform[F, S, I, O0] = new Transform[F, S, I, O0] {
-    override def run(namespace: List[String], settings: S, input: I): F[O0] =
+    override def run(namespace: List[PathElement], settings: S, input: I): F[O0] =
       outer.run(namespace, settings, input).map(f)
   }
 
   def flatMapResult[O0](f: O => F[O0])(implicit F: FlatMap[F]): Transform[F, S, I, O0] = new Transform[F, S, I, O0] {
-    override def run(namespace: List[String], settings: S, input: I): F[O0] =
+    override def run(namespace: List[PathElement], settings: S, input: I): F[O0] =
       outer.run(namespace, settings, input).flatMap(f)
   }
 }
@@ -36,9 +37,9 @@ trait Transform[F[_], S, I, O] { outer =>
 object Transform extends LowPriorityTransform with TransformInstances {
   def apply[F[_], S, I, O](implicit transform: Transform[F, S, I, O]): Transform[F, S, I, O] = transform
 
-  def fromKleisli[F[_], S, I, O](k: Kleisli[F, (List[String], S, I), O]): Transform[F, S, I, O] =
+  def fromKleisli[F[_], S, I, O](k: Kleisli[F, (List[PathElement], S, I), O]): Transform[F, S, I, O] =
     new Transform[F, S, I, O] {
-      override def run(namespace: List[String], settings: S, input: I): F[O] =
+      override def run(namespace: List[PathElement], settings: S, input: I): F[O] =
         k.run((namespace, settings, input))
     }
 
@@ -57,7 +58,7 @@ object Transform extends LowPriorityTransform with TransformInstances {
     transform.flatMapResult(f)
 
   implicit def noOp[F[_]: Applicative, I, S]: Transform[F, S, I, I] = new Transform[F, S, I, I] {
-    override def run(namespace: List[String], settings: S, input: I): F[I] = input.pure[F]
+    override def run(namespace: List[PathElement], settings: S, input: I): F[I] = input.pure[F]
   }
 
   implicit def tupleCombinedTransform[F[_]: FlatMap, S0, S1, I0, I1, O0, O1](
@@ -65,7 +66,7 @@ object Transform extends LowPriorityTransform with TransformInstances {
     ev1: Transform[F, S1, I1, O1],
     lp: LowPriority
   ): Transform[F, (S0, S1), (I0, I1), (O0, O1)] = new Transform[F, (S0, S1), (I0, I1), (O0, O1)] {
-    override def run(namespace: List[String], settings: (S0, S1), input: (I0, I1)): F[(O0, O1)] =
+    override def run(namespace: List[PathElement], settings: (S0, S1), input: (I0, I1)): F[(O0, O1)] =
       for {
         o0 <- ev0.run(namespace, settings._1, input._1)
         o1 <- ev1.run(namespace, settings._2, input._2)
@@ -80,7 +81,7 @@ trait LowPriorityTransform {
     ev1: Transform[F, S1, I1, O1],
     error: ExtruderErrors[F]
   ): Transform[F, (S0, S1), Ior[I0, I1], Ior[O0, O1]] = new Transform[F, (S0, S1), Ior[I0, I1], Ior[O0, O1]] {
-    override def run(namespace: List[String], settings: (S0, S1), input: Ior[I0, I1]): F[Ior[O0, O1]] = {
+    override def run(namespace: List[PathElement], settings: (S0, S1), input: Ior[I0, I1]): F[Ior[O0, O1]] = {
       input match {
         case Ior.Left(i0) => ev0.run(namespace, settings._1, i0).map(Ior.Left(_))
         case Ior.Right(i1) => ev1.run(namespace, settings._2, i1).map(Ior.Right(_))

@@ -11,7 +11,7 @@ trait CirceEncoderInstances {
     EncoderT.make { (path, settings, a) =>
       lazy val json = a.asJson
 
-      path.reverse match {
+      settings.pathElementsAsStrings(path).reverse match {
         case head :: tail =>
           tail
             .foldLeft(Map(settings.formatElement(head) -> json)) { (acc, elem) =>

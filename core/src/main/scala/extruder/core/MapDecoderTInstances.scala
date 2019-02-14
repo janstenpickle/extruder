@@ -7,6 +7,7 @@ import cats.syntax.apply._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.syntax.traverse._
+import extruder.data.PathElement
 import shapeless.{LowPriority, Refute}
 
 trait MapDecoderTInstances extends OptionSelector {
@@ -46,7 +47,7 @@ trait MapDecoderTInstances extends OptionSelector {
         } yield result
     )
 
-  private def decodeMap[F[_]: Monad, K, V, S, I](basePath: List[String], settings: S)(
+  private def decodeMap[F[_]: Monad, K, V, S, I](basePath: List[PathElement], settings: S)(
     keys: List[String],
     data: I
   )(implicit error: ExtruderErrors[F], keyParser: Parser[K], valueDecoder: DecoderT[F, S, V, I]): F[Map[K, V]] = {
@@ -54,7 +55,7 @@ trait MapDecoderTInstances extends OptionSelector {
       .traverse[F, (K, V)](
         k =>
           valueDecoder
-            .read(basePath :+ k, settings, None, data)
+            .read(basePath :+ PathElement.Standard(k), settings, None, data)
             .flatMap(v => error.fromEither(keyParser.parse(k)).map(_ -> v))
       )
       .map(_.toMap)

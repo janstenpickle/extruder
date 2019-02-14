@@ -10,6 +10,7 @@ import org.typelevel.discipline.Laws
 trait EncoderDecoderMultiTests[F[_], S <: Settings, E, D, O] extends EncoderDecoderDerivedTests[F, S, E, D, O] {
   def multiEncodeDecode[A: Arbitrary, B: Arbitrary](
     implicit eqFA: Eq[F[A]],
+    eqFListA: Eq[F[List[A]]],
     encoder: EncoderT[F, S, A, E],
     decoder: DecoderT[F, S, A, O],
     eqFOptA: Eq[F[Option[A]]],
@@ -27,6 +28,7 @@ trait EncoderDecoderMultiTests[F[_], S <: Settings, E, D, O] extends EncoderDeco
     nevDecoder: DecoderT[F, S, NonEmptyVector[A], O],
     necEncoder: EncoderT[F, S, NonEmptyChain[A], E],
     necDecoder: DecoderT[F, S, NonEmptyChain[A], O],
+    listDecoder: DecoderT[F, S, List[A], O],
     eqFMapBA: Eq[F[Map[B, A]]],
     multiShowEncoder: EncoderT[F, S, (A, B), E],
     multiShowDecoder: DecoderT[F, S, (A, B), O],

@@ -3,6 +3,7 @@ package extruder.metrics.dimensional
 import cats.Applicative
 import cats.data.NonEmptyList
 import extruder.core._
+import extruder.data.PathElement
 import extruder.metrics.MetricEncoderInstances
 import extruder.metrics.data._
 import shapeless.{Generic, HList, Refute}
@@ -101,7 +102,7 @@ trait DimensionalMetricEncoderInstances extends MetricEncoderInstances {
     Iterable[DimensionalMetric]
   ] =
     new Transform[F, S, Metrics, Iterable[DimensionalMetric]] {
-      override def run(namespace: List[String], settings: S, inputData: Metrics): F[Iterable[DimensionalMetric]] =
-        buildMetrics[F, S](namespace, settings, inputData)
+      override def run(namespace: List[PathElement], settings: S, inputData: Metrics): F[Iterable[DimensionalMetric]] =
+        buildMetrics[F, S](settings.pathElementsAsStrings(namespace), settings, inputData)
     }
 }

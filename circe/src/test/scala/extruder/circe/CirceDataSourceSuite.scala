@@ -1,5 +1,6 @@
 package extruder.circe
 
+import extruder.data.ValidationErrors
 import io.circe.Json
 import org.scalatest.{EitherValues, FunSuite}
 import io.circe.syntax._
@@ -29,6 +30,13 @@ class CirceDataSourceSuite extends FunSuite with EitherValues {
 
   test("Can decode an empty option") {
     assert(decode[Option[Int]](Json.Null).right.value === None)
+  }
+
+  test("Fails to decode missing a value") {
+    assert(
+      decode[Int](Json.Null).left.value === ValidationErrors
+        .missing(s"Could not find JSON value at '' and no default available")
+    )
   }
 }
 

@@ -6,6 +6,7 @@ import cats.instances.string._
 import cats.laws.discipline.FunctorTests
 import cats.laws.discipline.eq._
 import cats.{Eq, Id}
+import extruder.data.PathElement
 import extruder.map.defaultSettings
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.FunSuite
@@ -67,7 +68,7 @@ class TransformSuite extends FunSuite with Discipline with GeneratorDrivenProper
   test("Can create a transform from a Kleisli composition")(forAll { in: Int =>
     assert(
       Transform
-        .fromKleisli(Kleisli[Id, (List[String], Settings, Int), String](_._3.toString))
+        .fromKleisli(Kleisli[Id, (List[PathElement], Settings, Int), String](_._3.toString))
         .run(List.empty, defaultSettings, in) === in.toString
     )
   })

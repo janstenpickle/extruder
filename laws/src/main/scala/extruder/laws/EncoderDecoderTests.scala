@@ -11,8 +11,12 @@ trait EncoderDecoderTests[F[_], S <: Settings, E, D, O] extends DecoderTests[F, 
 
   def encodeDecode[A: Arbitrary](
     implicit eqFa: Eq[F[A]],
+    eqFOptA: Eq[F[Option[A]]],
+    eqFListA: Eq[F[List[A]]],
     encoder: EncoderT[F, S, A, E],
-    decoder: DecoderT[F, S, A, O]
+    decoder: DecoderT[F, S, A, O],
+    optDecoder: DecoderT[F, S, Option[A], O],
+    listDecoder: DecoderT[F, S, List[A], O]
   ): RuleSet = new RuleSet {
     override def name: String = "encoderDecoder"
     override def bases: Seq[(String, Laws#RuleSet)] = Nil
@@ -27,9 +31,11 @@ trait EncoderDecoderTests[F[_], S <: Settings, E, D, O] extends DecoderTests[F, 
       "encoderDecoder combinedEncodeDecodeWithPartiallyApplied" -> forAll(
         laws.combinedEncodeDecodeWithPartiallyApplied[A] _
       ),
-      "encoderDecoder combinedEncodeDecodeWithPartiallyAppliedRightFail" -> forAll(
-        laws.combinedEncodeDecodeWithPartiallyAppliedRightFail[A] _
-      )
+      "encoderDecoder combinedEncodeDecodeWithPartiallyAppliedLeftFail" -> forAll(
+        laws.combinedEncodeDecodeWithPartiallyAppliedLeftFail[A] _
+      ),
+      "encoderDecoder combinedEncodeDecodeOption" -> forAll(laws.combinedEncodeDecodeOption[A] _),
+      "encoderDecoder combinedEncodeDecodeOptionLeftFail" -> forAll(laws.combinedEncodeDecodeOptionLeftFail[A] _)
     )
   }
 }

@@ -11,6 +11,7 @@ import extruder.laws.EncoderDecoderTests
 import extruder.map._
 import org.scalatest.FunSuite
 import org.typelevel.discipline.scalatest.Discipline
+import shapeless.nat._0
 
 class RefinedInstancesSpec extends FunSuite with Discipline {
   implicit def refinedEq[A: Eq, F[_, _], P](implicit refType: RefType[F]): Eq[F[A, P]] =
@@ -22,4 +23,10 @@ class RefinedInstancesSpec extends FunSuite with Discipline {
       defaultSettings
     ).encodeDecode[Int Refined Positive]
   )
+
+  test("Can derive a refined meta info") {
+    val metaInfo = implicitly[RefinedMetaInfo[Int, Refined, Greater[_0]]]
+    assert(metaInfo.`type` === "Refined[Int, Greater[_0]]")
+    assert(metaInfo.underlying.`type` === "Int")
+  }
 }

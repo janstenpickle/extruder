@@ -34,7 +34,7 @@ trait DerivedDecoderTInstances {
       .flatMap[NonEmptyChain[T]](
         _.fold[F[NonEmptyChain[T]]](
           error.validationFailure(
-            s"List at '${settings.pathToString(path)}' must contain data, but is empty, and no default available"
+            s"Collection at '${settings.pathElementListToString(path)}' must contain data, but is empty, and no default available"
           )
         )(F.pure)
       )

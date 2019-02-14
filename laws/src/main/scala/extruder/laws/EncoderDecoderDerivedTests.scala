@@ -20,6 +20,7 @@ trait EncoderDecoderDerivedTests[F[_], S <: Settings, E, D, O] extends EncoderDe
     encoder: EncoderT[F, S, A, E],
     decoder: DecoderT[F, S, A, O],
     eqFOptA: Eq[F[Option[A]]],
+    eqFListA: Eq[F[List[A]]],
     optEncoder: EncoderT[F, S, Option[A], E],
     optDecoder: DecoderT[F, S, Option[A], O],
     eqFChainA: Eq[F[Chain[A]]],
@@ -33,7 +34,8 @@ trait EncoderDecoderDerivedTests[F[_], S <: Settings, E, D, O] extends EncoderDe
     nevEncoder: EncoderT[F, S, NonEmptyVector[A], E],
     nevDecoder: DecoderT[F, S, NonEmptyVector[A], O],
     necEncoder: EncoderT[F, S, NonEmptyChain[A], E],
-    necDecoder: DecoderT[F, S, NonEmptyChain[A], O]
+    necDecoder: DecoderT[F, S, NonEmptyChain[A], O],
+    listDecoder: DecoderT[F, S, List[A], O]
   ): RuleSet = new RuleSet {
     override def name: String = "derivedEncodeDecode"
     override def bases: Seq[(String, Laws#RuleSet)] = Nil

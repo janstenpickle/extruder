@@ -7,6 +7,7 @@ import cats.syntax.functor._
 import cats.syntax.traverse._
 import com.netflix.spectator.api.Registry
 import extruder.core.Transform
+import extruder.data.PathElement
 import extruder.metrics.data.{MetricType, Metrics, Numbers}
 import extruder.metrics.dimensional.{DimensionalMetric, DimensionalMetricEncoderInstances}
 
@@ -42,11 +43,11 @@ trait SpectatorEncoderInstances extends DimensionalMetricEncoderInstances {
 
   implicit def spectatorTransform[F[_], S <: SpectatorMetricSettings](
     implicit F: Sync[F],
-    dimensionalFinalize: Transform[F, S, Metrics, Iterable[DimensionalMetric]]
+    dimensionalTransform: Transform[F, S, Metrics, Iterable[DimensionalMetric]]
   ): Transform[F, S, Metrics, Registry] =
     new Transform[F, S, Metrics, Registry] {
-      override def run(namespace: List[String], settings: S, inputData: Metrics): F[Registry] =
-        dimensionalFinalize.run(namespace, settings, inputData).flatMap { metrics =>
+      override def run(namespace: List[PathElement], settings: S, inputData: Metrics): F[Registry] =
+        dimensionalTransform.run(namespace, settings, inputData).flatMap { metrics =>
           metrics.toList
             .traverse { metric =>
               metric.metricType match {

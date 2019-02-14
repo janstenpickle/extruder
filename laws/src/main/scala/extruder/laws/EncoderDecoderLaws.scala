@@ -1,12 +1,13 @@
 package extruder.laws
 
-import cats.data.{Ior, IorT}
+import cats.data.Ior
 import cats.kernel.laws.IsEq
 import cats.laws._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.{Monad, Monoid}
 import extruder.core._
+import extruder.data.PathElement
 import shapeless.Lazy
 
 trait EncoderDecoderLaws[F[_], S <: Settings, E, D, O] extends DecoderLaws[F, S, E, D, O] {
@@ -17,7 +18,7 @@ trait EncoderDecoderLaws[F[_], S <: Settings, E, D, O] extends DecoderLaws[F, S,
   def monoid: Monoid[E]
   implicit def errors: ExtruderErrors[F]
 
-  private def test[A](path: List[String], a: A)(
+  private def test[A](path: List[PathElement], a: A)(
     encoder: EncoderT[F, S, A, E],
     fin: Transform[F, S, E, D],
     prep: Transform[F, S, D, O],
@@ -32,26 +33,26 @@ trait EncoderDecoderLaws[F[_], S <: Settings, E, D, O] extends DecoderLaws[F, S,
 
   def encodeFinalizePrepareDecode[A](
     a: A,
-    path: List[String]
+    path: List[PathElement]
   )(implicit encoder: EncoderT[F, S, A, E], decoder: DecoderT[F, S, A, O]): IsEq[F[A]] =
     test(path, a)(encoder, finalise, prepare, decoder)(F.pure(a))
 
-  def encodeFinalizePrepareDecodeFail[A](a: A, path: List[String])(
+  def encodeFinalizePrepareDecodeFail[A](a: A, path: List[PathElement])(
     implicit encoder: EncoderT[F, S, A, E]
   ): IsEq[F[A]] = {
     implicit val decoder: DecoderT[F, S, A, O] = new DecoderT[F, S, A, O] {
-      override def read(path: List[String], settings: S, default: Option[A], input: O): F[A] =
+      override def read(path: List[PathElement], settings: S, default: Option[A], input: O): F[A] =
         errors.validationFailure("fail")
     }
 
     test(path, a)(encoder, finalise, prepare, decoder)(errors.validationFailure("fail"))
   }
 
-  def encodeFailFinalizePrepareDecode[A](a: A, path: List[String])(
+  def encodeFailFinalizePrepareDecode[A](a: A, path: List[PathElement])(
     implicit decoder: DecoderT[F, S, A, O]
   ): IsEq[F[A]] = {
     implicit val encoder: EncoderT[F, S, A, E] = new EncoderT[F, S, A, E] {
-      override def write(path: List[String], settings: S, in: A): F[E] = errors.validationFailure("fail")
+      override def write(path: List[PathElement], settings: S, in: A): F[E] = errors.validationFailure("fail")
     }
 
     test(path, a)(encoder, finalise, prepare, decoder)(errors.validationFailure("fail"))
@@ -62,10 +63,10 @@ trait EncoderDecoderLaws[F[_], S <: Settings, E, D, O] extends DecoderLaws[F, S,
     path: List[String]
   )(implicit encoder: EncoderT[F, S, A, E], decoder: DecoderT[F, S, A, O]): IsEq[F[A]] = {
     val fin = new Transform[F, S, E, D] {
-      override def run(namespace: List[String], settings: S, input: E): F[D] = errors.validationFailure("fail")
+      override def run(namespace: List[PathElement], settings: S, input: E): F[D] = errors.validationFailure("fail")
     }
 
-    test(path, a)(encoder, fin, prepare, decoder)(errors.validationFailure("fail"))
+    test(path.map(PathElement.Standard), a)(encoder, fin, prepare, decoder)(errors.validationFailure("fail"))
   }
 
   def encodeFinalizePrepareFailDecode[A](
@@ -73,10 +74,10 @@ trait EncoderDecoderLaws[F[_], S <: Settings, E, D, O] extends DecoderLaws[F, S,
     path: List[String]
   )(implicit encoder: EncoderT[F, S, A, E], decoder: DecoderT[F, S, A, O]): IsEq[F[A]] = {
     val prep = new Transform[F, S, D, O] {
-      override def run(namespace: List[String], settings: S, input: D): F[O] = errors.validationFailure("fail")
+      override def run(namespace: List[PathElement], settings: S, input: D): F[O] = errors.validationFailure("fail")
     }
 
-    test(path, a)(encoder, finalise, prep, decoder)(errors.validationFailure("fail"))
+    test(path.map(PathElement.Standard), a)(encoder, finalise, prep, decoder)(errors.validationFailure("fail"))
   }
 
   def encodeDecodeWithPartiallyApplied[A](
@@ -126,12 +127,12 @@ trait EncoderDecoderLaws[F[_], S <: Settings, E, D, O] extends DecoderLaws[F, S,
     } yield decoded) <-> F.pure(a)
   }
 
-  def combinedEncodeDecodeWithPartiallyAppliedRightFail[A](
+  def combinedEncodeDecodeWithPartiallyAppliedLeftFail[A](
     a: A,
     path: List[String]
   )(implicit encoder: EncoderT[F, S, A, E], decoder: DecoderT[F, S, A, O]): IsEq[F[A]] = {
     implicit val failDecoder: DecoderT[F, S, A, Lazy[O]] = new DecoderT[F, S, A, Lazy[O]] {
-      override def read(path: List[String], settings: S, default: Option[A], input: Lazy[O]): F[A] =
+      override def read(path: List[PathElement], settings: S, default: Option[A], input: Lazy[O]): F[A] =
         errors.validationFailure("Fail")
     }
 
@@ -166,6 +167,57 @@ trait EncoderDecoderLaws[F[_], S <: Settings, E, D, O] extends DecoderLaws[F, S,
       )
     } yield decoded) <-> F.pure(a)
   }
+
+  def combinedEncodeDecodeOption[A](
+    a: A,
+    path: List[PathElement]
+  )(implicit encoder: EncoderT[F, S, A, E], decoder: DecoderT[F, S, Option[A], O]): IsEq[F[Option[A]]] = {
+    val combinedDecoder: DecoderT[F, (S, S), Option[A], (O, O)] = DecoderT[F, (S, S), Option[A], (O, O)]
+
+    def run(f: (O, O) => F[Option[A]]) =
+      for {
+        encoded <- encoder.write(path, settings, a)
+        finalized <- finalise.run(path, settings, encoded)
+        prepared <- prepare.run(path, settings, finalized)
+        emptyFinalized <- finalise.run(path, settings, monoid.empty)
+        emptyPrepared <- prepare.run(path, settings, emptyFinalized)
+        ret <- f(prepared, emptyPrepared)
+      } yield ret
+
+    run((l, r) => combinedDecoder.read(path, (settings, settings), None, (l, r))) <-> run(
+      (l, r) => combinedDecoder.read(path, (settings, settings), None, (r, l))
+    )
+  }
+
+  def combinedEncodeDecodeOptionLeftFail[A](
+    a: A,
+    path: List[PathElement]
+  )(implicit encoder: EncoderT[F, S, A, E], decoder: DecoderT[F, S, Option[A], O]): IsEq[F[Option[A]]] = {
+    implicit val failDecoder: DecoderT[F, S, Option[A], Lazy[O]] = new DecoderT[F, S, Option[A], Lazy[O]] {
+      override def read(
+        path: List[PathElement],
+        settings: S,
+        default: Option[Option[A]],
+        input: Lazy[O]
+      ): F[Option[A]] =
+        errors.validationFailure("Fail")
+    }
+
+    val combinedDecoder: DecoderT[F, (S, S), Option[A], (Lazy[O], O)] = DecoderT[F, (S, S), Option[A], (Lazy[O], O)]
+
+    def run(f: (Lazy[O], O) => F[Option[A]]) =
+      for {
+        encoded <- encoder.write(path, settings, a)
+        finalized <- finalise.run(path, settings, encoded)
+        prepared <- prepare.run(path, settings, finalized)
+        ret <- f(Lazy(prepared), prepared)
+      } yield ret
+
+    run((l, r) => combinedDecoder.read(path, (settings, settings), None, (l, r))) <-> run(
+      (_, r) => decoder.read(path, settings, None, r)
+    )
+  }
+
 }
 
 object EncoderDecoderLaws {

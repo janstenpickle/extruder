@@ -6,6 +6,7 @@ import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.syntax.traverse._
 import extruder.core.{ExtruderErrors, Transform}
+import extruder.data.PathElement
 import extruder.metrics.data.{MetricType, Metrics, Numbers}
 import extruder.metrics.dimensional.{DimensionalMetric, DimensionalMetricEncoderInstances}
 import io.prometheus.client.{Collector, Counter, Gauge}
@@ -53,7 +54,7 @@ trait PrometheusPushEncoderInstances extends DimensionalMetricEncoderInstances {
     dimensionalTransform: Transform[F, S, Metrics, Iterable[DimensionalMetric]]
   ): Transform[F, S, Metrics, Unit] =
     new Transform[F, S, Metrics, Unit] {
-      override def run(namespace: List[String], settings: S, inputData: Metrics): F[Unit] =
+      override def run(namespace: List[PathElement], settings: S, inputData: Metrics): F[Unit] =
         dimensionalTransform
           .flatMapResult(buildCollectors[F, S](settings))
           .run(namespace, settings, inputData)

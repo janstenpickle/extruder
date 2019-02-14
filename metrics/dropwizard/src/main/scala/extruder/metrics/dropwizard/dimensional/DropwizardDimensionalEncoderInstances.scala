@@ -6,6 +6,7 @@ import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.syntax.traverse._
 import extruder.core.Transform
+import extruder.data.PathElement
 import extruder.metrics.data.{MetricType, Metrics, Numbers}
 import extruder.metrics.dimensional.{DimensionalMetric, DimensionalMetricEncoderInstances}
 import extruder.metrics.dropwizard.{SimpleGauge, SimpleGaugeSupplier}
@@ -41,7 +42,7 @@ trait DropwizardDimensionalEncoderInstances extends DimensionalMetricEncoderInst
     dimensionalTransform: Transform[F, S, Metrics, Iterable[DimensionalMetric]]
   ): Transform[F, S, Metrics, MetricRegistry] =
     new Transform[F, S, Metrics, MetricRegistry] {
-      override def run(namespace: List[String], settings: S, inputData: Metrics): F[MetricRegistry] =
+      override def run(namespace: List[PathElement], settings: S, inputData: Metrics): F[MetricRegistry] =
         dimensionalTransform.run(namespace, settings, inputData).flatMap { metrics =>
           metrics.toList
             .traverse { metric =>

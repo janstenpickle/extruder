@@ -5,13 +5,12 @@ import cats.data.NonEmptyList
 import cats.instances.all._
 import cats.Monoid
 import cats.kernel.laws.discipline.MonoidTests
-import cats.syntax.either._
 import com.typesafe.config.{ConfigFactory, ConfigList, ConfigObject, ConfigValue, Config => TConfig}
 import extruder.core.Settings
 import extruder.data.Validation
 import extruder.laws.{CaseClass, EncoderDecoderGenericTests, EncoderDecoderTests}
 import extruder.typesafe.IntermediateTypes.{Config, ConfigTypes}
-import org.scalatest.FunSuite
+import org.scalatest.{EitherValues, FunSuite}
 import org.typelevel.discipline.scalatest.Discipline
 import extruder.data.ValidationError.{Missing, ValidationException, ValidationFailure}
 import org.scalacheck.{Arbitrary, Gen}
@@ -21,7 +20,7 @@ import org.scalacheck.ScalacheckShapeless._
 
 import scala.collection.JavaConverters._
 
-class TypesafeConfigSuite extends FunSuite with GeneratorDrivenPropertyChecks with Discipline {
+class TypesafeConfigSuite extends FunSuite with EitherValues with GeneratorDrivenPropertyChecks with Discipline {
   import TypesafeConfigSuite._
 
   val encodeDecodeTests: EncoderDecoderTests[Validation, Settings, Config, TConfig, TConfig] =
@@ -46,22 +45,23 @@ class TypesafeConfigSuite extends FunSuite with GeneratorDrivenPropertyChecks wi
 
   def testException: Assertion =
     assert(
-      decode[String](List(Key), new BrokenConfig(LookupFailureMessage))
-        .leftMap(_.head.asInstanceOf[ValidationException].exception.getMessage) === Left(LookupFailureMessage)
+      decode[String](List(Key), new BrokenConfig(LookupFailureMessage)).left.value.head
+        .asInstanceOf[ValidationException]
+        .exception
+        .getMessage === LookupFailureMessage
     )
 
   def testTypsafeListMissing: Assertion =
     assert(
-      decode[List[Int]](List("a")).leftMap(_.head) ===
-        Left(Missing("Could not find value at 'a' and no default available"))
+      decode[List[Int]](List("a")).left.value.head ===
+        Missing("Could not find value at 'a' and no default available")
     )
 
   def testTypsafeListInvalid: Assertion = forAll { li: NonEmptyList[String] =>
     assert(
-      decode[List[Int]](List("a"), ConfigFactory.parseMap(Map[String, Any]("a" -> li.toList.asJava).asJava))
-        .leftMap(_.head)
-        .===(Left(ValidationFailure(s"""Could not parse value '${li.toList
-          .mkString(", ")}' at 'a': For input string: "${li.head}"""")))
+      decode[List[Int]](List("a"), ConfigFactory.parseMap(Map[String, Any]("a" -> li.toList.asJava).asJava)).left.value.head
+        .===(ValidationFailure(s"""Could not parse value '${li.toList
+          .mkString(", ")}' at 'a': For input string: "${li.head}""""))
     )
   }
 }

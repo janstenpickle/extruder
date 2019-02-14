@@ -1,8 +1,9 @@
 package extruder.core
 
-import cats.{FlatMap, Functor}
-import cats.syntax.functor._
 import cats.syntax.flatMap._
+import cats.syntax.functor._
+import cats.{FlatMap, Functor}
+import extruder.data.PathElement
 import extruder.instances.DecoderTInstances
 
 /**
@@ -14,7 +15,7 @@ import extruder.instances.DecoderTInstances
   * @tparam I Input data
   */
 trait DecoderT[F[_], S, A, I] {
-  def read(path: List[String], settings: S, default: Option[A], input: I): F[A]
+  def read(path: List[PathElement], settings: S, default: Option[A], input: I): F[A]
 
   def imap[B](f: A => B)(g: B => A)(implicit F: Functor[F]): DecoderT[F, S, B, I] = DecoderT.make[F, S, B, I] {
     (path, settings, default, input) =>
@@ -34,9 +35,9 @@ object DecoderT
     with DerivedDecoderTInstances
     with GenericDecoderTInstances
     with CombinedDecoderTInstances {
-  def make[F[_], S, A, C](f: (List[String], S, Option[A], C) => F[A]): DecoderT[F, S, A, C] =
+  def make[F[_], S, A, C](f: (List[PathElement], S, Option[A], C) => F[A]): DecoderT[F, S, A, C] =
     new DecoderT[F, S, A, C] {
-      override def read(path: List[String], settings: S, default: Option[A], input: C): F[A] =
+      override def read(path: List[PathElement], settings: S, default: Option[A], input: C): F[A] =
         f(path, settings, default, input)
     }
 

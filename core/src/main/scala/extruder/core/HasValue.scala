@@ -2,6 +2,7 @@ package extruder.core
 
 import cats.Functor
 import cats.syntax.functor._
+import extruder.data.PathElement
 
 /**
   * Discovers if data source `I` has a certain value at a path.
@@ -13,8 +14,8 @@ import cats.syntax.functor._
   * @tparam I input data
   */
 trait HasValue[F[_], S, I] {
-  def apply(path: List[String], settings: S, data: I): F[Boolean] = hasValue(path, settings, data)
-  def hasValue(path: List[String], settings: S, data: I): F[Boolean]
+  def apply(path: List[PathElement], settings: S, data: I): F[Boolean] = hasValue(path, settings, data)
+  def hasValue(path: List[PathElement], settings: S, data: I): F[Boolean]
 }
 
 object HasValue {
@@ -22,7 +23,7 @@ object HasValue {
 
   implicit def fromStringReader[F[_]: Functor, S, I](implicit stringReader: StringReader[F, S, I]): HasValue[F, S, I] =
     new HasValue[F, S, I] {
-      override def hasValue(path: List[String], settings: S, data: I): F[Boolean] =
+      override def hasValue(path: List[PathElement], settings: S, data: I): F[Boolean] =
         stringReader.lookup(path, settings, data).map(_.isDefined)
     }
 }

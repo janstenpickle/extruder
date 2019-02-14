@@ -6,6 +6,7 @@ import cats.syntax.functor._
 import cats.{Applicative, Monad, MonadError, Monoid, Traverse}
 import com.typesafe.config.{ConfigFactory, ConfigList, ConfigObject, ConfigValue, Config => TConfig}
 import extruder.core._
+import extruder.data.PathElement
 import extruder.typesafe.IntermediateTypes.{toConfig, Config, ConfigTypes}
 import shapeless.Refute
 
@@ -16,8 +17,8 @@ trait TypesafeConfigEncoderInstances {
 
   implicit def typesafeConfigStringWriter[F[_]: Applicative]: StringWriter[F, Settings, Config] =
     new StringWriter[F, Settings, Config] {
-      override def write(path: List[String], settings: Settings, value: String): F[Config] =
-        List(ConfigTypes(settings.pathToString(path), value)).pure[F]
+      override def write(path: List[PathElement], settings: Settings, value: String): F[Config] =
+        List(ConfigTypes(settings.pathElementListToString(path), value)).pure[F]
     }
 
   implicit def typesafeConfigFinalize[F[_]](
@@ -29,17 +30,17 @@ trait TypesafeConfigEncoderInstances {
 
   implicit def dataObjectEncoder[F[_]: Applicative]: EncoderT[F, Settings, ConfigObject, Config] =
     EncoderT.make[F, Settings, ConfigObject, Config] { (path, settings, value) =>
-      List(ConfigTypes(settings.pathToString(path), value)).pure[F]
+      List(ConfigTypes(settings.pathElementListToString(path), value)).pure[F]
     }
 
   implicit def dataListEncoder[F[_]: Applicative]: EncoderT[F, Settings, ConfigList, Config] =
     EncoderT.make[F, Settings, ConfigList, Config] { (path, settings, value) =>
-      List(ConfigTypes(settings.pathToString(path), value)).pure[F]
+      List(ConfigTypes(settings.pathElementListToString(path), value)).pure[F]
     }
 
   implicit def dataValueEncoder[F[_]: Applicative]: EncoderT[F, Settings, ConfigValue, Config] =
     EncoderT.make[F, Settings, ConfigValue, Config] { (path, settings, value) =>
-      List(ConfigTypes(settings.pathToString(path), value)).pure[F]
+      List(ConfigTypes(settings.pathElementListToString(path), value)).pure[F]
     }
 
   implicit def traversableObjectEncoder[F[_]: Monad, A, FF[T] <: TraversableOnce[T]](
@@ -48,13 +49,13 @@ trait TypesafeConfigEncoderInstances {
   ): EncoderT[F, Settings, FF[A], Config] = EncoderT.make[F, Settings, FF[A], Config] { (path, settings, value) =>
     Traverse[List]
       .sequence[F, Config](value.toList.map(encoder.write(List.empty, settings, _)))
-      .map(c => List(ConfigTypes.nested(settings.pathToString(path), c)))
+      .map(c => List(ConfigTypes.nested(settings.pathElementListToString(path), c)))
   }
 
   implicit def traversableEncoder[F[_]: Applicative, A, FF[T] <: TraversableOnce[T]](
     implicit shows: Show[A]
   ): EncoderT[F, Settings, FF[A], Config] =
     EncoderT.make[F, Settings, FF[A], Config] { (path, settings, value) =>
-      List(ConfigTypes(settings.pathToString(path), value.map(shows.show).toList)).pure[F]
+      List(ConfigTypes(settings.pathElementListToString(path), value.map(shows.show).toList)).pure[F]
     }
 }
