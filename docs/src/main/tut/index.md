@@ -7,7 +7,7 @@ section: "home"
 
 # Extruder
 
-[![Typelevel Incubator](https://img.shields.io/badge/typelevel-incubator-green.svg)](http://typelevel.org/projects) [![Build Status](https://travis-ci.org/janstenpickle/extruder.svg?branch=master)](https://travis-ci.org/janstenpickle/extruder)
+[![Typelevel Incubator](https://img.shields.io/badge/typelevel-incubator-green.svg)](http://typelevel.org/projects) [![CircleCI](https://circleci.com/gh/janstenpickle/extruder/tree/master.svg?style=svg)](https://circleci.com/gh/janstenpickle/extruder/tree/master) [![codecov](https://codecov.io/gh/janstenpickle/extruder/branch/master/graph/badge.svg)](https://codecov.io/gh/janstenpickle/extruder)
 
 This library uses [Shapeless](https://github.com/milessabin/shapeless), [Cats](https://github.com/typelevel/cats) and [Cats Effect](https://github.com/typelevel/cats-effect) to provide a neat syntax to instantiate Scala case classes from a data source.
 
