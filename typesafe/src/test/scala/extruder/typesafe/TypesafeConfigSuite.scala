@@ -31,7 +31,7 @@ class TypesafeConfigSuite extends FunSuite with EitherValues with GeneratorDrive
   checkAll(
     "TypesafeConfig",
     EncoderDecoderGenericTests[Validation, Settings, Config, TConfig, TConfig](defaultSettings)
-      .genericEncodeDecode[Int, Int]
+      .genericEncodeDecode[Int, Int, String]
   )
 
   checkAll("TypesafeConfig ConfigObject", encodeDecodeTests.encodeDecode[ConfigObject])
@@ -59,7 +59,7 @@ class TypesafeConfigSuite extends FunSuite with EitherValues with GeneratorDrive
 
   def testTypsafeListInvalid: Assertion = forAll { li: NonEmptyList[String] =>
     assert(
-      decode[List[Int]](List("a"), ConfigFactory.parseMap(Map[String, Any]("a" -> li.toList.asJava).asJava)).left.value.head
+      decode[List[Boolean]](List("a"), ConfigFactory.parseMap(Map[String, Any]("a" -> li.toList.asJava).asJava)).left.value.head
         .===(ValidationFailure(s"""Could not parse value '${li.toList
           .mkString(", ")}' at 'a': For input string: "${li.head}""""))
     )

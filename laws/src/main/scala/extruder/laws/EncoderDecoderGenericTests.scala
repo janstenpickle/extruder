@@ -9,11 +9,14 @@ import org.typelevel.discipline.Laws
 import org.scalacheck.ScalacheckShapeless._
 
 trait EncoderDecoderGenericTests[F[_], S <: Settings, E, D, O] extends EncoderDecoderMapTests[F, S, E, D, O] {
-  def genericEncodeDecode[A: Arbitrary, B: Arbitrary](
+  def genericEncodeDecode[A: Arbitrary, B: Arbitrary, C: Arbitrary](
     implicit eqFA: Eq[F[A]],
+    eqFEitherAC: Eq[F[Either[C, A]]],
     eqFListA: Eq[F[List[A]]],
     encoder: EncoderT[F, S, A, E],
     decoder: DecoderT[F, S, A, O],
+    cEncoder: EncoderT[F, S, C, E],
+    cDecoder: DecoderT[F, S, C, O],
     eqFOptA: Eq[F[Option[A]]],
     optEncoder: EncoderT[F, S, Option[A], E],
     optDecoder: DecoderT[F, S, Option[A], O],
@@ -45,7 +48,7 @@ trait EncoderDecoderGenericTests[F[_], S <: Settings, E, D, O] extends EncoderDe
   ): RuleSet = new RuleSet {
     override def name: String = "mapEncodeDecode"
     override def bases: Seq[(String, Laws#RuleSet)] = Nil
-    override def parents: Seq[RuleSet] = Seq(mapEncodeDecode[A, B])
+    override def parents: Seq[RuleSet] = Seq(mapEncodeDecode[A, B, C])
     override def props: Seq[(String, Prop)] =
       Seq(
         "generic encodeFinalizePrepareDecode" -> forAll(laws.encodeFinalizePrepareDecode[CaseClass] _),
@@ -55,10 +58,12 @@ trait EncoderDecoderGenericTests[F[_], S <: Settings, E, D, O] extends EncoderDe
 }
 
 object EncoderDecoderGenericTests {
-  def apply[F[_]: Monad: ExtruderErrors, S <: Settings, E: Monoid, D, O: Monoid](
-    settings: S
-  )(implicit fin: Transform[F, S, E, D], prep: Transform[F, S, D, O]): EncoderDecoderGenericTests[F, S, E, D, O] =
+  def apply[F[_]: Monad: ExtruderErrors, S <: Settings, E: Monoid, D, O: Monoid](settings: S)(
+    implicit fin: Transform[F, S, E, D],
+    prep: Transform[F, S, D, O],
+    hv: HasValue[F, S, O]
+  ): EncoderDecoderGenericTests[F, S, E, D, O] =
     new EncoderDecoderGenericTests[F, S, E, D, O] {
-      override def laws: EncoderDecoderLaws[F, S, E, D, O] = EncoderDecoderLaws[F, S, E, D, O](settings)
+      override def laws: EncoderDecoderDerivedLaws[F, S, E, D, O] = EncoderDecoderDerivedLaws[F, S, E, D, O](settings)
     }
 }

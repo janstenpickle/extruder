@@ -11,11 +11,14 @@ trait EncoderDecoderMapTests[F[_], S <: Settings, E, D, O] extends EncoderDecode
   implicit def mapArb[A, B](implicit arb: Arbitrary[List[(A, B)]]): Arbitrary[Map[A, B]] =
     Arbitrary(arb.arbitrary.suchThat(_.nonEmpty).map(_.toMap))
 
-  def mapEncodeDecode[A: Arbitrary, B: Arbitrary](
+  def mapEncodeDecode[A: Arbitrary, B: Arbitrary, C: Arbitrary](
     implicit eqFA: Eq[F[A]],
+    eqFEitherAC: Eq[F[Either[C, A]]],
     eqFListA: Eq[F[List[A]]],
     encoder: EncoderT[F, S, A, E],
     decoder: DecoderT[F, S, A, O],
+    cEncoder: EncoderT[F, S, C, E],
+    cDecoder: DecoderT[F, S, C, O],
     eqFOptA: Eq[F[Option[A]]],
     optEncoder: EncoderT[F, S, Option[A], E],
     optDecoder: DecoderT[F, S, Option[A], O],
@@ -44,7 +47,7 @@ trait EncoderDecoderMapTests[F[_], S <: Settings, E, D, O] extends EncoderDecode
   ): RuleSet = new RuleSet {
     override def name: String = "mapEncodeDecode"
     override def bases: Seq[(String, Laws#RuleSet)] = Nil
-    override def parents: Seq[RuleSet] = Seq(multiEncodeDecode[A, B])
+    override def parents: Seq[RuleSet] = Seq(multiEncodeDecode[A, B, C])
     override def props: Seq[(String, Prop)] =
       Seq(
         "map encodeFinalizePrepareDecode" -> forAll(laws.encodeFinalizePrepareDecode[Map[B, A]] _),
@@ -54,10 +57,12 @@ trait EncoderDecoderMapTests[F[_], S <: Settings, E, D, O] extends EncoderDecode
 }
 
 object EncoderDecoderMapTests {
-  def apply[F[_]: Monad: ExtruderErrors, S <: Settings, E: Monoid, D, O: Monoid](
-    settings: S
-  )(implicit fin: Transform[F, S, E, D], prep: Transform[F, S, D, O]): EncoderDecoderMapTests[F, S, E, D, O] =
+  def apply[F[_]: Monad: ExtruderErrors, S <: Settings, E: Monoid, D, O: Monoid](settings: S)(
+    implicit fin: Transform[F, S, E, D],
+    prep: Transform[F, S, D, O],
+    hv: HasValue[F, S, O]
+  ): EncoderDecoderMapTests[F, S, E, D, O] =
     new EncoderDecoderMapTests[F, S, E, D, O] {
-      override def laws: EncoderDecoderLaws[F, S, E, D, O] = EncoderDecoderLaws[F, S, E, D, O](settings)
+      override def laws: EncoderDecoderDerivedLaws[F, S, E, D, O] = EncoderDecoderDerivedLaws[F, S, E, D, O](settings)
     }
 }

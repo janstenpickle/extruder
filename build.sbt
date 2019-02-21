@@ -7,7 +7,7 @@ val circeVersion = "0.11.1"
 val disciplineVer = "0.9.0"
 val prometheusVer = "0.6.0"
 val refinedVer = "0.9.4"
-val scalaCheckVer = "1.13.2"
+val scalaCheckVer = "1.13.5"
 val scalaCheckShapelessVer = "1.1.8"
 val scalaTestVer = "3.0.5"
 
@@ -197,7 +197,7 @@ lazy val metricsCore = (project in file("metrics/core"))
           "org.scalatest"              %% "scalatest"                 % scalaTestVer           % Test,
           "org.scalacheck"             %% "scalacheck"                % scalaCheckVer          % Test,
           "com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % scalaCheckShapelessVer % Test,
-          "com.lihaoyi"                %% "utest"                     % "0.6.3"                % Test,
+          "com.lihaoyi"                %% "utest"                     % "0.6.6"                % Test,
           "org.typelevel"              %% "discipline"                % disciplineVer          % Test
         ),
         coverageEnabled.in(Test, test) := true
@@ -229,8 +229,8 @@ lazy val spectator = (project in file("metrics/spectator"))
       Seq(
         name := "extruder-metrics-spectator",
         libraryDependencies ++= Seq(
-          "com.netflix.spectator"      % "spectator-api"              % "0.83.0",
-          "com.netflix.spectator"      % "spectator-reg-servo"        % "0.83.0" % Test,
+          "com.netflix.spectator"      % "spectator-api"              % "0.85.0",
+          "com.netflix.spectator"      % "spectator-reg-servo"        % "0.85.0" % Test,
           "org.scalatest"              %% "scalatest"                 % scalaTestVer % Test,
           "org.scalacheck"             %% "scalacheck"                % scalaCheckVer % Test,
           "com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % scalaCheckShapelessVer % Test

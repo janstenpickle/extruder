@@ -8,6 +8,8 @@ import org.scalacheck.{Arbitrary, Prop}
 import org.typelevel.discipline.Laws
 
 trait EncoderDecoderDerivedTests[F[_], S <: Settings, E, D, O] extends EncoderDecoderTests[F, S, E, D, O] {
+  override def laws: EncoderDecoderDerivedLaws[F, S, E, D, O]
+
   implicit def chainArb[A](implicit listArb: Arbitrary[List[A]]): Arbitrary[Chain[A]] =
     Arbitrary(listArb.arbitrary.map(Chain.fromSeq))
   implicit def nonEmptyChainArb[A](implicit nelArb: Arbitrary[NonEmptyList[A]]): Arbitrary[NonEmptyChain[A]] =
@@ -15,10 +17,13 @@ trait EncoderDecoderDerivedTests[F[_], S <: Settings, E, D, O] extends EncoderDe
   implicit def nonEmptyVectorArb[A](implicit nelArb: Arbitrary[NonEmptyChain[A]]): Arbitrary[NonEmptyVector[A]] =
     Arbitrary(nelArb.arbitrary.map(_.toNonEmptyVector))
 
-  def derivedEncodeDecode[A: Arbitrary](
+  def derivedEncodeDecode[A: Arbitrary, B: Arbitrary](
     implicit eqFA: Eq[F[A]],
-    encoder: EncoderT[F, S, A, E],
-    decoder: DecoderT[F, S, A, O],
+    eqFEitherAB: Eq[F[Either[B, A]]],
+    aEncoder: EncoderT[F, S, A, E],
+    aDecoder: DecoderT[F, S, A, O],
+    bEncoder: EncoderT[F, S, B, E],
+    bDecoder: DecoderT[F, S, B, O],
     eqFOptA: Eq[F[Option[A]]],
     eqFListA: Eq[F[List[A]]],
     optEncoder: EncoderT[F, S, Option[A], E],
@@ -45,16 +50,22 @@ trait EncoderDecoderDerivedTests[F[_], S <: Settings, E, D, O] extends EncoderDe
       "chain encodeFinalizePrepareDecode" -> forAll(laws.encodeFinalizePrepareDecode[Chain[A]] _),
       "non-empty list encodeFinalizePrepareDecode" -> forAll(laws.encodeFinalizePrepareDecode[NonEmptyList[A]] _),
       "non-empty vector encodeFinalizePrepareDecode" -> forAll(laws.encodeFinalizePrepareDecode[NonEmptyVector[A]] _),
-      "non-empty chain encodeFinalizePrepareDecode" -> forAll(laws.encodeFinalizePrepareDecode[NonEmptyChain[A]] _)
+      "non-empty chain encodeFinalizePrepareDecode" -> forAll(laws.encodeFinalizePrepareDecode[NonEmptyChain[A]] _),
+      "either eitherLeftEncodeDecode " -> forAll(laws.eitherLeftEncodeDecode[B, A] _),
+      "either eitherRightEncodeDecode " -> forAll(laws.eitherRightEncodeDecode[B, A] _),
+      "either eitherLeftDefaultDecode " -> forAll(laws.eitherLeftDefaultDecode[B, A] _),
+      "either eitherRightDefaultDecode " -> forAll(laws.eitherRightDefaultDecode[B, A] _)
     )
   }
 }
 
 object EncoderDecoderDerivedTests {
-  def apply[F[_]: Monad: ExtruderErrors, S <: Settings, E: Monoid, D, O: Monoid](
-    settings: S
-  )(implicit fin: Transform[F, S, E, D], prep: Transform[F, S, D, O]): EncoderDecoderDerivedTests[F, S, E, D, O] =
+  def apply[F[_]: Monad: ExtruderErrors, S <: Settings, E: Monoid, D, O: Monoid](settings: S)(
+    implicit fin: Transform[F, S, E, D],
+    prep: Transform[F, S, D, O],
+    hv: HasValue[F, S, O]
+  ): EncoderDecoderDerivedTests[F, S, E, D, O] =
     new EncoderDecoderDerivedTests[F, S, E, D, O] {
-      override def laws: EncoderDecoderLaws[F, S, E, D, O] = EncoderDecoderLaws[F, S, E, D, O](settings)
+      override def laws: EncoderDecoderDerivedLaws[F, S, E, D, O] = EncoderDecoderDerivedLaws[F, S, E, D, O](settings)
     }
 }
