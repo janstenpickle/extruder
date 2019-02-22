@@ -35,7 +35,7 @@ class CirceDataSourceSuite extends FunSuite with EitherValues {
   test("Fails to decode missing a value") {
     assert(
       decode[Int](Json.Null).left.value === ValidationErrors
-        .missing(s"Could not find JSON value at '' and no default available")
+        .missing(s"Could not find value at '' and no default available")
     )
   }
 }

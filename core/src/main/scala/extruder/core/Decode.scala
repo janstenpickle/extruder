@@ -5,11 +5,11 @@ trait Decode { outer: DataSource =>
   type DecodeData
   type DecodeDefault[A]
 
-  def decode[A]: DecodePartiallyAppliedWithDefaultSettings[DecodeDefault, A, Sett, InputData, DecodeData] =
+  def decode[A]: DecodePartiallyAppliedWithDefaultSettings[DecodeDefault, A, Sett, DecodeData, InputData] =
     decodeF[DecodeDefault, A]
 
-  def decodeF[F[_], A]: DecodePartiallyAppliedWithDefaultSettings[F, A, Sett, InputData, DecodeData] =
-    new DecodePartiallyAppliedWithDefaultSettings[F, A, Sett, InputData, DecodeData] {
+  def decodeF[F[_], A]: DecodePartiallyAppliedWithDefaultSettings[F, A, Sett, DecodeData, InputData] =
+    new DecodePartiallyAppliedWithDefaultSettings[F, A, Sett, DecodeData, InputData] {
       override def defaultSettings: Sett = outer.defaultSettings
     }
 }

@@ -173,6 +173,20 @@ lazy val circe = (project in file("circe"))
   )
   .dependsOn(core)
 
+lazy val circeYaml = (project in file("circe-yaml"))
+  .settings(
+    commonSettings ++
+      Seq(
+        name := "extruder-circe-yaml",
+        libraryDependencies ++= Seq(
+          "io.circe"      %% "circe-yaml" % "0.9.0",
+          "org.scalatest" %% "scalatest"  % scalaTestVer % Test
+        ),
+        coverageEnabled.in(Test, test) := true
+      )
+  )
+  .dependsOn(circe)
+
 lazy val typesafe = (project in file("typesafe"))
   .settings(
     commonSettings ++
@@ -291,6 +305,7 @@ lazy val root = (project in file("."))
     aws,
     typesafe,
     circe,
+    circeYaml,
     systemSources,
     refined,
     metricsCore,

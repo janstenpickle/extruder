@@ -21,9 +21,7 @@ trait CirceDecoderInstances {
       case (None, Some(d)) => d.pure[F]
       case (Some(js), _) => error.fromEitherThrowable(js.as[A])
       case (None, None) =>
-        error.missing(
-          s"Could not find JSON value at '${settings.pathElementListToString(path)}' and no default available"
-        )
+        error.missing(s"Could not find value at '${settings.pathElementListToString(path)}' and no default available")
     }
   }
 
