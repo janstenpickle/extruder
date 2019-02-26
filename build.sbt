@@ -171,7 +171,7 @@ lazy val circe = (project in file("circe"))
         coverageEnabled.in(Test, test) := true
       )
   )
-  .dependsOn(core)
+  .dependsOn(core, laws % "test->compile")
 
 lazy val circeYaml = (project in file("circe-yaml"))
   .settings(
@@ -185,7 +185,7 @@ lazy val circeYaml = (project in file("circe-yaml"))
         coverageEnabled.in(Test, test) := true
       )
   )
-  .dependsOn(circe)
+  .dependsOn(circe, laws % "test->compile")
 
 lazy val typesafe = (project in file("typesafe"))
   .settings(

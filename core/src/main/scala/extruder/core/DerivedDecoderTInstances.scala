@@ -1,25 +1,22 @@
 package extruder.core
 
-import cats.{Functor, Monad}
 import cats.data.{Chain, NonEmptyChain, NonEmptyList, NonEmptyVector}
 import cats.syntax.flatMap._
 import cats.syntax.functor._
+import cats.{Functor, Monad}
 import shapeless.{Lazy, Refute}
 
 trait DerivedDecoderTInstances {
-  implicit def nonEmptyListDecoder[F[_], T, S, D](
-    implicit decoder: Lazy[DecoderT[F, S, NonEmptyChain[T], D]],
-    F: Functor[F]
+  implicit def nonEmptyListDecoder[F[_]: Functor, T, S, D](
+    implicit decoder: Lazy[DecoderT[F, S, NonEmptyChain[T], D]]
   ): DecoderT[F, S, NonEmptyList[T], D] = decoder.value.imap(_.toNonEmptyList)(NonEmptyChain.fromNonEmptyList)
 
-  implicit def nonEmptyVectorDecoder[F[_], T, S, D](
-    implicit decoder: Lazy[DecoderT[F, S, NonEmptyChain[T], D]],
-    F: Functor[F]
+  implicit def nonEmptyVectorDecoder[F[_]: Functor, T, S, D](
+    implicit decoder: Lazy[DecoderT[F, S, NonEmptyChain[T], D]]
   ): DecoderT[F, S, NonEmptyVector[T], D] = decoder.value.imap(_.toNonEmptyVector)(NonEmptyChain.fromNonEmptyVector)
 
-  implicit def chainDecoder[F[_], T, S, D](
-    implicit decoder: Lazy[DecoderT[F, S, List[T], D]],
-    F: Functor[F]
+  implicit def chainDecoder[F[_]: Functor, T, S, D](
+    implicit decoder: Lazy[DecoderT[F, S, List[T], D]]
   ): DecoderT[F, S, Chain[T], D] = decoder.value.imap(Chain.fromSeq)(_.toList)
 
   implicit def nonEmptyChainDecoder[F[_], T, S <: Settings, D](

@@ -13,7 +13,7 @@ trait GenericEncoderTInstances {
     sys.error("Impossible!")
   }
 
-  implicit def cconsEncoder[F[_], K <: Symbol, H, T <: Coproduct, S <: Settings, D](
+  implicit def cconsEncoder[F[_], K <: Symbol, H, T <: Coproduct, S, D](
     implicit key: Witness.Aux[K],
     headEncode: EncoderT[F, S, H, D],
     tailEncode: Lazy[EncoderT[F, S, T, D]],

@@ -11,7 +11,7 @@ trait EncoderDecoderMapTests[F[_], S <: Settings, E, D, O] extends EncoderDecode
   implicit def mapArb[A, B](implicit arb: Arbitrary[List[(A, B)]]): Arbitrary[Map[A, B]] =
     Arbitrary(arb.arbitrary.suchThat(_.nonEmpty).map(_.toMap))
 
-  def mapEncodeDecode[A: Arbitrary, B: Arbitrary, C: Arbitrary](
+  def mapEncodeDecode[A: Arbitrary: Parser: Show, B: Arbitrary: Parser: Show, C: Arbitrary](
     implicit eqFA: Eq[F[A]],
     eqFEitherAC: Eq[F[Either[C, A]]],
     eqFListA: Eq[F[List[A]]],
@@ -35,12 +35,10 @@ trait EncoderDecoderMapTests[F[_], S <: Settings, E, D, O] extends EncoderDecode
     necEncoder: EncoderT[F, S, NonEmptyChain[A], E],
     necDecoder: DecoderT[F, S, NonEmptyChain[A], O],
     listDecoder: DecoderT[F, S, List[A], O],
-    multiShowEncoder: EncoderT[F, S, (A, B), E],
-    multiShowDecoder: DecoderT[F, S, (A, B), O],
-    eqFTuple: Eq[F[(A, B)]],
-    optMultiShowEncoder: EncoderT[F, S, Option[(A, B)], E],
-    optMultiShowDecoder: DecoderT[F, S, Option[(A, B)], O],
-    optEqFTuple: Eq[F[Option[(A, B)]]],
+    optStringDecoder: DecoderT[F, S, Option[String], O],
+    stringEncoder: EncoderT[F, S, String, E],
+    eqFMultiClass: Eq[F[MultiClass[A, B]]],
+    optEqFMultiClass: Eq[F[Option[MultiClass[A, B]]]],
     mapEncoder: EncoderT[F, S, Map[B, A], E],
     mapDecoder: DecoderT[F, S, Map[B, A], O],
     eqFMapBA: Eq[F[Map[B, A]]]
@@ -63,6 +61,9 @@ object EncoderDecoderMapTests {
     hv: HasValue[F, S, O]
   ): EncoderDecoderMapTests[F, S, E, D, O] =
     new EncoderDecoderMapTests[F, S, E, D, O] {
+      override def F: Monad[F] = Monad[F]
+      override def monoid: Monoid[E] = Monoid[E]
+      override def errors: ExtruderErrors[F] = ExtruderErrors[F]
       override def laws: EncoderDecoderDerivedLaws[F, S, E, D, O] = EncoderDecoderDerivedLaws[F, S, E, D, O](settings)
     }
 }

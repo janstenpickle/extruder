@@ -9,5 +9,3 @@ gem install sass
 gem install -f jekyll -v 3.8.5
 
 sbt -mem 3000 ++${SCALA_VERSION} docs/makeMicrosite
-
-if [ "$CIRCLE_BRANCH" = "master" -a "x$CIRCLE_PULL_REQUEST" = "x" ]; then sbt ++${SCALA_VERSION} docs/publishMicrosite; fi

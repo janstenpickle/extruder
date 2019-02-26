@@ -34,12 +34,4 @@ object MultiParser extends MultiParserInstances {
         f(lookup)
     }
 
-  implicit def tuple2MultiParser[F[_]: Monad, A: Parser, B: Parser]: MultiParser[F, (A, B)] =
-    new MultiParser[F, (A, B)] {
-      override def parse(lookup: List[String] => OptionT[F, String]): OptionT[F, ValidatedNel[String, (A, B)]] =
-        for {
-          a <- lookup(List("_1"))
-          b <- lookup(List("_2"))
-        } yield Parser[A].parseNel(a).product(Parser[B].parseNel(b))
-    }
 }

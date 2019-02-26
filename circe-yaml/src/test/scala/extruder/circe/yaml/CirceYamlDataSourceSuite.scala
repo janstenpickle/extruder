@@ -1,12 +1,28 @@
 package extruder.circe.yaml
 
-import extruder.data.ValidationErrors
+import cats.instances.either._
+import cats.instances.int._
+import cats.instances.list._
+import cats.instances.option._
+import cats.instances.string._
+import extruder.circe.CirceSettings
+import extruder.data.{Validation, ValidationErrors}
+import extruder.laws.EncoderDecoderGenericTests
+import io.circe.Json
 import io.circe.syntax._
 import io.circe.yaml.printer
 import org.scalatest.{EitherValues, FunSuite}
+import org.typelevel.discipline.scalatest.Discipline
 
-class CirceYamlDataSourceSuite extends FunSuite with EitherValues {
+class CirceYamlDataSourceSuite extends FunSuite with Discipline with EitherValues {
   import CirceYamlDataSourceSuite._
+
+  // have to use `asInstanceOf` to get the compiler to work on 2.11
+  checkAll(
+    "Circe data source derived test",
+    EncoderDecoderGenericTests[Validation, CirceSettings, Json, Json, Json](defaultSettings.asInstanceOf[CirceSettings])
+      .derivedEncodeDecode[Int, String]
+  )
 
   test("Decodes simple value") {
     assert(decode[Int]("1").right.value === 1)
