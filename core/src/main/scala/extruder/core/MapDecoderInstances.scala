@@ -10,10 +10,10 @@ import cats.syntax.traverse._
 import extruder.data.PathElement
 import shapeless.{LowPriority, Refute}
 
-trait MapDecoderTInstances extends OptionSelector {
+trait MapDecoderInstances extends OptionSelector {
 
   implicit def stringMapDecoder[F[_]: Monad, K, V, S, I](
-    implicit mapDecoder: DecoderT[F, S, Map[String, String], I],
+    implicit mapDecoder: Decoder[F, S, Map[String, String], I],
     keyParser: Parser[K],
     valueParser: Parser[V],
     keyShow: Show[K],
@@ -21,7 +21,7 @@ trait MapDecoderTInstances extends OptionSelector {
     error: ExtruderErrors[F],
     refute: Refute[MultiParser[F, V]],
     lp: LowPriority
-  ): DecoderT[F, S, Map[K, V], I] =
+  ): Decoder[F, S, Map[K, V], I] =
     mapDecoder.imapResult(
       _.toList
         .traverse[F, (K, V)] {
@@ -34,11 +34,11 @@ trait MapDecoderTInstances extends OptionSelector {
     implicit
     error: ExtruderErrors[F],
     keyParser: Parser[K],
-    decoder: DecoderT[F, S, V, I],
+    decoder: Decoder[F, S, V, I],
     prune: Prune[F, S, I],
     refute: Refute[MultiParser[F, V]]
-  ): DecoderT[F, S, Map[K, V], I] =
-    DecoderT.make[F, S, Map[K, V], I](
+  ): Decoder[F, S, Map[K, V], I] =
+    Decoder.make[F, S, Map[K, V], I](
       (path, settings, default, data) =>
         for {
           pruned <- prune.prune(path, settings, data)
@@ -50,7 +50,7 @@ trait MapDecoderTInstances extends OptionSelector {
   private def decodeMap[F[_]: Monad, K, V, S, I](basePath: List[PathElement], settings: S)(
     keys: List[String],
     data: I
-  )(implicit error: ExtruderErrors[F], keyParser: Parser[K], valueDecoder: DecoderT[F, S, V, I]): F[Map[K, V]] = {
+  )(implicit error: ExtruderErrors[F], keyParser: Parser[K], valueDecoder: Decoder[F, S, V, I]): F[Map[K, V]] = {
     keys
       .traverse[F, (K, V)](
         k =>

@@ -7,15 +7,15 @@ import cats.{Monad, Traverse}
 import extruder.data.PathElement
 import shapeless.{<:!<, LowPriority, Refute}
 
-trait ShowEncoderTInstances {
+trait ShowEncoderInstances {
   implicit def showEncoder[F[_], A, S, O](
     implicit shows: Show[A],
     writer: StringWriter[F, S, O],
     refute: Refute[MultiShow[A]],
     neOpt: A <:!< Option[_],
     lp: LowPriority
-  ): EncoderT[F, S, A, O] =
-    EncoderT.make { (path, settings, in) =>
+  ): Encoder[F, S, A, O] =
+    Encoder.make { (path, settings, in) =>
       writer.write(path, settings, shows.show(in))
     }
 
@@ -24,8 +24,8 @@ trait ShowEncoderTInstances {
     F: Monad[F],
     writer: StringWriter[F, S, O],
     monoid: Monoid[O]
-  ): EncoderT[F, S, A, O] =
-    EncoderT.make { (path, settings, value) =>
+  ): Encoder[F, S, A, O] =
+    Encoder.make { (path, settings, value) =>
       Traverse[List]
         .traverse(shows.show(value).toList) {
           case (p, v) => writer.write(path ++ p.map(PathElement.Standard), settings, v)

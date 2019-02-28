@@ -13,10 +13,10 @@ trait EncoderDecoderTests[F[_], S <: Settings, E, D, O] extends DecoderTests[F, 
     implicit eqFa: Eq[F[A]],
     eqFOptA: Eq[F[Option[A]]],
     eqFListA: Eq[F[List[A]]],
-    encoder: EncoderT[F, S, A, E],
-    decoder: DecoderT[F, S, A, O],
-    optDecoder: DecoderT[F, S, Option[A], O],
-    listDecoder: DecoderT[F, S, List[A], O]
+    encoder: Encoder[F, S, A, E],
+    decoder: Decoder[F, S, A, O],
+    optDecoder: Decoder[F, S, Option[A], O],
+    listDecoder: Decoder[F, S, List[A], O]
   ): RuleSet = new RuleSet {
     override def name: String = "encoderDecoder"
     override def bases: Seq[(String, Laws#RuleSet)] = Nil

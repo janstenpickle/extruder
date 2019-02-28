@@ -16,8 +16,8 @@ import java.net.URL
 import extruder.core._
 
 trait WithURL {
-  implicit def urlMapDecoder[F[_], S <: Settings](implicit F: Applicative[F], error: ExtruderErrors[F]): DecoderT[F, S, URL, Map[String, String]] =
-    DecoderT.make[F, S, URL, Map[String, String]]((path, settings, default, input) =>
+  implicit def urlMapDecoder[F[_], S <: Settings](implicit F: Applicative[F], error: ExtruderErrors[F]): Decoder[F, S, URL, Map[String, String]] =
+    Decoder.make[F, S, URL, Map[String, String]]((path, settings, default, input) =>
       (input.get(settings.pathElementListToString(path)), default) match {
         case (Some(v), _) => error.fromEitherThrowable(Either.catchNonFatal(new URL(v)))
         case (None, Some(url)) => F.pure(url)
@@ -25,8 +25,8 @@ trait WithURL {
       }
     )
 
-  implicit def urlEncoder[F[_], S <: Settings](implicit F: Applicative[F]): EncoderT[F, S, URL, Map[String, String]]  =
-    EncoderT.make[F, S, URL, Map[String, String]]((path, settings, value) =>
+  implicit def urlEncoder[F[_], S <: Settings](implicit F: Applicative[F]): Encoder[F, S, URL, Map[String, String]]  =
+    Encoder.make[F, S, URL, Map[String, String]]((path, settings, value) =>
       F.pure(Map(settings.pathElementListToString(path) -> value.toString))
     )
 }
@@ -34,7 +34,7 @@ trait WithURL {
 object WithURL extends WithURL
 ```
 
-This is a fairly verbose implementation which repeats some of the abstracted functionality found in `ParserDecoderTInstances` and `ShowEncoderTInstances`, it must also be implemented for each data type.
+This is a fairly verbose implementation which repeats some of the abstracted functionality found in `ParserDecoderInstances` and `ShowEncoderInstances`, it must also be implemented for each data type.
 
 ```tut:silent
 import cats.syntax.either._

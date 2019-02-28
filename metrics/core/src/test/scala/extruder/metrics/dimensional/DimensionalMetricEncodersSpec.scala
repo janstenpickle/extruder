@@ -121,7 +121,7 @@ class DimensionalMetricEncodersSpec extends FunSuite with GeneratorDrivenPropert
         .catchNonFatal(
           compileError("encodeF[extruder.data.Validation](dt)").check(
             "",
-            "could not find implicit value for parameter encoder: extruder.core.EncoderT" +
+            "could not find implicit value for parameter encoder: extruder.core.Encoder" +
               "[extruder.data.Validation,extruder.metrics.dimensional.DimensionalMetricEncodersSpec.TestDimensionalEncoders.Sett," +
               "extruder.metrics.dimensional.DimensionalMetricEncodersSpec.DifferentTypes," +
               "extruder.metrics.dimensional.DimensionalMetricEncodersSpec.TestDimensionalEncoders.EncodeData]"
@@ -137,7 +137,7 @@ class DimensionalMetricEncodersSpec extends FunSuite with GeneratorDrivenPropert
         .catchNonFatal(
           compileError("encodeF[extruder.data.Validation](dt)").check(
             "",
-            "could not find implicit value for parameter encoder: extruder.core.EncoderT" +
+            "could not find implicit value for parameter encoder: extruder.core.Encoder" +
               "[extruder.data.Validation,extruder.metrics.dimensional.DimensionalMetricEncodersSpec.TestDimensionalEncoders.Sett," +
               "extruder.metrics.dimensional.DimensionalMetricEncodersSpec.DifferentTypes2," +
               "extruder.metrics.dimensional.DimensionalMetricEncodersSpec.TestDimensionalEncoders.EncodeData]"

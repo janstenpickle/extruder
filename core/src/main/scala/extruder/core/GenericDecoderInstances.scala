@@ -8,7 +8,7 @@ import shapeless.labelled.{field, FieldType}
 
 import scala.reflect.runtime.universe.TypeTag
 
-trait GenericDecoderTInstances {
+trait GenericDecoderInstances {
   private[core] trait DerivedDecoder[F[_], Repr <: Coproduct, S, I] {
     def read(path: List[PathElement], settings: S, data: I): F[Repr]
   }
@@ -34,9 +34,9 @@ trait GenericDecoderTInstances {
 
   implicit def cconsDecoder[F[_], K <: Symbol, H, Repr <: Coproduct, S, I](
     implicit key: Witness.Aux[K],
-    headResolve: Lazy[DecoderT[F, S, H, I]],
+    headResolve: Lazy[Decoder[F, S, H, I]],
     tailResolve: Lazy[DerivedDecoder[F, Repr, S, I]],
-    typeResolver: Lazy[DecoderT[F, S, Option[String], I]],
+    typeResolver: Lazy[Decoder[F, S, Option[String], I]],
     F: Monad[F],
     errors: ExtruderErrors[F]
   ): DerivedDecoder[F, FieldType[K, H] :+: Repr, S, I] = new DerivedDecoder[F, FieldType[K, H] :+: Repr, S, I] {
@@ -59,13 +59,13 @@ trait GenericDecoderTInstances {
     implicit gen: LabelledGeneric.Aux[T, V],
     underlying: Lazy[DerivedDecoder[F, V, S, I]],
     F: Functor[F],
-    refute: Refute[DecoderTRefute[T, S, I]],
+    refute: Refute[DecoderRefute[T, S, I]],
     refuteParser: Refute[Parser[T]],
     refuteMultiParser: Refute[MultiParser[F, T]],
     neOpt: T <:!< Option[_],
     neCol: T <:!< TraversableOnce[_]
-  ): DecoderT[F, S, T, I] =
-    DecoderT.make[F, S, T, I] { (path, settings, _, data) =>
+  ): Decoder[F, S, T, I] =
+    Decoder.make[F, S, T, I] { (path, settings, _, data) =>
       underlying.value.read(path, settings, data).map(gen.from)
     }
 
@@ -84,7 +84,7 @@ trait GenericDecoderTInstances {
   implicit def hConsDerivedDecoder[T, F[_], K <: Symbol, V, TailRepr <: HList, DefaultsTailRepr <: HList, S, I](
     implicit key: Witness.Aux[K],
     F: Applicative[F],
-    decoder: Lazy[DecoderT[F, S, V, I]],
+    decoder: Lazy[Decoder[F, S, V, I]],
     tailDecoder: Lazy[DerivedDecoderWithDefault[F, T, TailRepr, DefaultsTailRepr, S, I]]
   ): DerivedDecoderWithDefault[F, T, FieldType[K, V] :: TailRepr, Option[V] :: DefaultsTailRepr, S, I] =
     new DerivedDecoderWithDefault[F, T, FieldType[K, V] :: TailRepr, Option[V] :: DefaultsTailRepr, S, I] {
@@ -110,11 +110,11 @@ trait GenericDecoderTInstances {
     F: Functor[F],
     decoder: Lazy[DerivedDecoderWithDefault[F, T, GenRepr, DefaultOptsRepr, S, I]],
     lp: LowPriority,
-    refute: Refute[DecoderTRefute[T, S, I]],
+    refute: Refute[DecoderRefute[T, S, I]],
     refuteParser: Refute[Parser[T]],
     refuteMultiParser: Refute[MultiParser[F, T]]
-  ): DecoderT[F, S, T, I] =
-    DecoderT.make[F, S, T, I] { (path, settings, _, data) =>
+  ): Decoder[F, S, T, I] =
+    Decoder.make[F, S, T, I] { (path, settings, _, data) =>
       val newPath = path :+ PathElement.ClassName(tag.tpe.typeSymbol.name.toString)
       decoder.value.read(newPath, settings, defaults(), data).map(gen.from)
     }

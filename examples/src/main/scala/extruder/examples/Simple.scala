@@ -78,16 +78,12 @@ object Simple extends App {
 
   type Ev[A] = EffectValidation[IO, A]
 
-  println(encode[Sealed](ObjImpl))
-
-  EncoderT[Validation, Se]
-
-//  println(decode[CC].combine(decode[CC])((config1, config2)))
-//  println(encode.combine(encode)(CC3(Some("xzf"))))
-//  println(decode[CC](Map.empty[String, String]))
-//  println(decodeF[Try, CC](config))
-//  println(decodeF[Future, CC](config))
-//  println(decodeF[IO, CC](config).unsafeRunSync())
-//  println(decodeF[Ev, CC](config).value.unsafeRunSync())
-//  println(decodeF[EvalValidation, CC](Map.empty[String, String]).value.value)
+  println(decode[CC].combine(decode[CC])((config1, config2)))
+  println(encode.combine(encode)(CC3(Some("xzf"))))
+  println(decode[CC](Map.empty[String, String]))
+  println(decodeF[Try, CC](config))
+  println(decodeF[Future, CC](config))
+  println(decodeF[IO, CC](config).unsafeRunSync())
+  println(decodeF[Ev, CC](config).value.unsafeRunSync())
+  println(decodeF[EvalValidation, CC](Map.empty[String, String]).value.value)
 }

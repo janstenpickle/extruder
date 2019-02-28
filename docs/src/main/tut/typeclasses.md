@@ -11,15 +11,15 @@ position: 5
 Extruder is made up of a number of type classes which compose to perform the task of encoding and decoding. Each data source may define new instances of some of these, or rely on already provided and derived instances.
 
 
-# `EncoderT`
+# `Encoder`
 
-**[Scaladoc](api/extruder/core/EncoderT.html)**
+**[Scaladoc](api/extruder/core/Encoder.html)**
 
 Top level type class for encoding data. Implicit instances may be automatically derived by combining [`Show`](#show) or [`MultiShow`](#multishow) with [`StringWriter`](#stringwriter). 
 
-# `DecoderT`
+# `Decoder`
 
-**[Scaladoc](api/extruder/core/DecoderT.html)**
+**[Scaladoc](api/extruder/core/Decoder.html)**
 
 Top level type class for decoding data. Implicit instances may be automatically derived by combining [`Parser`](#parser) or [`MultiParser`](#multiparser) with [`StringReader`](#stringreader)
 

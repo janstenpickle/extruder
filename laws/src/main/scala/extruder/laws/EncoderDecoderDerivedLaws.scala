@@ -18,13 +18,13 @@ trait EncoderDecoderDerivedLaws[F[_], S <: Settings, E, D, O] extends EncoderDec
     } yield o
 
   def eitherLeftEncodeDecode[A, B](path: List[PathElement], a: A)(
-    implicit aEncoder: EncoderT[F, S, A, E],
-    bEncoder: EncoderT[F, S, B, E],
-    aDecoder: DecoderT[F, S, A, O],
-    bDecoder: DecoderT[F, S, B, O]
+    implicit aEncoder: Encoder[F, S, A, E],
+    bEncoder: Encoder[F, S, B, E],
+    aDecoder: Decoder[F, S, A, O],
+    bDecoder: Decoder[F, S, B, O]
   ): IsEq[F[Either[A, B]]] = {
-    val eitherEncoder: EncoderT[F, S, Either[A, B], E] = EncoderT[F, S, Either[A, B], E]
-    val eitherDecoder: DecoderT[F, S, Either[A, B], O] = DecoderT[F, S, Either[A, B], O]
+    val eitherEncoder: Encoder[F, S, Either[A, B], E] = Encoder[F, S, Either[A, B], E]
+    val eitherDecoder: Decoder[F, S, Either[A, B], O] = Decoder[F, S, Either[A, B], O]
 
     (for {
       left <- encodePrepare(path, eitherEncoder.write(path, settings, Left(a)))
@@ -33,13 +33,13 @@ trait EncoderDecoderDerivedLaws[F[_], S <: Settings, E, D, O] extends EncoderDec
   }
 
   def eitherRightEncodeDecode[A, B](path: List[PathElement], b: B)(
-    implicit aEncoder: EncoderT[F, S, A, E],
-    bEncoder: EncoderT[F, S, B, E],
-    aDecoder: DecoderT[F, S, A, O],
-    bDecoder: DecoderT[F, S, B, O]
+    implicit aEncoder: Encoder[F, S, A, E],
+    bEncoder: Encoder[F, S, B, E],
+    aDecoder: Decoder[F, S, A, O],
+    bDecoder: Decoder[F, S, B, O]
   ): IsEq[F[Either[A, B]]] = {
-    val eitherEncoder: EncoderT[F, S, Either[A, B], E] = EncoderT[F, S, Either[A, B], E]
-    val eitherDecoder: DecoderT[F, S, Either[A, B], O] = DecoderT[F, S, Either[A, B], O]
+    val eitherEncoder: Encoder[F, S, Either[A, B], E] = Encoder[F, S, Either[A, B], E]
+    val eitherDecoder: Decoder[F, S, Either[A, B], O] = Decoder[F, S, Either[A, B], O]
 
     (for {
       right <- encodePrepare(path, eitherEncoder.write(path, settings, Right(b)))
@@ -50,8 +50,8 @@ trait EncoderDecoderDerivedLaws[F[_], S <: Settings, E, D, O] extends EncoderDec
   def eitherLeftDefaultDecode[A, B](
     path: List[PathElement],
     a: A
-  )(implicit aDecoder: DecoderT[F, S, A, O], bDecoder: DecoderT[F, S, B, O]): IsEq[F[Either[A, B]]] = {
-    val eitherDecoder: DecoderT[F, S, Either[A, B], O] = DecoderT[F, S, Either[A, B], O]
+  )(implicit aDecoder: Decoder[F, S, A, O], bDecoder: Decoder[F, S, B, O]): IsEq[F[Either[A, B]]] = {
+    val eitherDecoder: Decoder[F, S, Either[A, B], O] = Decoder[F, S, Either[A, B], O]
 
     eitherDecoder.read(path, settings, Some(Left(a)), outMonoid.empty) <-> F.pure(Left(a))
   }
@@ -59,8 +59,8 @@ trait EncoderDecoderDerivedLaws[F[_], S <: Settings, E, D, O] extends EncoderDec
   def eitherRightDefaultDecode[A, B](
     path: List[PathElement],
     b: B
-  )(implicit aDecoder: DecoderT[F, S, A, O], bDecoder: DecoderT[F, S, B, O]): IsEq[F[Either[A, B]]] = {
-    val eitherDecoder: DecoderT[F, S, Either[A, B], O] = DecoderT[F, S, Either[A, B], O]
+  )(implicit aDecoder: Decoder[F, S, A, O], bDecoder: Decoder[F, S, B, O]): IsEq[F[Either[A, B]]] = {
+    val eitherDecoder: Decoder[F, S, Either[A, B], O] = Decoder[F, S, Either[A, B], O]
 
     eitherDecoder.read(path, settings, Some(Right(b)), outMonoid.empty) <-> F.pure(Right(b))
   }

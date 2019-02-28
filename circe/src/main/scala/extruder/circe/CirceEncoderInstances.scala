@@ -2,15 +2,14 @@ package extruder.circe
 
 import cats.{Applicative, Monad}
 import cats.syntax.applicative._
-import extruder.core.EncoderT
+import extruder.core.Encoder
 import io.circe.syntax._
-import io.circe.{Encoder, Json}
+import io.circe.{Encoder => CEncoder, Json}
 import cats.instances.vector._
 import cats.kernel.Monoid
 import cats.syntax.traverse._
 import extruder.data.PathElement
 
-import scala.collection.generic.CanBuildFrom
 import cats.syntax.flatMap._
 import shapeless.{<:!<, LowPriority}
 
@@ -23,7 +22,7 @@ trait CirceEncoderInstances {
       else x.deepMerge(y)
   }
 
-  private def encode[F[_]: Applicative, A: Encoder](path: List[PathElement], settings: CirceSettings, a: A): F[Json] =
+  private def encode[F[_]: Applicative, A: CEncoder](path: List[PathElement], settings: CirceSettings, a: A): F[Json] =
     settings.pathElementsAsStrings(path).reverse match {
       case head :: tail =>
         tail
@@ -35,15 +34,15 @@ trait CirceEncoderInstances {
       case Nil => a.asJson.pure[F]
     }
 
-  implicit def fromCirceEncoder[F[_]: Applicative, S <: CirceSettings, A: Encoder](
+  implicit def fromCirceEncoder[F[_]: Applicative, S <: CirceSettings, A: CEncoder](
     implicit neOpt: A <:!< Option[_],
     lp: LowPriority
-  ): EncoderT[F, S, A, Json] =
-    EncoderT.make(encode[F, A])
+  ): Encoder[F, S, A, Json] =
+    Encoder.make(encode[F, A])
 
   implicit def circeObjectArrayEncoder[F[_]: Monad, FF[T] <: TraversableOnce[T], S <: CirceSettings, A](
-    implicit encoder: EncoderT[F, S, A, Json]
-  ): EncoderT[F, S, FF[A], Json] = EncoderT.make { (path, settings, as) =>
+    implicit encoder: Encoder[F, S, A, Json]
+  ): Encoder[F, S, FF[A], Json] = Encoder.make { (path, settings, as) =>
     as.toVector
       .traverse { a =>
         encoder.write(List.empty, settings, a)

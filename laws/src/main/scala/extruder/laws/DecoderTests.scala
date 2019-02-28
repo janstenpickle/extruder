@@ -1,7 +1,7 @@
 package extruder.laws
 
 import cats.{Applicative, Eq, Monoid}
-import extruder.core.{DecoderT, EncoderT, ExtruderErrors, Settings}
+import extruder.core.{Decoder, Encoder, ExtruderErrors, Settings}
 import extruder.data.PathElement
 import org.scalacheck.Prop.forAll
 import org.scalacheck.{Arbitrary, Gen, Prop}
@@ -19,9 +19,9 @@ trait DecoderTests[F[_], S <: Settings, E, D, O] extends Laws {
   def decode[A: Arbitrary](
     implicit eqFa: Eq[F[A]],
     eqFListA: Eq[F[List[A]]],
-    encoder: EncoderT[F, S, A, E],
-    decoder: DecoderT[F, S, A, O],
-    listDecoder: DecoderT[F, S, List[A], O]
+    encoder: Encoder[F, S, A, E],
+    decoder: Decoder[F, S, A, O],
+    listDecoder: Decoder[F, S, List[A], O]
   ): RuleSet = new RuleSet {
     override def name: String = "decoder"
     override def bases: Seq[(String, Laws#RuleSet)] = Nil

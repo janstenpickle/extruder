@@ -4,7 +4,7 @@ import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.{FlatMap, Functor}
 import extruder.data.PathElement
-import extruder.instances.DecoderTInstances
+import extruder.instances.DecoderInstances
 
 /**
   * Reads value `A` from input `I`, wrapping result in functor `F`.
@@ -14,32 +14,32 @@ import extruder.instances.DecoderTInstances
   * @tparam A Decoded type
   * @tparam I Input data
   */
-trait DecoderT[F[_], S, A, I] {
+trait Decoder[F[_], S, A, I] {
   def read(path: List[PathElement], settings: S, default: Option[A], input: I): F[A]
 
-  def imap[B](f: A => B)(g: B => A)(implicit F: Functor[F]): DecoderT[F, S, B, I] = DecoderT.make[F, S, B, I] {
+  def imap[B](f: A => B)(g: B => A)(implicit F: Functor[F]): Decoder[F, S, B, I] = Decoder.make[F, S, B, I] {
     (path, settings, default, input) =>
       read(path, settings, default.map(g), input).map(f)
   }
 
-  def imapResult[B](f: A => F[B])(g: B => A)(implicit F: FlatMap[F]): DecoderT[F, S, B, I] = DecoderT.make[F, S, B, I] {
+  def imapResult[B](f: A => F[B])(g: B => A)(implicit F: FlatMap[F]): Decoder[F, S, B, I] = Decoder.make[F, S, B, I] {
     (path, settings, default, input) =>
       read(path, settings, default.map(g), input).flatMap(f)
   }
 }
 
-object DecoderT
-    extends DecoderTInstances
-    with ParserDecoderTInstances
-    with MapDecoderTInstances
-    with DerivedDecoderTInstances
-    with GenericDecoderTInstances
-    with CombinedDecoderTInstances {
-  def make[F[_], S, A, C](f: (List[PathElement], S, Option[A], C) => F[A]): DecoderT[F, S, A, C] =
-    new DecoderT[F, S, A, C] {
+object Decoder
+    extends DecoderInstances
+    with ParserDecoderInstances
+    with MapDecoderInstances
+    with DerivedDecoderInstances
+    with GenericDecoderInstances
+    with CombinedDecoderInstances {
+  def make[F[_], S, A, C](f: (List[PathElement], S, Option[A], C) => F[A]): Decoder[F, S, A, C] =
+    new Decoder[F, S, A, C] {
       override def read(path: List[PathElement], settings: S, default: Option[A], input: C): F[A] =
         f(path, settings, default, input)
     }
 
-  def apply[F[_], S, A, C](implicit decoder: DecoderT[F, S, A, C]): DecoderT[F, S, A, C] = decoder
+  def apply[F[_], S, A, C](implicit decoder: Decoder[F, S, A, C]): Decoder[F, S, A, C] = decoder
 }

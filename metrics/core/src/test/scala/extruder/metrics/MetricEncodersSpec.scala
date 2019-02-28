@@ -6,7 +6,7 @@ import cats.Eq
 import cats.instances.long._
 import cats.instances.map._
 import cats.kernel.laws.discipline.MonoidTests
-import extruder.core.{DataSource, Encode, EncoderT}
+import extruder.core.{DataSource, Encode, Encoder}
 import extruder.data.Validation
 import extruder.metrics.data.MetricType.Counter
 import extruder.metrics.data._

@@ -3,7 +3,7 @@ package extruder.laws
 import cats.kernel.laws.IsEq
 import cats.laws._
 import cats.{Applicative, Monoid}
-import extruder.core.{DecoderT, ExtruderErrors, Settings}
+import extruder.core.{Decoder, ExtruderErrors, Settings}
 import extruder.data.PathElement
 import org.scalacheck.{Arbitrary, Gen}
 
@@ -18,12 +18,12 @@ trait DecoderLaws[F[_], S <: Settings, E, D, O] {
     Gen.nonEmptyListOf(nonEmptyStringArb.arbitrary.map(PathElement.Standard))
   )
 
-  def decodeEmpty[A](path: List[PathElement])(implicit decoder: DecoderT[F, S, A, O]): IsEq[F[A]] =
+  def decodeEmpty[A](path: List[PathElement])(implicit decoder: Decoder[F, S, A, O]): IsEq[F[A]] =
     decoder.read(path, settings, None, outMonoid.empty) <-> errors.missing(
       s"Could not find value at '${settings.pathElementListToString(path)}' and no default available"
     )
 
-  def decodeDefault[A](a: A, path: List[PathElement])(implicit decoder: DecoderT[F, S, A, O]): IsEq[F[A]] =
+  def decodeDefault[A](a: A, path: List[PathElement])(implicit decoder: Decoder[F, S, A, O]): IsEq[F[A]] =
     decoder.read(path, settings, Some(a), outMonoid.empty) <-> F.pure(a)
 }
 

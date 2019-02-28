@@ -32,8 +32,8 @@ trait TypesafeConfigDecoderInstances extends Resolve { outer =>
   implicit def dataObjectDecoder[F[_]](
     implicit F: MonadError[F, Throwable],
     error: ExtruderErrors[F]
-  ): DecoderT[F, Settings, ConfigObject, Config] =
-    DecoderT.make[F, Settings, ConfigObject, Config](
+  ): Decoder[F, Settings, ConfigObject, Config] =
+    Decoder.make[F, Settings, ConfigObject, Config](
       resolveConfig[F, ConfigObject](
         (path, settings, data) => lookup(_.getObject(settings.pathElementListToString(path)), data)
       )
@@ -42,8 +42,8 @@ trait TypesafeConfigDecoderInstances extends Resolve { outer =>
   implicit def dataListDecoder[F[_]](
     implicit F: MonadError[F, Throwable],
     error: ExtruderErrors[F]
-  ): DecoderT[F, Settings, ConfigList, Config] =
-    DecoderT.make[F, Settings, ConfigList, Config](
+  ): Decoder[F, Settings, ConfigList, Config] =
+    Decoder.make[F, Settings, ConfigList, Config](
       resolveConfig[F, ConfigList](
         (path, settings, data) => lookup(_.getList(settings.pathElementListToString(path)), data)
       )
@@ -52,8 +52,8 @@ trait TypesafeConfigDecoderInstances extends Resolve { outer =>
   implicit def dataValueDecoder[F[_]](
     implicit F: MonadError[F, Throwable],
     error: ExtruderErrors[F]
-  ): DecoderT[F, Settings, ConfigValue, Config] =
-    DecoderT.make[F, Settings, ConfigValue, Config](
+  ): Decoder[F, Settings, ConfigValue, Config] =
+    Decoder.make[F, Settings, ConfigValue, Config](
       resolveConfig[F, ConfigValue](
         (path, settings, data) => lookup(_.getValue(settings.pathElementListToString(path)), data)
       )
@@ -64,8 +64,8 @@ trait TypesafeConfigDecoderInstances extends Resolve { outer =>
     cbf: CanBuildFrom[FF[A], A, FF[A]],
     F: MonadError[F, Throwable],
     error: ExtruderErrors[F]
-  ): DecoderT[F, S, FF[A], Config] =
-    DecoderT.make[F, S, FF[A], Config](
+  ): Decoder[F, S, FF[A], Config] =
+    Decoder.make[F, S, FF[A], Config](
       (path, settings: Settings, default, data) =>
         lookup[F, List[String]](_.getStringList(settings.pathElementListToString(path)).asScala.toList, data).flatMap(
           listOpt =>
@@ -92,13 +92,13 @@ trait TypesafeConfigDecoderInstances extends Resolve { outer =>
 
   implicit def traversableObjectDecoder[F[_], A, FF[T] <: TraversableOnce[T], S <: Settings](
     implicit parser: Parser[List[String]],
-    decoder: DecoderT[F, S, A, Config],
+    decoder: Decoder[F, S, A, Config],
     cbf: CanBuildFrom[FF[A], A, FF[A]],
     F: MonadError[F, Throwable],
     error: ExtruderErrors[F],
     refute: Refute[Parser[A]]
-  ): DecoderT[F, S, FF[A], Config] =
-    DecoderT.make[F, S, FF[A], Config] { (path, settings, default, data) =>
+  ): Decoder[F, S, FF[A], Config] =
+    Decoder.make[F, S, FF[A], Config] { (path, settings, default, data) =>
       lookup[F, List[Config]](_.getConfigList(settings.pathElementListToString(path)).asScala.toList, data)
         .map(_.map(_.map(decoder.read(List.empty, settings, None, _))))
         .flatMap(

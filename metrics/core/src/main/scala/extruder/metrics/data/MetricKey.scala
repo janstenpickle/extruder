@@ -74,7 +74,7 @@ object MetricKey {
     settings: Settings,
     dimensions: A,
     metricType: Option[MetricType]
-  )(implicit enc: EncoderT[F, Settings, A, Map[String, String]]): F[MetricKey] =
+  )(implicit enc: Encoder[F, Settings, A, Map[String, String]]): F[MetricKey] =
     enc.write(List.empty, settings, dimensions).flatMap(apply[F](path, _, metricType))
 
   def apply[F[_]: Applicative](path: List[String], dimension: (String, String), metricType: Option[MetricType])(

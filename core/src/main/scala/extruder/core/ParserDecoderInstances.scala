@@ -7,15 +7,15 @@ import cats.syntax.functor._
 import cats.{Monad, Traverse}
 import extruder.data.PathElement
 
-trait ParserDecoderTInstances extends Resolve {
+trait ParserDecoderInstances extends Resolve {
 
   implicit def parserDecoder[F[_], T, S <: Settings, I](
     implicit parser: Parser[T],
     monad: Monad[F],
     error: ExtruderErrors[F],
     reader: StringReader[F, S, I]
-  ): DecoderT[F, S, T, I] =
-    DecoderT.make[F, S, T, I](
+  ): Decoder[F, S, T, I] =
+    Decoder.make[F, S, T, I](
       (path, settings, default, data) =>
         resolveValue[F, S, T, I](formatParserError[F, T, S](parser, path, settings))
           .apply(path, settings, default, data)
@@ -26,16 +26,16 @@ trait ParserDecoderTInstances extends Resolve {
     monad: Monad[F],
     error: ExtruderErrors[F],
     reader: StringReader[F, S, I]
-  ): DecoderT[F, S, Option[T], I] =
-    DecoderT.make[F, S, Option[T], I]((path, settings, _, data) => multiParse[F, T, S, I](parser, path, settings, data))
+  ): Decoder[F, S, Option[T], I] =
+    Decoder.make[F, S, Option[T], I]((path, settings, _, data) => multiParse[F, T, S, I](parser, path, settings, data))
 
   implicit def multiParserDecode[F[_], T, S <: Settings, I](
     implicit parser: MultiParser[F, T],
     monad: Monad[F],
     error: ExtruderErrors[F],
     reader: StringReader[F, S, I]
-  ): DecoderT[F, S, T, I] =
-    DecoderT.make[F, S, T, I](
+  ): Decoder[F, S, T, I] =
+    Decoder.make[F, S, T, I](
       (path, settings, default, data) =>
         for {
           parsed <- multiParse[F, T, S, I](parser, path, settings, data)

@@ -17,29 +17,29 @@ trait EncoderDecoderMultiTests[F[_], S <: Settings, E, D, O] extends EncoderDeco
     implicit eqFA: Eq[F[A]],
     eqFEitherAC: Eq[F[Either[C, A]]],
     eqFListA: Eq[F[List[A]]],
-    encoder: EncoderT[F, S, A, E],
-    decoder: DecoderT[F, S, A, O],
-    cEncoder: EncoderT[F, S, C, E],
-    cDecoder: DecoderT[F, S, C, O],
+    encoder: Encoder[F, S, A, E],
+    decoder: Decoder[F, S, A, O],
+    cEncoder: Encoder[F, S, C, E],
+    cDecoder: Decoder[F, S, C, O],
     eqFOptA: Eq[F[Option[A]]],
-    optEncoder: EncoderT[F, S, Option[A], E],
-    optDecoder: DecoderT[F, S, Option[A], O],
+    optEncoder: Encoder[F, S, Option[A], E],
+    optDecoder: Decoder[F, S, Option[A], O],
     eqFChainA: Eq[F[Chain[A]]],
     eqFNelA: Eq[F[NonEmptyList[A]]],
     eqFNevA: Eq[F[NonEmptyVector[A]]],
     eqFNecA: Eq[F[NonEmptyChain[A]]],
-    chainEncoder: EncoderT[F, S, Chain[A], E],
-    chainDecoder: DecoderT[F, S, Chain[A], O],
-    nelEncoder: EncoderT[F, S, NonEmptyList[A], E],
-    nelDecoder: DecoderT[F, S, NonEmptyList[A], O],
-    nevEncoder: EncoderT[F, S, NonEmptyVector[A], E],
-    nevDecoder: DecoderT[F, S, NonEmptyVector[A], O],
-    necEncoder: EncoderT[F, S, NonEmptyChain[A], E],
-    necDecoder: DecoderT[F, S, NonEmptyChain[A], O],
-    listDecoder: DecoderT[F, S, List[A], O],
+    chainEncoder: Encoder[F, S, Chain[A], E],
+    chainDecoder: Decoder[F, S, Chain[A], O],
+    nelEncoder: Encoder[F, S, NonEmptyList[A], E],
+    nelDecoder: Decoder[F, S, NonEmptyList[A], O],
+    nevEncoder: Encoder[F, S, NonEmptyVector[A], E],
+    nevDecoder: Decoder[F, S, NonEmptyVector[A], O],
+    necEncoder: Encoder[F, S, NonEmptyChain[A], E],
+    necDecoder: Decoder[F, S, NonEmptyChain[A], O],
+    listDecoder: Decoder[F, S, List[A], O],
     eqFMapBA: Eq[F[Map[B, A]]],
-    optStringDecoder: DecoderT[F, S, Option[String], O],
-    stringEncoder: EncoderT[F, S, String, E],
+    optStringDecoder: Decoder[F, S, Option[String], O],
+    stringEncoder: Encoder[F, S, String, E],
     eqFMultiClass: Eq[F[MultiClass[A, B]]],
     optEqFMultiClass: Eq[F[Option[MultiClass[A, B]]]]
   ): RuleSet = new RuleSet {
@@ -67,7 +67,7 @@ trait EncoderDecoderMultiTests[F[_], S <: Settings, E, D, O] extends EncoderDeco
         Map(List("a") -> Show[A].show(value.a), List("b") -> Show[B].show(value.b))
     }
 
-    DecoderT.multiParserDecode[F, MultiClass[A, B], S, O]
+    Decoder.multiParserDecode[F, MultiClass[A, B], S, O]
 
     override def name: String = "multiEncodeDecode"
     override def bases: Seq[(String, Laws#RuleSet)] = Nil

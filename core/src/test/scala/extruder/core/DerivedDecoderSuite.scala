@@ -8,7 +8,7 @@ import org.scalatest.{EitherValues, FunSuite}
 class DerivedDecoderSuite extends FunSuite with EitherValues {
   test("Fails to decode a non-empty chain") {
     assert(
-      DecoderT[Validation, Settings, NonEmptyChain[Int], Map[String, String]]
+      Decoder[Validation, Settings, NonEmptyChain[Int], Map[String, String]]
         .read(List.empty, defaultSettings, None, Map("" -> ""))
         .left
         .value === ValidationErrors

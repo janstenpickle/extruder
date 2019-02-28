@@ -23,7 +23,7 @@ trait EncodePartiallyApplied[F[_], S, E, O] {
     namespace: List[String],
     settings: S,
     value: A
-  )(implicit F: FlatMap[F], encoder: EncoderT[F, S, A, E], transform: Transform[F, S, E, O]): F[O] = {
+  )(implicit F: FlatMap[F], encoder: Encoder[F, S, A, E], transform: Transform[F, S, E, O]): F[O] = {
     val newNamespace = namespace.map(PathElement.Standard)
     encoder.write(newNamespace, settings, value).flatMap(transform.run(newNamespace, settings, _))
   }
@@ -42,7 +42,7 @@ trait EncodePartiallyApplied[F[_], S, E, O] {
   def apply[A](
     settings: S,
     value: A
-  )(implicit F: FlatMap[F], encoder: EncoderT[F, S, A, E], transform: Transform[F, S, E, O]): F[O] =
+  )(implicit F: FlatMap[F], encoder: Encoder[F, S, A, E], transform: Transform[F, S, E, O]): F[O] =
     apply(List.empty, settings, value)
 
   /**
@@ -85,7 +85,7 @@ trait EncodePartiallyAppliedWithDefaultSettings[F[_], S, E, O] extends EncodePar
   def apply[A](
     namespace: List[String],
     value: A
-  )(implicit F: FlatMap[F], encoder: EncoderT[F, S, A, E], transform: Transform[F, S, E, O]): F[O] =
+  )(implicit F: FlatMap[F], encoder: Encoder[F, S, A, E], transform: Transform[F, S, E, O]): F[O] =
     apply(namespace, defaultSettings, value)
 
   /**
@@ -98,9 +98,7 @@ trait EncodePartiallyAppliedWithDefaultSettings[F[_], S, E, O] extends EncodePar
     * @tparam A type of value to be encoded
     * @return encoded data wrapped in functor F
     */
-  def apply[A](
-    value: A
-  )(implicit F: FlatMap[F], encoder: EncoderT[F, S, A, E], transform: Transform[F, S, E, O]): F[O] =
+  def apply[A](value: A)(implicit F: FlatMap[F], encoder: Encoder[F, S, A, E], transform: Transform[F, S, E, O]): F[O] =
     apply(List.empty, defaultSettings, value)
 
   /**

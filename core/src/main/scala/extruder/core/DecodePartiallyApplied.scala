@@ -21,7 +21,7 @@ trait DecodePartiallyApplied[F[_], A, S, D, I] {
     namespace: List[String],
     settings: S,
     input: I
-  )(implicit decoder: DecoderT[F, S, A, D], F: FlatMap[F], transform: Transform[F, S, I, D]): F[A] = {
+  )(implicit decoder: Decoder[F, S, A, D], F: FlatMap[F], transform: Transform[F, S, I, D]): F[A] = {
     val newNamespace = namespace.map(PathElement.Standard)
     transform.run(newNamespace, settings, input).flatMap(decoder.read(newNamespace, settings, None, _))
   }
@@ -39,7 +39,7 @@ trait DecodePartiallyApplied[F[_], A, S, D, I] {
   def apply(
     settings: S,
     input: I
-  )(implicit decoder: DecoderT[F, S, A, D], F: FlatMap[F], transform: Transform[F, S, I, D]): F[A] =
+  )(implicit decoder: Decoder[F, S, A, D], F: FlatMap[F], transform: Transform[F, S, I, D]): F[A] =
     apply(List.empty, settings, input)
 
   /**
@@ -54,7 +54,7 @@ trait DecodePartiallyApplied[F[_], A, S, D, I] {
     * @return decoded value A, wrapping in functor F
     */
   def apply(namespace: List[String], settings: S)(
-    implicit decoder: DecoderT[F, S, A, D],
+    implicit decoder: Decoder[F, S, A, D],
     F: FlatMap[F],
     loadInput: LoadInput[F, I],
     transform: Transform[F, S, I, D]
@@ -72,7 +72,7 @@ trait DecodePartiallyApplied[F[_], A, S, D, I] {
     * @return decoded value A, wrapping in functor F
     */
   def apply(settings: S)(
-    implicit decoder: DecoderT[F, S, A, D],
+    implicit decoder: Decoder[F, S, A, D],
     F: FlatMap[F],
     loadInput: LoadInput[F, I],
     transform: Transform[F, S, I, D]
@@ -120,7 +120,7 @@ trait DecodePartiallyAppliedWithDefaultSettings[F[_], A, S, D, I] extends Decode
   def apply(
     namespace: List[String],
     input: I
-  )(implicit decoder: DecoderT[F, S, A, D], F: FlatMap[F], transform: Transform[F, S, I, D]): F[A] =
+  )(implicit decoder: Decoder[F, S, A, D], F: FlatMap[F], transform: Transform[F, S, I, D]): F[A] =
     apply(namespace, defaultSettings, input)
 
   /**
@@ -132,7 +132,7 @@ trait DecodePartiallyAppliedWithDefaultSettings[F[_], A, S, D, I] extends Decode
     * @param transform implicit transform instance to convert from input I to decode data D
     * @return decoded value A, wrapping in functor F
     */
-  def apply(input: I)(implicit decoder: DecoderT[F, S, A, D], F: FlatMap[F], transform: Transform[F, S, I, D]): F[A] =
+  def apply(input: I)(implicit decoder: Decoder[F, S, A, D], F: FlatMap[F], transform: Transform[F, S, I, D]): F[A] =
     apply(List.empty, defaultSettings, input)
 
   /**
@@ -146,7 +146,7 @@ trait DecodePartiallyAppliedWithDefaultSettings[F[_], A, S, D, I] extends Decode
     * @return decoded value A, wrapping in functor F
     */
   def apply(namespace: List[String])(
-    implicit decoder: DecoderT[F, S, A, D],
+    implicit decoder: Decoder[F, S, A, D],
     F: FlatMap[F],
     loadInput: LoadInput[F, I],
     transform: Transform[F, S, I, D]
@@ -163,7 +163,7 @@ trait DecodePartiallyAppliedWithDefaultSettings[F[_], A, S, D, I] extends Decode
     * @return decoded value A, wrapping in functor F
     */
   def apply()(
-    implicit decoder: DecoderT[F, S, A, D],
+    implicit decoder: Decoder[F, S, A, D],
     F: FlatMap[F],
     loadInput: LoadInput[F, I],
     transform: Transform[F, S, I, D]

@@ -14,9 +14,9 @@ trait DimensionalMetricEncoderInstances extends MetricEncoderInstances {
   val metricTypeName = "metric_type"
 
   implicit def resetNamespaceEncoder[F[_], T, S](
-    implicit enc: EncoderT[F, S, T, Metrics]
-  ): EncoderT[F, S, ResetNamespace[T], Metrics] =
-    EncoderT.make[F, S, ResetNamespace[T], Metrics] { (path, settings, v) =>
+    implicit enc: Encoder[F, S, T, Metrics]
+  ): Encoder[F, S, ResetNamespace[T], Metrics] =
+    Encoder.make[F, S, ResetNamespace[T], Metrics] { (path, settings, v) =>
       enc.write(path.lastOption.fold(path)(List(_)), settings, v.value)
     }
 
@@ -92,8 +92,8 @@ trait DimensionalMetricEncoderInstances extends MetricEncoderInstances {
   implicit def refute[T, Repr <: HList, S](
     implicit gen: Generic.Aux[T, Repr],
     unRefute: Refute[UnRefute[T]]
-  ): EncoderTRefute[T, S, Metrics] =
-    new EncoderTRefute[T, S, Metrics] {}
+  ): EncoderRefute[T, S, Metrics] =
+    new EncoderRefute[T, S, Metrics] {}
 
   implicit def dimensionalMetricsTransform[F[_]: Applicative: ExtruderErrors, S <: DimensionalMetricSettings]: Transform[
     F,
