@@ -4,6 +4,8 @@ trait Encode { outer: DataSource =>
   type EncodeData
   type OutputData
   type EncodeDefault[A]
+  type DSEncoderF[F[_], A] = Encoder[F, Sett, A, EncodeData]
+  type DSEncoder[A] = DSEncoderF[EncodeDefault, A]
 
   def encode: EncodePartiallyAppliedWithDefaultSettings[EncodeDefault, Sett, EncodeData, OutputData] =
     encodeF[EncodeDefault]
