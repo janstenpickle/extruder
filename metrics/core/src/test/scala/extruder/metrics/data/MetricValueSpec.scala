@@ -5,59 +5,52 @@ import cats.instances.all._
 import cats.kernel.Monoid
 import cats.kernel.laws.discipline.MonoidTests
 import org.scalacheck.ScalacheckShapeless._
-import org.specs2.execute.Result
-import org.specs2.{ScalaCheck, Specification}
-import org.specs2.specification.core.SpecStructure
-import org.typelevel.discipline.specs2.Discipline
+import org.scalatest.{Assertion, FunSuite}
+import org.typelevel.discipline.scalatest.Discipline
 
-class MetricValueSpec extends Specification with Discipline {
+class MetricValueSpec extends FunSuite with Discipline {
   import MetricValueSpec._
 
-  override def is: SpecStructure =
-    s2"""
-      ${checkAll("Counter monoid", MonoidTests[CounterValue[Int]].monoid)}
-      ${checkAll("Gauge monoid", MonoidTests[GaugeValue[Int]].monoid)}
+  checkAll("Counter monoid", MonoidTests[CounterValue[Int]].monoid)
+  checkAll("Gauge monoid", MonoidTests[GaugeValue[Int]].monoid)
 
-      Can create a timer value with the start set to the current time $timerStart
+  test("Can create a timer value with the start set to the current time")(timerStart)
+  test("Timer monoid Can create a timer value with the start set to the current time")(timerMonoidEmpty)
+  test("Timer monoid Combines two unfinished timers, setting the start to lowest value")(timerMonoidNotFinished)
+  test("Timer monoid Combines two timers where one is finished")(timerMonoidOneFinished)
+  test("Timer monoid Combines two timers where both are finished")(timerMonoidBothFinished)
 
-      Timer monoid
-        Can create a timer value with the start set to the current time $timerMonoidEmpty
-        Combines two unfinished timers, setting the start to lowest value $timerMonoidNotFinished
-        Combines two timers where one is finished $timerMonoidOneFinished
-        Combines two timers where both are finished $timerMonoidBothFinished
-      """
-
-  def timerStart: Result = {
+  def timerStart: Assertion = {
     val min = System.currentTimeMillis()
     val timerStart = TimerValue().start
-    (timerStart >= min).and(timerStart <= System.currentTimeMillis())
+    assert((timerStart >= min) && (timerStart <= System.currentTimeMillis()))
   }
 
-  def timerMonoidEmpty: Result = {
+  def timerMonoidEmpty: Assertion = {
     val min = System.currentTimeMillis()
     val timerStart = Monoid[TimerValue[Long]].empty.start
-    (timerStart >= min).and(timerStart <= System.currentTimeMillis())
+    assert((timerStart >= min) && (timerStart <= System.currentTimeMillis()))
   }
 
-  def timerMonoidNotFinished: Result = {
+  def timerMonoidNotFinished: Assertion = {
     val first = TimerValue()
     val second = TimerValue()
-    Monoid[TimerValue[Long]].combine(first, second).start === first.start
+    assert(Monoid[TimerValue[Long]].combine(first, second).start === first.start)
   }
 
-  def timerMonoidOneFinished: Result = {
+  def timerMonoidOneFinished: Assertion = {
     val first = TimerValue()
     val second = TimerValue().checkpoint(System.currentTimeMillis())
     val combined = Monoid[TimerValue[Long]].combine(first, second)
-    (combined.start === first.start).and(combined.finish === second.finish)
+    assert((combined.start === first.start) && (combined.finish === second.finish))
   }
 
-  def timerMonoidBothFinished: Result = {
+  def timerMonoidBothFinished: Assertion = {
     val first = TimerValue()
     val second = TimerValue().checkpoint(System.currentTimeMillis())
     val third = first.checkpoint(System.currentTimeMillis())
     val combined = Monoid[TimerValue[Long]].combine(first, second)
-    (combined.start === third.start).and(combined.finish === third.finish)
+    assert((combined.start === third.start) && (combined.finish === third.finish))
   }
 }
 

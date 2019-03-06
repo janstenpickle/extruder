@@ -1,10 +1,18 @@
 package extruder.core
 
-trait Settings {
-  def pathWithType(path: List[String]): List[String] = path :+ TypeKey
+import extruder.data.PathElement
 
-  def pathToStringWithType(path: List[String]): String =
-    pathToString(pathWithType(path))
+trait Settings {
+  val typeKey: String = "type"
+
+  final def pathElementListToString(path: List[PathElement]): String =
+    pathToString(pathElementsAsStrings(path))
+
+  final def pathElementsAsStrings(path: List[PathElement]): List[String] = path.collect {
+    case PathElement.Standard(element) => element
+    case PathElement.ClassName(className) if includeClassNameInPath => className
+    case PathElement.Type => typeKey
+  }
 
   def pathToString(path: List[String]): String
 

@@ -5,9 +5,13 @@ options:
     url: usage.html
   - title: Decoding and encoding
     url: decode_encode.html
+  - title: Combining Data Sources
+    url: combining.html   
   - title: Extending a Data Source
     url: extending.html
-  - title: Implementing a Data Source
-    url: config.html
+  - title: Type Classes
+    url: typeclasses.html
+  - title: Data Types
+    url: datatypes.html
   - title: Extruder Metrics
     url: metrics.html

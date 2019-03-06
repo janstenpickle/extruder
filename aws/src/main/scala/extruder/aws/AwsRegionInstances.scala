@@ -14,11 +14,7 @@ trait AwsRegionInstances {
     }
   )
 
-  implicit val awsRegionShow: Show[Region] = Show { r: Region =>
-    r.getName
-  }
+  implicit val awsRegionShow: Show[Region] = Show.make(_.getName)
 
-  implicit val awsRegionProviderShow: Show[AwsRegionProvider] = Show { rp: AwsRegionProvider =>
-    rp.getRegion
-  }
+  implicit val awsRegionProviderShow: Show[AwsRegionProvider] = Show.make(_.getRegion)
 }

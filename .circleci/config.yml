@@ -1,0 +1,140 @@
+base_job: &base
+  working_directory: ~/repo
+  environment:
+    TERM: dumb
+  steps:
+    - checkout
+    - restore_cache:
+        keys:
+          - v1-dependencies-{{ checksum "build.sbt" }}
+          - v1-dependencies-
+    - run: .circleci/build.sh
+    - run: find . -name '*coverage*.xml' | grep -e Plugin.xml -e laws | xargs rm -f
+    - run: bash <(curl -s https://codecov.io/bash)
+    - save_cache:
+        paths:
+          - ~/.m2
+          - ~/.ivy2
+          - ~/.sbt
+        key: v1-dependencies--{{ checksum "build.sbt" }}
+
+version: 2
+jobs:
+  build_212_JDK11:
+    <<: *base
+    docker:
+      - image: circleci/openjdk:11-jdk
+    environment:
+      SCALA_VERSION: 2.12.8
+  build_212_JDK8:
+    <<: *base
+    docker:
+      - image: circleci/openjdk:8-jdk
+    environment:
+      SCALA_VERSION: 2.12.8
+  build_211_JDK11:
+    <<: *base
+    docker:
+      - image: circleci/openjdk:11-jdk
+    environment:
+      SCALA_VERSION: 2.11.12    
+  build_211_JDK8:
+    <<: *base
+    docker:
+      - image: circleci/openjdk:8-jdk
+    environment:
+      SCALA_VERSION: 2.11.12
+  docs:
+    <<: *base
+    docker:
+      - image: circleci/openjdk:11-jdk
+    environment:
+      SCALA_VERSION: 2.12.8
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-docs-{{ checksum "build.sbt" }}
+            - v1-dependencies-docs-
+      - run: .circleci/docs.sh
+      - save_cache:
+          paths:
+            - ~/.m2
+            - ~/.ivy2
+            - ~/.sbt
+            - ~/.gem
+          key: v1-dependencies-docs--{{ checksum "build.sbt" }}
+  publish212:
+    <<: *base
+    docker:
+    - image: circleci/openjdk:11-jdk
+    environment:
+      SCALA_VERSION: 2.12.8
+    steps:
+      - checkout
+      - run: git fetch --tags
+      - run: sbt -mem 2048 publish
+  publish211:
+    <<: *base
+    docker:
+    - image: circleci/openjdk:11-jdk
+    environment:
+      SCALA_VERSION: 2.11.12
+    steps:
+      - checkout
+      - run: git fetch --tags
+      - run: sbt -mem 2048 publish
+  release:
+    <<: *base
+    docker:
+    - image: circleci/openjdk:11-jdk
+    environment:
+      SCALA_VERSION: 2.12.8
+    steps:
+      - checkout
+      - run: git fetch --tags
+      - run: sbt -mem docs/publishMicrosite
+      - run: sbt -mem 2048 bintrayRelease
+
+workflows:
+  version: 2
+  build_test_publish_release:
+    jobs:
+      - build_212_JDK11
+      - build_212_JDK8
+      - build_211_JDK11
+      - build_211_JDK8
+      - docs
+      - publish212:
+          requires:
+            - build_212_JDK11
+            - build_212_JDK8
+            - build_211_JDK11
+            - build_211_JDK8
+            - docs
+          filters:
+            branches:
+              only: master
+            tags:
+              only: /^v.*/
+      - publish211:
+          requires:
+            - build_212_JDK11
+            - build_212_JDK8
+            - build_211_JDK11
+            - build_211_JDK8
+            - docs
+          filters:
+            branches:
+              only: master
+            tags:
+              only: /^v.*/
+      - release:
+          requires:
+            - publish212
+            - publish211
+          filters:
+            branches:
+              only: master
+            tags:
+              only: /^v.*/
