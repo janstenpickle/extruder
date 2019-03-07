@@ -12,7 +12,7 @@ val scalaCheckShapelessVer = "1.1.8"
 val scalaTestVer = "3.0.5"
 
 val commonSettings = Seq(
-  organization := "extruder",
+  organization := "io.extruder",
   scalaVersion := "2.12.8",
   crossScalaVersions := Seq("2.11.12", "2.12.8"),
   addCompilerPlugin(("org.spire-math"  % "kind-projector" % "0.9.9").cross(CrossVersion.binary)),
@@ -46,7 +46,6 @@ val commonSettings = Seq(
   pomIncludeRepository := { _ =>
     false
   },
-  bintrayReleaseOnPublish := true,
   coverageMinimum := 80,
   coverageHighlighting := true,
   releaseCrossBuild := true,
@@ -54,7 +53,9 @@ val commonSettings = Seq(
   scalafmtTestOnCompile := true,
   releaseIgnoreUntrackedFiles := true,
   parallelExecution in ThisBuild := true,
-  logBuffered in Test := false
+  logBuffered in Test := false,
+  bintrayRepository := "extruder",
+  bintrayReleaseOnPublish := false
 )
 
 lazy val core = (project in file("core"))

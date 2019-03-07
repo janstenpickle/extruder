@@ -73,7 +73,7 @@ jobs:
     steps:
       - checkout
       - run: git fetch --tags
-      - run: sbt -mem 2048 publish
+      - run: sbt -mem 2048 ++${SCALA_VERSION} publish
   publish211:
     <<: *base
     docker:
@@ -83,7 +83,7 @@ jobs:
     steps:
       - checkout
       - run: git fetch --tags
-      - run: sbt -mem 2048 publish
+      - run: sbt -mem 2048 ++${SCALA_VERSION}  publish
   release:
     <<: *base
     docker:
@@ -93,8 +93,8 @@ jobs:
     steps:
       - checkout
       - run: git fetch --tags
-      - run: sbt -mem docs/publishMicrosite
-      - run: sbt -mem 2048 bintrayRelease
+      - run: sbt -mem 2048 ++${SCALA_VERSION} docs/publishMicrosite
+      - run: sbt -mem 2048 ++${SCALA_VERSION} bintrayRelease
 
 workflows:
   version: 2
