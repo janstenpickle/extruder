@@ -2,26 +2,34 @@
 
 Add the following to your `build.sbt`:
 ```scala
-resolvers += Resolver.bintrayRepo("janstenpickle", "maven")
-libraryDependencies += "extruder" %% "extruder" % "0.9.2"
+libraryDependencies += "io.extruder" %% "extruder" % "0.10.0"
+
+// only if you require support for cats-effect instances
+libraryDependencies += "io.extruder" %% "extruder-cats-effect" % "0.10.0"
 
 // only if you require support for Typesafe config
-libraryDependencies += "extruder" %% "extruder-typesafe" % "0.9.2"
+libraryDependencies += "io.extruder" %% "extruder-typesafe" % "0.10.0"
+
+// only if you require support for Circe types
+libraryDependencies += "io.extruder" %% "extruder-circe" % "0.10.0"
+
+// only if you require support for Circe YAML
+libraryDependencies += "io.extruder" %% "extruder-circe-yaml" % "0.10.0"
 
 // only if you require support for refined types
-libraryDependencies += "extruder" %% "extruder-refined" % "0.9.2"
+libraryDependencies += "io.extruder" %% "extruder-refined" % "0.10.0"
 
 // only if you require support for AWS config
-libraryDependencies += "extruder" %% "extruder-aws" % "0.9.2"
+libraryDependencies += "io.extruder" %% "extruder-aws" % "0.10.0"
 
 // only if you require support for prometheus encoders
-libraryDependencies += "extruder" %% "extruder-metrics-prometheus" % "0.9.2"
+libraryDependencies += "io.extruder" %% "extruder-metrics-prometheus" % "0.10.0"
 
 // only if you require support for dropwizard encoders
-libraryDependencies += "extruder" %% "extruder-metrics-dropwizard" % "0.9.2"
+libraryDependencies += "io.extruder" %% "extruder-metrics-dropwizard" % "0.10.0"
 
 // only if you require support for spectator encoders
-libraryDependencies += "extruder" %% "extruder-metrics-spectator" % "0.9.2"
+libraryDependencies += "io.extruder" %% "extruder-metrics-spectator" % "0.10.0"
 ```
 
 **Rules for resolution are specified in the declaration of the case class itself:**
@@ -34,7 +42,8 @@ See the page on [decoding and encoding](decode_encode.html) for more information
 import cats.data.EitherT
 import cats.effect.IO
 import extruder.core._
-import extruder.core.MapSource._
+import extruder.data._
+import extruder.map._
 
 case class ApplicationConfig(default: Int = 100, noDefault: String, optional: Option[Double])
 
@@ -46,11 +55,11 @@ type EitherTIO[A] = EitherT[IO, ValidationErrors, A]
 
 // Decode from configuration into different target monads
 val decoded: Either[ValidationErrors, ApplicationConfig] = decode[ApplicationConfig](config)
-val decodedIO: EitherTIO[ApplicationConfig] = decode[EitherTIO, ApplicationConfig](config)
+val decodedIO: EitherTIO[ApplicationConfig] = decodeF[EitherTIO, ApplicationConfig](config)
 
 // Encode to configuration into different target monads
-val encoded: Either[ValidationErrors, Map[String, String]] = encode(applicationConfig)
-val encodedIO: EitherTIO[Map[String, String]] = encode[EitherTIO, ApplicationConfig](applicationConfig)
+val encoded: Map[String, String] = encode(applicationConfig)
+val encodedIO: EitherTIO[Map[String, String]] = encodeF[EitherTIO](applicationConfig)
 ```
 
 It is also possible to print parameters as a table, with keys formatted as they would be in the source data:
