@@ -8,4 +8,4 @@ mkdir -p ${GEM_HOME}/gems
 gem install sass
 gem install -f jekyll -v 3.8.5
 
-sbt -mem 3000 ++${SCALA_VERSION} docs/makeMicrosite
+sbt -mem 2048 ++${SCALA_VERSION} docs/publishMicrosite
