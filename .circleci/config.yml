@@ -113,8 +113,6 @@ workflows:
             - build_211_JDK8
             - docs
           filters:
-            branches:
-              only: master
             tags:
               only: /^v.*/
       - publish211:
@@ -125,8 +123,6 @@ workflows:
             - build_211_JDK8
             - docs
           filters:
-            branches:
-              only: master
             tags:
               only: /^v.*/
       - release:
@@ -134,7 +130,5 @@ workflows:
             - publish212
             - publish211
           filters:
-            branches:
-              only: master
             tags:
               only: /^v.*/
