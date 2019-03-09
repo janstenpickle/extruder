@@ -6,6 +6,6 @@ docs: true
 collections:
   tut:
     output: true
-version: 0.10.0
+version: 0.10.1-2-ddb44019-SNAPSHOT
 org: io.extruder
 markdown: kramdown
