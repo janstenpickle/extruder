@@ -14,6 +14,12 @@ support you.
 ## Moderation
 
 For any questions, concerns, or moderation requests please contact a
-member of the project.
+member of the project:
+
+- [Chris Jansen](mailto:jansen.chris@gmail.com)
+
+Alternatively, as there is currently only a single member of this
+project, you can contact any of the moderators listed in the 
+[Scala Code of Conduct].
 
 [Scala Code of Conduct]: https://typelevel.org/code-of-conduct.html
