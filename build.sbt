@@ -2,7 +2,7 @@ import microsites._
 import sbt.Keys.libraryDependencies
 
 val catsVer = "1.6.1"
-val catsEffectVer = "1.2.0"
+val catsEffectVer = "1.3.0"
 val circeVersion = "0.11.1"
 val disciplineVer = "0.9.0"
 val prometheusVer = "0.6.0"
