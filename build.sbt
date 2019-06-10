@@ -1,21 +1,21 @@
 import microsites._
 import sbt.Keys.libraryDependencies
 
-val catsVer = "1.6.0"
+val catsVer = "1.6.1"
 val catsEffectVer = "1.2.0"
 val circeVersion = "0.11.1"
 val disciplineVer = "0.9.0"
 val prometheusVer = "0.6.0"
-val refinedVer = "0.9.4"
+val refinedVer = "0.9.7"
 val scalaCheckVer = "1.13.5"
 val scalaCheckShapelessVer = "1.1.8"
-val scalaTestVer = "3.0.5"
+val scalaTestVer = "3.0.7"
 
 val commonSettings = Seq(
   organization := "io.extruder",
   scalaVersion := "2.12.8",
   crossScalaVersions := Seq("2.11.12", "2.12.8"),
-  addCompilerPlugin(("org.spire-math"  % "kind-projector" % "0.9.9").cross(CrossVersion.binary)),
+  addCompilerPlugin(("org.spire-math"  % "kind-projector" % "0.9.10").cross(CrossVersion.binary)),
   addCompilerPlugin(("org.scalamacros" % "paradise"       % "2.1.1").cross(CrossVersion.full)),
   scalacOptions ++= Seq(
     "-unchecked",
@@ -67,7 +67,7 @@ lazy val core = (project in file("core"))
           "io.estatico"    %% "newtype"    % "0.4.2",
           "org.typelevel"  %% "cats-core"  % catsVer,
           "org.typelevel"  %% "cats-laws"  % catsVer,
-          "org.typelevel"  %% "mouse"      % "0.20",
+          "org.typelevel"  %% "mouse"      % "0.21",
           "com.chuusai"    %% "shapeless"  % "2.3.3",
           "org.scalatest"  %% "scalatest"  % scalaTestVer % Test,
           "org.scalacheck" %% "scalacheck" % scalaCheckVer % Test,
@@ -150,7 +150,7 @@ lazy val aws = (project in file("aws"))
         name := "extruder-aws",
         libraryDependencies ++= Seq(
           "eu.timepit"     %% "refined"            % refinedVer,
-          "com.amazonaws"  % "aws-java-sdk-core"   % "1.11.490",
+          "com.amazonaws"  % "aws-java-sdk-core"   % "1.11.568",
           "org.scalatest"  %% "scalatest"          % scalaTestVer % Test,
           "org.scalacheck" %% "scalacheck"         % scalaCheckVer % Test,
           "eu.timepit"     %% "refined-scalacheck" % refinedVer % Test
@@ -194,7 +194,7 @@ lazy val typesafe = (project in file("typesafe"))
       Seq(
         name := "extruder-typesafe",
         libraryDependencies ++= Seq(
-          "com.typesafe"   % "config"      % "1.3.3",
+          "com.typesafe"   % "config"      % "1.3.4",
           "org.scalatest"  %% "scalatest"  % scalaTestVer % Test,
           "org.scalacheck" %% "scalacheck" % scalaCheckVer % Test
         ),
