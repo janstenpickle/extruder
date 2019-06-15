@@ -138,7 +138,7 @@ The [Dropwizard](http://metrics.dropwizard.io) package provides both name-spaced
 
 ```scala
 resolvers += Resolver.bintrayRepo("janstenpickle", "maven")
-libraryDependencies += "io.extruder" %% "extruder-metrics-dropwizard" % "0.10.0"
+libraryDependencies += "io.extruder" %% "extruder-metrics-dropwizard" % "0.10.1"
 ```
 
 ## Prometheus
@@ -147,7 +147,7 @@ The [Prometheus](https://prometheus.io/) package provides two dimensional metric
 
 ```scala
 resolvers += Resolver.bintrayRepo("janstenpickle", "maven")
-libraryDependencies += "io.extruder" %% "extruder-metrics-prometheus" % "0.10.0"
+libraryDependencies += "io.extruder" %% "extruder-metrics-prometheus" % "0.10.1"
 ```
 
 ## Spectator
@@ -155,5 +155,5 @@ libraryDependencies += "io.extruder" %% "extruder-metrics-prometheus" % "0.10.0"
 The [Spectator](https://github.com/Netflix/spectator) package provides a dimensional metric encode which records in a Spectator metrics registry.
 
 ```scala
-libraryDependencies += "io.extruder" %% "extruder-metrics-spectator" % "0.10.0"
+libraryDependencies += "io.extruder" %% "extruder-metrics-spectator" % "0.10.1"
 ```

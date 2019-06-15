@@ -25,34 +25,34 @@ This library uses [shapeless](https://github.com/milessabin/shapeless) and [cats
 ## Install with SBT
 Add the following to your `build.sbt`:
 ```scala
-libraryDependencies += "io.extruder" %% "extruder" % "0.10.0"
+libraryDependencies += "io.extruder" %% "extruder" % "0.10.1"
 
 // only if you require support for cats-effect instances
-libraryDependencies += "io.extruder" %% "extruder-cats-effect" % "0.10.0"
+libraryDependencies += "io.extruder" %% "extruder-cats-effect" % "0.10.1"
 
 // only if you require support for Typesafe config
-libraryDependencies += "io.extruder" %% "extruder-typesafe" % "0.10.0"
+libraryDependencies += "io.extruder" %% "extruder-typesafe" % "0.10.1"
 
 // only if you require support for Circe types
-libraryDependencies += "io.extruder" %% "extruder-circe" % "0.10.0"
+libraryDependencies += "io.extruder" %% "extruder-circe" % "0.10.1"
 
 // only if you require support for Circe YAML
-libraryDependencies += "io.extruder" %% "extruder-circe-yaml" % "0.10.0"
+libraryDependencies += "io.extruder" %% "extruder-circe-yaml" % "0.10.1"
 
 // only if you require support for refined types
-libraryDependencies += "io.extruder" %% "extruder-refined" % "0.10.0"
+libraryDependencies += "io.extruder" %% "extruder-refined" % "0.10.1"
 
 // only if you require support for AWS config
-libraryDependencies += "io.extruder" %% "extruder-aws" % "0.10.0"
+libraryDependencies += "io.extruder" %% "extruder-aws" % "0.10.1"
 
 // only if you require support for prometheus encoders
-libraryDependencies += "io.extruder" %% "extruder-metrics-prometheus" % "0.10.0"
+libraryDependencies += "io.extruder" %% "extruder-metrics-prometheus" % "0.10.1"
 
 // only if you require support for dropwizard encoders
-libraryDependencies += "io.extruder" %% "extruder-metrics-dropwizard" % "0.10.0"
+libraryDependencies += "io.extruder" %% "extruder-metrics-dropwizard" % "0.10.1"
 
 // only if you require support for spectator encoders
-libraryDependencies += "io.extruder" %% "extruder-metrics-spectator" % "0.10.0"
+libraryDependencies += "io.extruder" %% "extruder-metrics-spectator" % "0.10.1"
 ```
 
 # Participation

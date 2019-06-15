@@ -4,7 +4,7 @@ This module intoduces support for [refined](https://github.com/fthomas/refined) 
 ## Usage
 First include the library in your SBT configuration:
 ```
-libraryDependencies += "io.extruder" %% "extruder-refined" % "0.10.0"
+libraryDependencies += "io.extruder" %% "extruder-refined" % "0.10.1"
 ```
 Then import the refined package and use refined types as you normally would:
 ```scala
