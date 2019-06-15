@@ -63,7 +63,7 @@
 <span class="k">case</span> <span class="k">class</span> <span class="nc">Example</span><span class="o">(</span><span class="n">defaultedString</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">"default"</span><span class="o">,</span> <span class="n">configuredString</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">optionalString</span><span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">String</span><span class="o">])</span>
 
 <span class="c1">// Fails to decode
-</span><span class="n">decode</span><span class="o">[</span><span class="kt">Example</span><span class="o">](</span><span class="nc">Map</span><span class="o">.</span><span class="n">empty</span><span class="o">[</span><span class="kt">String</span>, <span class="kt">String</span><span class="o">])</span>
+</span><span class="n">decode</span><span class="o">[</span><span class="kt">Example</span><span class="o">](</span><span class="nv">Map</span><span class="o">.</span><span class="py">empty</span><span class="o">[</span><span class="kt">String</span>, <span class="kt">String</span><span class="o">])</span>
 
 <span class="c1">// Decodes with empty option
 </span><span class="n">decode</span><span class="o">[</span><span class="kt">Example</span><span class="o">](</span><span class="nc">Map</span><span class="o">(</span><span class="s">"example.configuredstring"</span> <span class="o">-&gt;</span> <span class="s">"configured"</span><span class="o">))</span>
@@ -91,7 +91,7 @@
 <span class="k">case</span> <span class="k">class</span> <span class="nc">NestedOne</span><span class="o">(</span><span class="n">value</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">nested</span><span class="k">:</span> <span class="kt">NestedTwo</span><span class="o">)</span>
 <span class="k">case</span> <span class="k">class</span> <span class="nc">Example</span><span class="o">(</span><span class="n">a</span><span class="k">:</span> <span class="kt">NestedOne</span><span class="o">,</span> <span class="n">b</span><span class="k">:</span> <span class="kt">NestedTwo</span><span class="o">,</span> <span class="n">c</span><span class="k">:</span> <span class="kt">Int</span><span class="o">)</span>
 
-<span class="k">val</span> <span class="n">config</span> <span class="k">=</span> <span class="nc">Map</span><span class="o">(</span>
+<span class="k">val</span> <span class="nv">config</span> <span class="k">=</span> <span class="nc">Map</span><span class="o">(</span>
   <span class="s">"example.a.nestedone.value"</span> <span class="o">-&gt;</span> <span class="s">"nested-one"</span><span class="o">,</span>
   <span class="s">"example.a.nestedone.nested.nestedtwo.value"</span> <span class="o">-&gt;</span> <span class="s">"nested-one-nested-two"</span><span class="o">,</span>
   <span class="s">"example.b.nestedtwo.value"</span> <span class="o">-&gt;</span> <span class="s">"nested-two"</span><span class="o">,</span>
@@ -132,13 +132,13 @@
 <div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="nn">extruder.core.Settings</span>
 <span class="k">import</span> <span class="nn">extruder.map._</span>
 
-<span class="k">val</span> <span class="n">settings</span><span class="k">:</span> <span class="kt">Settings</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Settings</span> <span class="o">{</span>
-  <span class="k">override</span> <span class="k">def</span> <span class="n">pathToString</span><span class="o">(</span><span class="n">path</span><span class="k">:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">String</span><span class="o">])</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">mkString</span><span class="o">(</span><span class="s">"_"</span><span class="o">).</span><span class="n">toUpperCase</span>
+<span class="k">val</span> <span class="nv">settings</span><span class="k">:</span> <span class="kt">Settings</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Settings</span> <span class="o">{</span>
+  <span class="k">override</span> <span class="k">def</span> <span class="nf">pathToString</span><span class="o">(</span><span class="n">path</span><span class="k">:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">String</span><span class="o">])</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="nv">path</span><span class="o">.</span><span class="py">mkString</span><span class="o">(</span><span class="s">"_"</span><span class="o">).</span><span class="py">toUpperCase</span>
 <span class="o">}</span>
 
 <span class="k">case</span> <span class="k">class</span> <span class="nc">Example</span><span class="o">(</span><span class="n">defaultedString</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="s">"default"</span><span class="o">,</span> <span class="n">configuredString</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">optionalString</span><span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">String</span><span class="o">])</span>
 
-<span class="n">println</span><span class="o">(</span><span class="n">parameters</span><span class="o">[</span><span class="kt">Example</span><span class="o">](</span><span class="n">settings</span><span class="o">))</span>
+<span class="nf">println</span><span class="o">(</span><span class="n">parameters</span><span class="o">[</span><span class="kt">Example</span><span class="o">](</span><span class="n">settings</span><span class="o">))</span>
 </code></pre></div></div>
 <p>Changing the <code class="highlighter-rouge">pathToString</code> implementation will change the expected configuration keys:</p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>+--------------------------+----------+--------+---------+------------------+
