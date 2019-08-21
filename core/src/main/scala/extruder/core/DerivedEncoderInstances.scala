@@ -1,7 +1,7 @@
 package extruder.core
 
 import cats.Applicative
-import cats.data.{Chain, NonEmptyChain, NonEmptyList, NonEmptyVector}
+import cats.data.{Chain, NonEmptyChain, NonEmptyList, NonEmptySet, NonEmptyStream, NonEmptyVector}
 import cats.kernel.Monoid
 import shapeless.Lazy
 
@@ -15,6 +15,15 @@ trait DerivedEncoderInstances {
     implicit encoder: Lazy[Encoder[F, S, NonEmptyChain[A], O]]
   ): Encoder[F, S, NonEmptyVector[A], O] =
     encoder.value.contramap(NonEmptyChain.fromNonEmptyVector)
+
+  implicit def nonEmptySetEncoder[F[_], A, S, O](
+    implicit encoder: Lazy[Encoder[F, S, NonEmptyChain[A], O]]
+  ): Encoder[F, S, NonEmptySet[A], O] =
+    encoder.value.contramap(c => NonEmptyChain(c.head, c.tail.toSeq: _*))
+
+  implicit def nonEmptyStreamEncoder[F[_], A, S, O](
+    implicit encoder: Lazy[Encoder[F, S, NonEmptyChain[A], O]]
+  ): Encoder[F, S, NonEmptyStream[A], O] = encoder.value.contramap(c => NonEmptyChain(c.head, c.tail: _*))
 
   implicit def chainEncoder[F[_], A, S, O](
     implicit encoder: Lazy[Encoder[F, S, Vector[A], O]]

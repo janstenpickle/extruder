@@ -1,7 +1,7 @@
 package extruder.laws
 
 import cats.data._
-import cats.{Eq, Monad, Monoid}
+import cats.{Eq, Monad, Monoid, Order}
 import extruder.core._
 import extruder.data.PathElement
 import org.scalacheck.Prop.forAll
@@ -13,7 +13,7 @@ trait EncoderDecoderMultiTests[F[_], S <: Settings, E, D, O] extends EncoderDeco
   implicit def errors: ExtruderErrors[F]
   implicit def monoid: Monoid[E]
 
-  def multiEncodeDecode[A: Arbitrary: Parser: Show, B: Arbitrary: Parser: Show, C: Arbitrary](
+  def multiEncodeDecode[A: Arbitrary: Parser: Show: Order, B: Arbitrary: Parser: Show, C: Arbitrary](
     implicit eqFA: Eq[F[A]],
     eqFEitherAC: Eq[F[Either[C, A]]],
     eqFListA: Eq[F[List[A]]],
@@ -28,6 +28,8 @@ trait EncoderDecoderMultiTests[F[_], S <: Settings, E, D, O] extends EncoderDeco
     eqFNelA: Eq[F[NonEmptyList[A]]],
     eqFNevA: Eq[F[NonEmptyVector[A]]],
     eqFNecA: Eq[F[NonEmptyChain[A]]],
+    eqFNeSetA: Eq[F[NonEmptySet[A]]],
+    eqFNeStreamA: Eq[F[NonEmptyStream[A]]],
     chainEncoder: Encoder[F, S, Chain[A], E],
     chainDecoder: Decoder[F, S, Chain[A], O],
     nelEncoder: Encoder[F, S, NonEmptyList[A], E],
@@ -36,6 +38,10 @@ trait EncoderDecoderMultiTests[F[_], S <: Settings, E, D, O] extends EncoderDeco
     nevDecoder: Decoder[F, S, NonEmptyVector[A], O],
     necEncoder: Encoder[F, S, NonEmptyChain[A], E],
     necDecoder: Decoder[F, S, NonEmptyChain[A], O],
+    neSetEncoder: Encoder[F, S, NonEmptySet[A], E],
+    neSetDecoder: Decoder[F, S, NonEmptySet[A], O],
+    neStreamEncoder: Encoder[F, S, NonEmptyStream[A], E],
+    neStreamDecoder: Decoder[F, S, NonEmptyStream[A], O],
     listDecoder: Decoder[F, S, List[A], O],
     eqFMapBA: Eq[F[Map[B, A]]],
     optStringDecoder: Decoder[F, S, Option[String], O],
