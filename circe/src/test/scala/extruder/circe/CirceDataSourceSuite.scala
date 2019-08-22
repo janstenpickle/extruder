@@ -4,9 +4,9 @@ import cats.instances.either._
 import cats.instances.int._
 import cats.instances.list._
 import cats.instances.option._
+import cats.instances.stream._
 import cats.instances.string._
 import cats.kernel.laws.discipline.MonoidTests
-import extruder.core.Decoder
 import extruder.data.{Validation, ValidationErrors}
 import extruder.laws.EncoderDecoderGenericTests
 import io.circe.Json

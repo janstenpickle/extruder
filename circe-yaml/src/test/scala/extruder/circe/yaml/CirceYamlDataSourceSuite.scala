@@ -5,6 +5,7 @@ import cats.instances.int._
 import cats.instances.list._
 import cats.instances.option._
 import cats.instances.string._
+import cats.instances.stream._
 import extruder.circe.CirceSettings
 import extruder.data.{Validation, ValidationErrors}
 import extruder.laws.EncoderDecoderGenericTests

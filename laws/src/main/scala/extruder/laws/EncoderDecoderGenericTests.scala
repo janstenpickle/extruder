@@ -1,7 +1,7 @@
 package extruder.laws
 
-import cats.data.{Chain, NonEmptyChain, NonEmptyList, NonEmptyVector}
-import cats.{Eq, Monad, Monoid}
+import cats.data.{Chain, NonEmptyChain, NonEmptyList, NonEmptySet, NonEmptyStream, NonEmptyVector}
+import cats.{Eq, Monad, Monoid, Order}
 import extruder.core._
 import org.scalacheck.Prop.forAll
 import org.scalacheck.{Arbitrary, Prop}
@@ -9,7 +9,7 @@ import org.typelevel.discipline.Laws
 import org.scalacheck.ScalacheckShapeless._
 
 trait EncoderDecoderGenericTests[F[_], S <: Settings, E, D, O] extends EncoderDecoderMapTests[F, S, E, D, O] {
-  def genericEncodeDecode[A: Arbitrary: Parser: Show, B: Arbitrary: Parser: Show, C: Arbitrary](
+  def genericEncodeDecode[A: Arbitrary: Parser: Show: Order, B: Arbitrary: Parser: Show, C: Arbitrary](
     implicit eqFA: Eq[F[A]],
     eqFEitherAC: Eq[F[Either[C, A]]],
     eqFListA: Eq[F[List[A]]],
@@ -24,6 +24,8 @@ trait EncoderDecoderGenericTests[F[_], S <: Settings, E, D, O] extends EncoderDe
     eqFNelA: Eq[F[NonEmptyList[A]]],
     eqFNevA: Eq[F[NonEmptyVector[A]]],
     eqFNecA: Eq[F[NonEmptyChain[A]]],
+    eqFNeSetA: Eq[F[NonEmptySet[A]]],
+    eqFNeStreamA: Eq[F[NonEmptyStream[A]]],
     chainEncoder: Encoder[F, S, Chain[A], E],
     chainDecoder: Decoder[F, S, Chain[A], O],
     nelEncoder: Encoder[F, S, NonEmptyList[A], E],
@@ -32,6 +34,10 @@ trait EncoderDecoderGenericTests[F[_], S <: Settings, E, D, O] extends EncoderDe
     nevDecoder: Decoder[F, S, NonEmptyVector[A], O],
     necEncoder: Encoder[F, S, NonEmptyChain[A], E],
     necDecoder: Decoder[F, S, NonEmptyChain[A], O],
+    neSetEncoder: Encoder[F, S, NonEmptySet[A], E],
+    neSetDecoder: Decoder[F, S, NonEmptySet[A], O],
+    neStreamEncoder: Encoder[F, S, NonEmptyStream[A], E],
+    neStreamDecoder: Decoder[F, S, NonEmptyStream[A], O],
     listDecoder: Decoder[F, S, List[A], O],
     optStringDecoder: Decoder[F, S, Option[String], O],
     stringEncoder: Encoder[F, S, String, E],

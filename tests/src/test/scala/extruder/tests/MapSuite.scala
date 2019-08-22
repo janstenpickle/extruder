@@ -9,6 +9,7 @@ import cats.instances.map.catsKernelStdEqForMap
 import cats.instances.option._
 import cats.instances.string._
 import cats.instances.tuple._
+import cats.instances.stream._
 import cats.kernel.laws.discipline.MonoidTests
 import extruder.core.{MultiShow, Settings, Show}
 import extruder.data.Validation
