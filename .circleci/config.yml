@@ -133,7 +133,7 @@ workflows:
             - docs
           filters:
             branches:
-              ignore: /.*/
+              only: master
             tags:
               only: /^v.*/
       - publish211:
@@ -145,7 +145,7 @@ workflows:
             - docs
           filters:
             branches:
-              ignore: /.*/
+              only: master
             tags:
               only: /^v.*/
       - release:
@@ -154,6 +154,6 @@ workflows:
             - publish211
           filters:
             branches:
-              ignore: /.*/
+              only: master
             tags:
               only: /^v.*/
