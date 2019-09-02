@@ -5,10 +5,11 @@ import extruder.metrics.snakeCaseTransformation
 import io.dropwizard.metrics5.{MetricName, MetricRegistry}
 import org.scalacheck.ScalacheckShapeless._
 import org.scalacheck.{Arbitrary, Gen}
-import org.scalatest.prop.GeneratorDrivenPropertyChecks
-import org.scalatest.{Assertion, EitherValues, FunSuite}
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.{Assertion, EitherValues}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
-class DropwizardDimensionalEncodersSpec extends FunSuite with GeneratorDrivenPropertyChecks with EitherValues {
+class DropwizardDimensionalEncodersSpec extends AnyFunSuite with ScalaCheckDrivenPropertyChecks with EitherValues {
   import DropwizardDimensionalEncodersSpec._
 
   test("Can encode namespaced values")(encodeNamespaced)

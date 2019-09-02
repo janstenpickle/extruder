@@ -4,17 +4,17 @@ import cats.data.{Chain, NonEmptyChain, NonEmptyList, NonEmptyVector}
 import shapeless.Typeable
 
 import scala.collection.generic.CanBuildFrom
-import scala.reflect.runtime.universe.TypeTag
+import scala.reflect.ClassTag
 
 trait CollectionMetaInfoInstances {
   implicit def traversable[F[T] <: TraversableOnce[T], A](
     implicit ev: MetaInfo[A],
     cbf: CanBuildFrom[F[A], A, F[A]],
-    tag: TypeTag[F[A]],
+    tag: ClassTag[F[A]],
     tpe: Typeable[F[A]]
   ): Collection[F, A] = new Collection[F, A] {
     override val elements: MetaInfo[A] = ev
-    override val collectionType: String = tag.tpe.typeSymbol.name.toString
+    override val collectionType: String = tag.runtimeClass.getName
     override val typeable: Typeable[F[A]] = tpe
   }
 

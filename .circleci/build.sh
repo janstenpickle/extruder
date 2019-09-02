@@ -2,8 +2,14 @@
 
 sbtcmd="sbt -mem 2500 ++${SCALA_VERSION} clean dependencyUpdates scalafmt::test compile "
 
+if [ "${COVERAGE}" == "true" ]; then
+  test="coverage test coverageReport"
+else
+  test="test"
+fi
+
 for prj in "core" "catsEffect" "circe" "circeYaml" "tests" "aws" "refined" "typesafe" "prometheus" "spectator" "dropwizard" "metricsCore"; do
-  sbtcmd="${sbtcmd} \"project ${prj}\" coverage test coverageReport"
+  sbtcmd="${sbtcmd} \"project ${prj}\" ${test}"
 done
 
 
@@ -26,3 +32,7 @@ if [ ${retry} -ge ${maxRetries} ]; then
   exit 1
 fi
 
+if [ "${COVERAGE}" == "true" ]; then
+  find . -name '*coverage*.xml' | grep -e Plugin.xml -e laws | xargs rm -f
+  bash <(curl -s https://codecov.io/bash)
+fi

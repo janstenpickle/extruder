@@ -1,6 +1,6 @@
 package extruder.laws
 
-import cats.data.{Chain, NonEmptyChain, NonEmptyList, NonEmptySet, NonEmptyStream, NonEmptyVector}
+import cats.data._
 import cats.{Eq, Monad, Monoid, Order}
 import extruder.core._
 import org.scalacheck.Prop.forAll
@@ -27,7 +27,6 @@ trait EncoderDecoderMapTests[F[_], S <: Settings, E, D, O] extends EncoderDecode
     eqFNevA: Eq[F[NonEmptyVector[A]]],
     eqFNecA: Eq[F[NonEmptyChain[A]]],
     eqFNeSetA: Eq[F[NonEmptySet[A]]],
-    eqFNeStreamA: Eq[F[NonEmptyStream[A]]],
     chainEncoder: Encoder[F, S, Chain[A], E],
     chainDecoder: Decoder[F, S, Chain[A], O],
     nelEncoder: Encoder[F, S, NonEmptyList[A], E],
@@ -38,8 +37,6 @@ trait EncoderDecoderMapTests[F[_], S <: Settings, E, D, O] extends EncoderDecode
     necDecoder: Decoder[F, S, NonEmptyChain[A], O],
     neSetEncoder: Encoder[F, S, NonEmptySet[A], E],
     neSetDecoder: Decoder[F, S, NonEmptySet[A], O],
-    neStreamEncoder: Encoder[F, S, NonEmptyStream[A], E],
-    neStreamDecoder: Decoder[F, S, NonEmptyStream[A], O],
     listDecoder: Decoder[F, S, List[A], O],
     optStringDecoder: Decoder[F, S, Option[String], O],
     stringEncoder: Encoder[F, S, String, E],

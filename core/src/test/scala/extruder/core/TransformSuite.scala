@@ -3,17 +3,18 @@ package extruder.core
 import cats.data.{Ior, Kleisli}
 import cats.instances.int._
 import cats.instances.string._
-import cats.laws.discipline.FunctorTests
 import cats.laws.discipline.eq._
+import cats.laws.discipline.{ExhaustiveCheck, FunctorTests}
 import cats.{Eq, Id}
+import extruder.CoreTestInstances._
 import extruder.data.PathElement
 import extruder.map.defaultSettings
 import org.scalacheck.{Arbitrary, Gen}
-import org.scalatest.FunSuite
-import org.scalatest.prop.GeneratorDrivenPropertyChecks
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import org.typelevel.discipline.scalatest.Discipline
 
-class TransformSuite extends FunSuite with Discipline with GeneratorDrivenPropertyChecks {
+class TransformSuite extends AnyFunSuite with Discipline with ScalaCheckDrivenPropertyChecks {
   import TransformSuite._
 
   type Tran[A] = Transform[Id, Settings, Int, A]
@@ -78,7 +79,7 @@ object TransformSuite {
   implicit def transformArb[A](implicit fin: Transform[Id, Settings, A, A]): Arbitrary[Transform[Id, Settings, A, A]] =
     Arbitrary(Gen.const(fin))
 
-  implicit def transformEq[A: Eq: Arbitrary]: Eq[Transform[Id, Settings, A, A]] =
+  implicit def transformEq[A: Eq: Arbitrary: ExhaustiveCheck]: Eq[Transform[Id, Settings, A, A]] =
     Eq.by[Transform[Id, Settings, A, A], A => Id[A]](tran => (a: A) => tran.run(List.empty, defaultSettings, a))
 
   val settings: Settings = new Settings {

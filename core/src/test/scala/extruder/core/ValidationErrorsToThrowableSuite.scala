@@ -4,36 +4,36 @@ import cats.data.NonEmptyList
 import extruder.core.ValidationErrorsToThrowable.defaultValidationErrorsThrowable
 import extruder.data.{ValidationError, ValidationErrors}
 import org.scalacheck.{Arbitrary, Gen}
-import org.scalatest.FunSuite
-import org.scalatest.prop.GeneratorDrivenPropertyChecks
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
-class ValidationErrorsToThrowableSuite extends FunSuite with GeneratorDrivenPropertyChecks {
+class ValidationErrorsToThrowableSuite extends AnyFunSuite with ScalaCheckDrivenPropertyChecks {
   import ValidationErrorsToThrowableSuite._
 
   test("Converts a non-empty list of validation errors to throwables") {
     forAll { li: ValidationErrors =>
       val th = defaultValidationErrorsThrowable.convertErrors(li)
-      li.map(_.message).toList === (th :: th.getSuppressed.toList).map(_.getMessage)
+      assert(li.map(_.message).toList === (th :: th.getSuppressed.toList).map(_.getMessage))
     }
   }
 }
 
 object ValidationErrorsToThrowableSuite {
-  implicit val validationErrorsArb: Arbitrary[ValidationErrors] = Arbitrary(
-    Gen
-      .nonEmptyListOf(Gen.alphaNumStr)
-      .map(
-        li =>
-          NonEmptyList
-            .of(li.head, li.tail: _*)
-            .flatMap[ValidationError](
-              msg =>
-                NonEmptyList.of(
-                  ValidationError.failure(msg),
-                  ValidationError.missing(msg),
-                  ValidationError.exception(msg, new RuntimeException(msg))
-              )
+  implicit val validationErrorsGen: Arbitrary[ValidationErrors] =
+    Arbitrary(
+      for {
+        head <- Gen.alphaNumStr
+        tail <- Gen.listOf(Gen.alphaNumStr)
+      } yield
+        NonEmptyList
+          .of(head, tail: _*)
+          .flatMap(
+            msg =>
+              NonEmptyList.of(
+                ValidationError.failure(msg),
+                ValidationError.missing(msg),
+                ValidationError.exception(msg, new RuntimeException(msg))
+            )
           )
-      )
-  )
+    )
 }

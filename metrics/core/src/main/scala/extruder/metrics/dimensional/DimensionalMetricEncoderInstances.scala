@@ -9,6 +9,7 @@ import extruder.metrics.data._
 import shapeless.{Generic, HList, Refute}
 
 import scala.collection.SortedSet
+import scala.collection.immutable.HashSet
 
 trait DimensionalMetricEncoderInstances extends MetricEncoderInstances {
   val metricTypeName = "metric_type"
@@ -33,8 +34,8 @@ trait DimensionalMetricEncoderInstances extends MetricEncoderInstances {
       .map(makeDimensional(namespace, settings, defaultDimensionNames, defaultDimensionValues))
 
     val metricTypes = metrics
-      .foldLeft(Map.empty[String, Set[MetricType]]) { (acc, m) =>
-        acc + (m.name -> (acc.getOrElse(m.name, Set.empty) + m.metricType))
+      .foldLeft(Map.empty[String, HashSet[MetricType]]) { (acc, m) =>
+        acc + (m.name -> (acc.getOrElse(m.name, HashSet.empty) + m.metricType))
       }
       .filter(_._2.size != 1)
 

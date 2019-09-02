@@ -12,7 +12,7 @@ import mouse.string._
 import shapeless.Typeable
 import shapeless.syntax.typeable._
 
-import scala.collection.generic.CanBuildFrom
+import scala.collection.compat._
 import scala.concurrent.duration.Duration
 import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}
@@ -81,14 +81,13 @@ trait Parsers {
         )
     )
 
-  def convertTraversable[T, F[T] <: TraversableOnce[T]](
-    li: TraversableOnce[T]
-  )(implicit cbf: CanBuildFrom[F[T], T, F[T]]): F[T] =
-    li.foldLeft(cbf())(_ += _).result()
+  def convertTraversable[T, F[T] <: IterableOnce[T]](it: IterableOnce[T])(implicit factory: Factory[T, F[T]]): F[T] =
+    factory.fromSpecific(it)
+  //li.iterator.foldLeft(bf(li))(_ += _).result()
 
-  def traversableBuilder[T, F[T] <: TraversableOnce[T]](
+  def traversableBuilder[T, F[T] <: IterableOnce[T]](
     split: String => List[String]
-  )(implicit parser: Parser[T], cbf: CanBuildFrom[F[T], T, F[T]]): Parser[F[T]] =
+  )(implicit parser: Parser[T], factory: Factory[T, F[T]]): Parser[F[T]] =
     Parser(
       input =>
         Traverse[List]
@@ -96,9 +95,9 @@ trait Parsers {
           .map(convertTraversable(_))
     )
 
-  implicit def traversable[T, F[T] <: TraversableOnce[T]](
+  implicit def traversable[T, F[T] <: IterableOnce[T]](
     implicit parser: Parser[T],
-    cbf: CanBuildFrom[F[T], T, F[T]]
+    factory: Factory[T, F[T]]
   ): Parser[F[T]] =
     traversableBuilder[T, F](_.split(',').toList)
 }

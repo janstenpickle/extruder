@@ -84,10 +84,10 @@ trait EncoderDecoderLaws[F[_], S <: Settings, E, D, O] extends DecoderLaws[F, S,
     a: A,
     path: List[String]
   )(implicit encoder: Encoder[F, S, A, E], decoder: Decoder[F, S, A, O]): IsEq[F[A]] = {
-    val encode = new EncodePartiallyAppliedWithDefaultSettings[F, S, E, D] {
+    val encode = new EncodePartiallyApplied[F, S, E, D] {
       override protected def defaultSettings: S = settings
     }
-    val decode = new DecodePartiallyAppliedWithDefaultSettings[F, A, S, O, D] {
+    val decode = new DecodePartiallyApplied[F, A, S, O, D] {
       override protected def defaultSettings: S = settings
     }
 
@@ -102,10 +102,10 @@ trait EncoderDecoderLaws[F[_], S <: Settings, E, D, O] extends DecoderLaws[F, S,
     a: A,
     path: List[String]
   )(implicit encoder: Encoder[F, S, A, E], decoder: Decoder[F, S, A, O]): IsEq[F[A]] = {
-    val encode = new EncodePartiallyAppliedWithDefaultSettings[F, S, E, D] {
+    val encode = new EncodePartiallyApplied[F, S, E, D] {
       override protected def defaultSettings: S = settings
     }
-    val decode = new DecodePartiallyAppliedWithDefaultSettings[F, A, S, O, D] {
+    val decode = new DecodePartiallyApplied[F, A, S, O, D] {
       override protected def defaultSettings: S = settings
     }
 
@@ -138,15 +138,15 @@ trait EncoderDecoderLaws[F[_], S <: Settings, E, D, O] extends DecoderLaws[F, S,
 
     implicit val transformLazy: Transform[F, S, D, Lazy[O]] = Transform.by[F, S, D, O, Lazy[O]](Lazy(_))
 
-    val encode = new EncodePartiallyAppliedWithDefaultSettings[F, S, E, D] {
+    val encode = new EncodePartiallyApplied[F, S, E, D] {
       override protected def defaultSettings: S = settings
     }
 
-    val decode = new DecodePartiallyAppliedWithDefaultSettings[F, A, S, O, D] {
+    val decode = new DecodePartiallyApplied[F, A, S, O, D] {
       override protected def defaultSettings: S = settings
     }
 
-    val decodeLazy = new DecodePartiallyAppliedWithDefaultSettings[F, A, S, Lazy[O], D] {
+    val decodeLazy = new DecodePartiallyApplied[F, A, S, Lazy[O], D] {
       override protected def defaultSettings: S = settings
     }
 

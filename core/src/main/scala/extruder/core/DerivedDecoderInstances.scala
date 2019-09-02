@@ -1,6 +1,6 @@
 package extruder.core
 
-import cats.data.{Chain, NonEmptyChain, NonEmptyList, NonEmptySet, NonEmptyStream, NonEmptyVector, OneAnd}
+import cats.data._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.{Functor, Monad, Order}
@@ -19,11 +19,6 @@ trait DerivedDecoderInstances {
     implicit decoder: Lazy[Decoder[F, S, NonEmptyChain[T], D]]
   ): Decoder[F, S, NonEmptySet[T], D] =
     decoder.value.imap(c => NonEmptySet.of(c.head, c.tail.toVector: _*))(s => NonEmptyChain(s.head, s.tail.toSeq: _*))
-
-  implicit def nonEmptyStreamDecoder[F[_]: Functor, T, S, D](
-    implicit decoder: Lazy[Decoder[F, S, NonEmptyChain[T], D]]
-  ): Decoder[F, S, NonEmptyStream[T], D] =
-    decoder.value.imap(c => NonEmptyStream(c.head, c.tail.toVector: _*))(s => NonEmptyChain(s.head, s.tail: _*))
 
   implicit def chainDecoder[F[_]: Functor, T, S, D](
     implicit decoder: Lazy[Decoder[F, S, List[T], D]]

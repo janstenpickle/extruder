@@ -1,10 +1,11 @@
 package extruder.core
 
-import org.scalatest.{EitherValues, FunSuite}
+import org.scalatest.EitherValues
+import org.scalatest.funsuite.AnyFunSuite
 
 import scala.util.Try
 
-class ParserSuite extends FunSuite with EitherValues {
+class ParserSuite extends AnyFunSuite with EitherValues {
   test("From try") {
     assert(Parser.fromTry(s => Try(s)).parse("test").right.value === "test")
   }

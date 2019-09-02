@@ -40,7 +40,10 @@ class EncodeSuite extends FunSuite with EitherValues {
   test("Combine with both provided settings") {
     assert(
       encodeF[Validation]
-        .combine[Settings, Map[String, String], Map[String, String]]((customSettings, customSettings), "test")
+        .combine[Settings, Map[String, String], Map[String, String]](customSettings)(
+          (customSettings, customSettings),
+          "test"
+        )
         .right
         .value
         .isBoth

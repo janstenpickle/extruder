@@ -3,7 +3,8 @@ package extruder.meta
 import shapeless.labelled.FieldType
 import shapeless._
 
-import scala.reflect.runtime.universe.TypeTag
+import scala.reflect.ClassTag
+import scala.collection.compat._
 
 trait UnionMetaInfoInstances {
   implicit val cnilMetaInfo: DerivedUnion[CNil] = new DerivedUnion[CNil] {
@@ -30,13 +31,13 @@ trait UnionMetaInfoInstances {
 
   implicit def unionMetaInfo[A, Repr <: Coproduct](
     implicit gen: LabelledGeneric.Aux[A, Repr],
-    tag: TypeTag[A],
+    tag: ClassTag[A],
     tpe: Typeable[A],
     ev: Lazy[DerivedUnion[Repr]],
     neOpt: A <:!< Option[_],
-    neCol: A <:!< TraversableOnce[_]
+    neCol: A <:!< IterableOnce[_]
   ): Union[A] = new Union[A] {
-    override val `type`: String = tag.tpe.typeSymbol.name.toString
+    override val `type`: String = tag.runtimeClass.getName
     override val options: Set[BaseMetaInfo] = ev.value.options
     override val typeable: Typeable[A] = tpe
   }

@@ -7,11 +7,11 @@ trait Encode { outer: DataSource =>
   type DSEncoderF[F[_], A] = Encoder[F, Sett, A, EncodeData]
   type DSEncoder[A] = DSEncoderF[EncodeDefault, A]
 
-  def encode: EncodePartiallyAppliedWithDefaultSettings[EncodeDefault, Sett, EncodeData, OutputData] =
+  def encode: EncodePartiallyApplied[EncodeDefault, Sett, EncodeData, OutputData] =
     encodeF[EncodeDefault]
 
-  def encodeF[F[_]]: EncodePartiallyAppliedWithDefaultSettings[F, Sett, EncodeData, OutputData] =
-    new EncodePartiallyAppliedWithDefaultSettings[F, Sett, EncodeData, OutputData] {
+  def encodeF[F[_]]: EncodePartiallyApplied[F, Sett, EncodeData, OutputData] =
+    new EncodePartiallyApplied[F, Sett, EncodeData, OutputData] {
       override protected def defaultSettings: Sett = outer.defaultSettings
     }
 }

@@ -5,12 +5,13 @@ import java.util.concurrent.TimeUnit
 import extruder.metrics.data.TimerValue
 import extruder.metrics.syntax.timer._
 import org.scalacheck.{Arbitrary, Gen}
-import org.scalatest.prop.GeneratorDrivenPropertyChecks
-import org.scalatest.{Assertion, FunSuite}
+import org.scalatest.Assertion
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
 import scala.concurrent.duration.FiniteDuration
 
-class TimerSyntaxSpec extends FunSuite with GeneratorDrivenPropertyChecks {
+class TimerSyntaxSpec extends AnyFunSuite with ScalaCheckDrivenPropertyChecks {
   import TimerSyntaxSpec._
 
   test("Can convert a long into a timer")(testLong)

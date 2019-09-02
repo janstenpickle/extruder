@@ -5,7 +5,7 @@ import extruder.meta.Product.MetaInfoWithDefault
 import shapeless.labelled.FieldType
 import shapeless._
 
-import scala.reflect.runtime.universe.TypeTag
+import scala.reflect.ClassTag
 
 trait ProductMetaInfoInstances {
   private[meta] trait DerivedMeta[A, Repr <: HList, DefaultRepr <: HList] {
@@ -32,13 +32,13 @@ trait ProductMetaInfoInstances {
   implicit def productMetaInfo[A, GenRepr <: HList, DefaultOptsRepr <: HList](
     implicit gen: LabelledGeneric.Aux[A, GenRepr],
     defaults: Default.AsOptions.Aux[A, DefaultOptsRepr],
-    tag: TypeTag[A],
+    tag: ClassTag[A],
     tpe: Typeable[A],
     ev: Lazy[DerivedMeta[A, GenRepr, DefaultOptsRepr]],
     lp: LowPriority
   ): Product[A] =
     new Product[A] {
-      override val `type`: String = tag.tpe.typeSymbol.name.toString
+      override val `type`: String = tag.runtimeClass.getName
       override val children: Map[String, MetaInfoWithDefault] = ev.value.values(defaults.apply())
       override val typeable: Typeable[A] = tpe
     }

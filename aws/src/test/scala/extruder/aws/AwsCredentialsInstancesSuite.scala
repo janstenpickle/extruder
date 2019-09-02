@@ -9,10 +9,11 @@ import eu.timepit.refined.scalacheck.any._
 import extruder.aws.AwsCredentialsInstances._
 import extruder.aws.credentials._
 import extruder.core.{MultiParser, MultiShow}
-import org.scalatest.prop.GeneratorDrivenPropertyChecks
-import org.scalatest.{Assertion, EitherValues, FunSuite}
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.{Assertion, EitherValues}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
-class AwsCredentialsInstancesSuite extends FunSuite with GeneratorDrivenPropertyChecks with EitherValues {
+class AwsCredentialsInstancesSuite extends AnyFunSuite with ScalaCheckDrivenPropertyChecks with EitherValues {
   import AwsCredentialsInstancesSuite._
 
   test("Parses valid ID and Key values")(passes)

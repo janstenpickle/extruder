@@ -4,7 +4,8 @@ import cats.FlatMap
 import cats.syntax.flatMap._
 import extruder.data.PathElement
 
-trait DecodePartiallyApplied[F[_], A, S, D, I] {
+trait DecodePartiallyApplied[F[_], A, S, D, I] { self =>
+  protected def defaultSettings: S
 
   /**
     * Decode a value A from input data I
@@ -80,34 +81,6 @@ trait DecodePartiallyApplied[F[_], A, S, D, I] {
     loadInput.load.flatMap(apply(settings, _))
 
   /**
-    * Combine decoder with another decoder instance
-    *
-    * @tparam S1 other source's settings type
-    * @tparam I1 other source's input data type
-    * @tparam D1 other source's decode data type
-    * @return a new combined instance of DecodePartiallyApplied
-    */
-  def combine[S1, I1, D1]: DecodePartiallyApplied[F, A, (S, S1), (D, D1), (I, I1)] =
-    new DecodePartiallyApplied[F, A, (S, S1), (D, D1), (I, I1)] {}
-
-  /**
-    * Combine decoder with another decoder instance
-    *
-    * @param other other data source from where types can be taken
-    * @return a new combined instance of DecodePartiallyApplied
-    */
-  def combine(
-    other: Decode with DataSource
-  ): DecodePartiallyApplied[F, A, (S, other.Sett), (D, other.DecodeData), (I, other.InputData)] =
-    new DecodePartiallyApplied[F, A, (S, other.Sett), (D, other.DecodeData), (I, other.InputData)] {}
-
-}
-
-trait DecodePartiallyAppliedWithDefaultSettings[F[_], A, S, D, I] extends DecodePartiallyApplied[F, A, S, D, I] {
-  outer =>
-  protected def defaultSettings: S
-
-  /**
     * Decode a value A from input data I
     *
     * @param namespace namespace under which the data is stored
@@ -179,9 +152,22 @@ trait DecodePartiallyAppliedWithDefaultSettings[F[_], A, S, D, I] extends Decode
     * @tparam D1 other source's decode data type
     * @return a new combined instance of DecodePartiallyAppliedWithDefaultSettings
     */
-  def combine[S1, D1, I1](settings: S1): DecodePartiallyAppliedWithDefaultSettings[F, A, (S, S1), (D, D1), (I, I1)] =
-    new DecodePartiallyAppliedWithDefaultSettings[F, A, (S, S1), (D, D1), (I, I1)] {
-      override protected def defaultSettings: (S, S1) = (outer.defaultSettings, settings)
+  def combine[S1, D1, I1](settings: S1): DecodePartiallyApplied[F, A, (S, S1), (D, D1), (I, I1)] =
+    new DecodePartiallyApplied[F, A, (S, S1), (D, D1), (I, I1)] {
+      override protected def defaultSettings: (S, S1) = (self.defaultSettings, settings)
+    }
+
+  /**
+    * Combine decoder with another decoder instance
+    *
+    * @param other other data source from where types can be taken
+    * @return a new combined instance of DecodePartiallyApplied
+    */
+  def combine(
+    other: Decode with DataSource
+  ): DecodePartiallyApplied[F, A, (S, other.Sett), (D, other.DecodeData), (I, other.InputData)] =
+    new DecodePartiallyApplied[F, A, (S, other.Sett), (D, other.DecodeData), (I, other.InputData)] {
+      override protected def defaultSettings: (S, other.Sett) = (self.defaultSettings, other.defaultSettings)
     }
 
   /**
@@ -194,22 +180,10 @@ trait DecodePartiallyAppliedWithDefaultSettings[F[_], A, S, D, I] extends Decode
     * @return a new combined instance of DecodePartiallyAppliedWithDefaultSettings
     */
   def combine[S1, D1, I1](
-    other: DecodePartiallyAppliedWithDefaultSettings[F, A, S1, D1, I1]
-  ): DecodePartiallyAppliedWithDefaultSettings[F, A, (S, S1), (D, D1), (I, I1)] =
-    new DecodePartiallyAppliedWithDefaultSettings[F, A, (S, S1), (D, D1), (I, I1)] {
-      override protected def defaultSettings: (S, S1) = (outer.defaultSettings, other.defaultSettings)
+    other: DecodePartiallyApplied[F, A, S1, D1, I1]
+  ): DecodePartiallyApplied[F, A, (S, S1), (D, D1), (I, I1)] =
+    new DecodePartiallyApplied[F, A, (S, S1), (D, D1), (I, I1)] {
+      override protected def defaultSettings: (S, S1) = (self.defaultSettings, other.defaultSettings)
     }
 
-  /**
-    * Combine decoder with another decoder instance
-    *
-    * @param other other data source from where types can be taken
-    * @return a new combined instance of DecodePartiallyAppliedWithDefaultSettings
-    */
-  override def combine(
-    other: Decode with DataSource
-  ): DecodePartiallyAppliedWithDefaultSettings[F, A, (S, other.Sett), (D, other.DecodeData), (I, other.InputData)] =
-    new DecodePartiallyAppliedWithDefaultSettings[F, A, (S, other.Sett), (D, other.DecodeData), (I, other.InputData)] {
-      override protected def defaultSettings: (S, other.Sett) = (outer.defaultSettings, other.defaultSettings)
-    }
 }
