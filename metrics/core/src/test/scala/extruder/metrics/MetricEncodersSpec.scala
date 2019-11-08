@@ -6,22 +6,26 @@ import cats.Eq
 import cats.instances.long._
 import cats.instances.map._
 import cats.kernel.laws.discipline.MonoidTests
-import extruder.core.{DataSource, Encode, Encoder}
+import extruder.core.{DataSource, Encode}
 import extruder.data.Validation
 import extruder.metrics.data.MetricType.Counter
 import extruder.metrics.data._
 import org.scalacheck.ScalacheckShapeless._
-import org.scalacheck.{Arbitrary, Gen}
-import org.scalatest.prop.GeneratorDrivenPropertyChecks
-import org.scalatest.{Assertion, EitherValues, FunSuite}
+import org.scalacheck.{Arbitrary, Gen, Shrink}
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.{Assertion, EitherValues}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import org.typelevel.discipline.scalatest.Discipline
 import shapeless.Coproduct
 
+import scala.collection.compat._
 import scala.concurrent.duration.FiniteDuration
 
-class MetricEncodersSpec extends FunSuite with GeneratorDrivenPropertyChecks with EitherValues with Discipline {
+class MetricEncodersSpec extends AnyFunSuite with ScalaCheckDrivenPropertyChecks with EitherValues with Discipline {
   import MetricEncodersSpec._
   import TestMetricEncoders._
+
+  implicit def noShrink[T]: Shrink[T] = Shrink.shrinkAny
 
   checkAll("Encoder monoid", MonoidTests[Metrics].monoid)
 
@@ -142,7 +146,7 @@ class MetricEncodersSpec extends FunSuite with GeneratorDrivenPropertyChecks wit
   def testValues: Assertion =
     forAll { values: Map[String, Double] =>
       assert(
-        encode(List.empty, defaultSettings, MetricValues(values.mapValues(GaugeValue[Double]))).right.value ===
+        encode(List.empty, defaultSettings, MetricValues(values.view.mapValues(GaugeValue[Double]).toMap)).right.value ===
           values.map {
             case (k, v) => SimpleMetricKey(k, List.empty, Some(MetricType.Gauge)) -> Coproduct[Numbers](v)
           }
@@ -289,7 +293,7 @@ object MetricEncodersSpec {
     Gen.oneOf(MetricType.Counter, MetricType.Gauge, MetricType.Status, MetricType.Timer)
   )
 
-  implicit val metricsEq: Eq[Metrics] = Eq.by(_.mapValues(Numbers.toLong))
+  implicit val metricsEq: Eq[Metrics] = Eq.by(_.view.mapValues(Numbers.toLong).toMap)
 
   implicit def numArb(implicit ev: Arbitrary[Long]): Arbitrary[Numbers] =
     Arbitrary(ev.arbitrary.map(Coproduct[Numbers](_)))

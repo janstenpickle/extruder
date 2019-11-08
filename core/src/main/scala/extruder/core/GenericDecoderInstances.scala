@@ -6,7 +6,8 @@ import extruder.data.PathElement
 import shapeless._
 import shapeless.labelled.{field, FieldType}
 
-import scala.reflect.runtime.universe.TypeTag
+import scala.collection.compat._
+import scala.reflect.ClassTag
 
 trait GenericDecoderInstances {
   private[core] trait DerivedDecoder[F[_], Repr <: Coproduct, S, I] {
@@ -63,7 +64,7 @@ trait GenericDecoderInstances {
     refuteParser: Refute[Parser[T]],
     refuteMultiParser: Refute[MultiParser[F, T]],
     neOpt: T <:!< Option[_],
-    neCol: T <:!< TraversableOnce[_]
+    neCol: T <:!< IterableOnce[_]
   ): Decoder[F, S, T, I] =
     Decoder.make[F, S, T, I] { (path, settings, _, data) =>
       underlying.value.read(path, settings, data).map(gen.from)
@@ -106,7 +107,7 @@ trait GenericDecoderInstances {
   implicit def productDecoder[F[_], T, GenRepr <: HList, DefaultOptsRepr <: HList, S, I](
     implicit gen: LabelledGeneric.Aux[T, GenRepr],
     defaults: Default.AsOptions.Aux[T, DefaultOptsRepr],
-    tag: TypeTag[T],
+    tag: ClassTag[T],
     F: Functor[F],
     decoder: Lazy[DerivedDecoderWithDefault[F, T, GenRepr, DefaultOptsRepr, S, I]],
     lp: LowPriority,
@@ -115,7 +116,7 @@ trait GenericDecoderInstances {
     refuteMultiParser: Refute[MultiParser[F, T]]
   ): Decoder[F, S, T, I] =
     Decoder.make[F, S, T, I] { (path, settings, _, data) =>
-      val newPath = path :+ PathElement.ClassName(tag.tpe.typeSymbol.name.toString)
+      val newPath = path :+ PathElement.ClassName(tag.runtimeClass.getSimpleName)
       decoder.value.read(newPath, settings, defaults(), data).map(gen.from)
     }
 }

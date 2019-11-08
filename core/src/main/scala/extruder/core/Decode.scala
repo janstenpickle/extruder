@@ -7,11 +7,11 @@ trait Decode { outer: DataSource =>
   type DSDecoderF[F[_], A] = Decoder[F, Sett, A, DecodeData]
   type DSDecoder[A] = DSDecoderF[DecodeDefault, A]
 
-  def decode[A]: DecodePartiallyAppliedWithDefaultSettings[DecodeDefault, A, Sett, DecodeData, InputData] =
+  def decode[A]: DecodePartiallyApplied[DecodeDefault, A, Sett, DecodeData, InputData] =
     decodeF[DecodeDefault, A]
 
-  def decodeF[F[_], A]: DecodePartiallyAppliedWithDefaultSettings[F, A, Sett, DecodeData, InputData] =
-    new DecodePartiallyAppliedWithDefaultSettings[F, A, Sett, DecodeData, InputData] {
+  def decodeF[F[_], A]: DecodePartiallyApplied[F, A, Sett, DecodeData, InputData] =
+    new DecodePartiallyApplied[F, A, Sett, DecodeData, InputData] {
       override def defaultSettings: Sett = outer.defaultSettings
     }
 }

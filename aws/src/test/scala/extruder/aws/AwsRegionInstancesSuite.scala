@@ -7,11 +7,16 @@ import extruder.aws.region._
 import extruder.core.{Parser, Show}
 import extruder.laws.ParserShowTests
 import org.scalacheck.{Arbitrary, Gen}
-import org.scalatest.prop.GeneratorDrivenPropertyChecks
-import org.scalatest.{Assertion, EitherValues, FunSuite}
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.{Assertion, EitherValues}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import org.typelevel.discipline.scalatest.Discipline
 
-class AwsRegionInstancesSuite extends FunSuite with GeneratorDrivenPropertyChecks with EitherValues with Discipline {
+class AwsRegionInstancesSuite
+    extends AnyFunSuite
+    with ScalaCheckDrivenPropertyChecks
+    with EitherValues
+    with Discipline {
   import AwsRegionInstancesSuite._
 
   test("Parses a valid region")(passes)

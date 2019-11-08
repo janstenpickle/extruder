@@ -60,7 +60,7 @@ class DecodeSuite extends FunSuite with EitherValues {
   test("Combine with both provided settings") {
     assert(
       decode[String]
-        .combine[Settings, Map[String, String], Map[String, String]](
+        .combine[Settings, Map[String, String], Map[String, String]](customSettings)(
           (customSettings, customSettings),
           (Map.empty[String, String], Map("" -> "test"))
         )

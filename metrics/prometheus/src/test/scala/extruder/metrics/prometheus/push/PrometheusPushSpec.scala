@@ -5,16 +5,16 @@ import extruder.metrics.snakeCaseTransformation
 import io.prometheus.client.Collector
 import io.prometheus.client.exporter.PushGateway
 import org.mockito.ArgumentCaptor
-import org.mockito.Mockito._
+import org.mockito.scalatest.MockitoSugar
 import org.scalacheck.ScalacheckShapeless._
-import org.scalatest.Matchers._
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.prop.GeneratorDrivenPropertyChecks
-import org.scalatest.{Assertion, FunSuite}
+import org.scalatest.matchers.should.Matchers._
+import org.scalatest.Assertion
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
 import scala.collection.JavaConverters._
 
-class PrometheusPushSpec extends FunSuite with GeneratorDrivenPropertyChecks with MockitoSugar {
+class PrometheusPushSpec extends AnyFunSuite with ScalaCheckDrivenPropertyChecks with MockitoSugar {
   import TestUtils._
 
   test("Can encode namespaced values")(encodeNamespaced)

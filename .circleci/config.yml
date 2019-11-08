@@ -9,8 +9,6 @@ base_job: &base
           - v1-dependencies-{{ checksum "build.sbt" }}
           - v1-dependencies-
     - run: .circleci/build.sh
-    - run: find . -name '*coverage*.xml' | grep -e Plugin.xml -e laws | xargs rm -f
-    - run: bash <(curl -s https://codecov.io/bash)
     - save_cache:
         paths:
           - ~/.m2
@@ -25,31 +23,33 @@ jobs:
     docker:
       - image: circleci/openjdk:11-jdk
     environment:
-      SCALA_VERSION: 2.12.8
+      SCALA_VERSION: 2.12.10
+      COVERAGE: true
   build_212_JDK8:
     <<: *base
     docker:
       - image: circleci/openjdk:8-jdk
     environment:
-      SCALA_VERSION: 2.12.8
-  build_211_JDK11:
+      SCALA_VERSION: 2.12.10
+      COVERAGE: true
+  build_213_JDK11:
     <<: *base
     docker:
       - image: circleci/openjdk:11-jdk
     environment:
-      SCALA_VERSION: 2.11.12    
-  build_211_JDK8:
+      SCALA_VERSION: 2.13.1
+  build_213_JDK8:
     <<: *base
     docker:
       - image: circleci/openjdk:8-jdk
     environment:
-      SCALA_VERSION: 2.11.12
+      SCALA_VERSION: 2.13.1
   docs:
     <<: *base
     docker:
       - image: circleci/openjdk:11-jdk
     environment:
-      SCALA_VERSION: 2.12.8
+      SCALA_VERSION: 2.12.10
     steps:
       - checkout
       - restore_cache:
@@ -69,7 +69,7 @@ jobs:
     docker:
     - image: circleci/openjdk:11-jdk
     environment:
-      SCALA_VERSION: 2.12.8
+      SCALA_VERSION: 2.13.1
     steps:
       - checkout
       - run: git fetch --tags
@@ -79,7 +79,7 @@ jobs:
     docker:
     - image: circleci/openjdk:11-jdk
     environment:
-      SCALA_VERSION: 2.11.12
+      SCALA_VERSION: 2.13.1
     steps:
       - checkout
       - run: git fetch --tags
@@ -89,7 +89,7 @@ jobs:
     docker:
       - image: circleci/openjdk:11-jdk
     environment:
-      SCALA_VERSION: 2.12.8
+      SCALA_VERSION: 2.12.10
     steps:
       - checkout
       - run: git fetch --tags
@@ -102,7 +102,7 @@ jobs:
     docker:
     - image: circleci/openjdk:11-jdk
     environment:
-      SCALA_VERSION: 2.12.8
+      SCALA_VERSION: 2.13.1
     steps:
       - checkout
       - run: git fetch --tags
@@ -114,8 +114,8 @@ workflows:
     jobs:
       - build_212_JDK11
       - build_212_JDK8
-      - build_211_JDK11
-      - build_211_JDK8
+      - build_213_JDK11
+      - build_213_JDK8
       - docs
       - publishDocs:
           requires:
@@ -128,8 +128,8 @@ workflows:
           requires:
             - build_212_JDK11
             - build_212_JDK8
-            - build_211_JDK11
-            - build_211_JDK8
+            - build_213_JDK11
+            - build_213_JDK8
             - docs
           filters:
             branches:
@@ -140,8 +140,8 @@ workflows:
           requires:
             - build_212_JDK11
             - build_212_JDK8
-            - build_211_JDK11
-            - build_211_JDK8
+            - build_213_JDK11
+            - build_213_JDK8
             - docs
           filters:
             branches:

@@ -6,6 +6,7 @@ import cats.instances.all._
 import cats.{Show => CatsShow}
 import extruder.instances.ShowInstances
 
+import scala.collection.compat._
 import scala.concurrent.duration.Duration
 
 /**
@@ -52,13 +53,13 @@ trait Shows extends LowPriorityShows {
 
   implicit def optionalShow[A](implicit ev: Show[A]): Show[Option[A]] = Show.by(_.fold("")(ev.show))
 
-  def traversableBuilder[T, F[_], FF[T] <: TraversableOnce[T]](
-    concat: TraversableOnce[String] => String
+  def traversableBuilder[T, F[_], FF[T] <: IterableOnce[T]](
+    concat: IterableOnce[String] => String
   )(implicit shows: Show[T]): Show[FF[T]] =
-    Show.make((x: FF[T]) => concat(x.map(shows.show).filter(_.trim.nonEmpty)))
+    Show.make((x: FF[T]) => concat(x.iterator.map(shows.show).filter(_.trim.nonEmpty)))
 
-  implicit def traversable[T, F[_], FF[T] <: TraversableOnce[T]](implicit shows: Show[T]): Show[FF[T]] =
-    traversableBuilder[T, F, FF](_.mkString(","))
+  implicit def traversable[T, F[_], FF[T] <: IterableOnce[T]](implicit shows: Show[T]): Show[FF[T]] =
+    traversableBuilder[T, F, FF](_.iterator.mkString(","))
 }
 
 trait LowPriorityShows {

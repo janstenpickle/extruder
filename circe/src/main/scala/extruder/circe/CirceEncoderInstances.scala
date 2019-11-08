@@ -1,17 +1,18 @@
 package extruder.circe
 
-import cats.{Applicative, Monad}
-import cats.syntax.applicative._
-import extruder.core.Encoder
-import io.circe.syntax._
-import io.circe.{Encoder => CEncoder, Json}
 import cats.instances.vector._
 import cats.kernel.Monoid
-import cats.syntax.traverse._
-import extruder.data.PathElement
-
+import cats.syntax.applicative._
 import cats.syntax.flatMap._
+import cats.syntax.traverse._
+import cats.{Applicative, Monad}
+import extruder.core.Encoder
+import extruder.data.PathElement
+import io.circe.syntax._
+import io.circe.{Json, Encoder => CEncoder}
 import shapeless.{<:!<, LowPriority}
+
+import scala.collection.compat._
 
 trait CirceEncoderInstances {
   implicit val jsonMonoid: Monoid[Json] = new Monoid[Json] {
@@ -40,10 +41,12 @@ trait CirceEncoderInstances {
   ): Encoder[F, S, A, Json] =
     Encoder.make(encode[F, A])
 
-  implicit def circeObjectArrayEncoder[F[_]: Monad, FF[T] <: TraversableOnce[T], S <: CirceSettings, A](
-    implicit encoder: Encoder[F, S, A, Json]
+  implicit def circeObjectArrayEncoder[F[_]: Monad, FF[T] <: IterableOnce[T], S <: CirceSettings, A](
+    implicit encoder: Encoder[F, S, A, Json],
+    neOpt: FF[A] <:!< Option[_]
   ): Encoder[F, S, FF[A], Json] = Encoder.make { (path, settings, as) =>
-    as.toVector
+    as.iterator
+      .to(Vector)
       .traverse { a =>
         encoder.write(List.empty, settings, a)
       }

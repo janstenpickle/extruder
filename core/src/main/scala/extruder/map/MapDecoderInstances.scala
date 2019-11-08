@@ -20,10 +20,10 @@ trait MapDecoderInstances {
         data: Map[String, String]
       ): F[Option[(List[String], Map[String, String])]] = {
         val basePath = s"${settings.pathElementListToString(path)}."
-        val pruned = data.filterKeys(_.startsWith(basePath))
+        val pruned = data.view.filter(_._1.startsWith(basePath))
         F.pure(
           if (pruned.isEmpty) None
-          else Some(pruned.keys.map(_.replace(basePath, "")).toList -> pruned)
+          else Some(pruned.view.map(_._1.replace(basePath, "")).toList -> pruned.toMap)
         )
       }
     }

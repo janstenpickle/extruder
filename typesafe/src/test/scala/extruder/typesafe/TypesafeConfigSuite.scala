@@ -15,12 +15,13 @@ import org.typelevel.discipline.scalatest.Discipline
 import extruder.data.ValidationError.{Missing, ValidationException, ValidationFailure}
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.compatible.Assertion
-import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalacheck.ScalacheckShapeless._
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
-class TypesafeConfigSuite extends FunSuite with EitherValues with GeneratorDrivenPropertyChecks with Discipline {
+class TypesafeConfigSuite extends AnyFunSuite with EitherValues with ScalaCheckDrivenPropertyChecks with Discipline {
   import TypesafeConfigSuite._
 
   val encodeDecodeTests: EncoderDecoderTests[Validation, Settings, Config, TConfig, TConfig] =
@@ -104,7 +105,7 @@ object TypesafeConfigSuite {
       v <- Gen.alphaNumStr
     } yield ConfigTypes(k, v))
 
-  implicit val nelArb: Arbitrary[NonEmptyList[String]] =
+  implicit val nelGen: Arbitrary[NonEmptyList[String]] =
     Arbitrary(for {
       h <- Gen.alphaNumStr
       t <- Gen.listOf(Gen.alphaNumStr)

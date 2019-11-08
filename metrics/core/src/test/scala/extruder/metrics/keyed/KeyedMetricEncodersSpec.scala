@@ -5,13 +5,14 @@ import extruder.data.Validation
 import extruder.metrics.MetricSettings
 import extruder.metrics.data.{MetricType, Metrics, Numbers}
 import org.scalacheck.ScalacheckShapeless._
-import org.scalatest.prop.GeneratorDrivenPropertyChecks
-import org.scalatest.{EitherValues, FunSuite}
+import org.scalatest.EitherValues
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import shapeless.Coproduct
 
-class KeyedMetricEncodersSpec extends FunSuite with GeneratorDrivenPropertyChecks with EitherValues {
-  import extruder.metrics.MetricEncodersSpec._
+class KeyedMetricEncodersSpec extends AnyFunSuite with ScalaCheckDrivenPropertyChecks with EitherValues {
   import KeyedMetricEncodersSpec.TestKeyedMetricEncoders._
+  import extruder.metrics.MetricEncodersSpec._
 
   test("Can encode an object")(forAll { req: RequestCount =>
     encode[RequestCount](req).right.value ===

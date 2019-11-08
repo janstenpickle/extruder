@@ -11,13 +11,13 @@ import extruder.metrics.MetricEncodersSpec.{Dimensions, RequestCount, StatusCode
 import extruder.metrics._
 import extruder.metrics.data._
 import org.scalacheck.ScalacheckShapeless._
-import org.scalatest.Matchers._
-import org.scalatest.prop.GeneratorDrivenPropertyChecks
-import org.scalatest.{Assertion, EitherValues, FunSuite}
+import org.scalatest.matchers.should.Matchers._
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.{Assertion, EitherValues}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import shapeless.Coproduct
-import utest.compileError
 
-class DimensionalMetricEncodersSpec extends FunSuite with GeneratorDrivenPropertyChecks with EitherValues {
+class DimensionalMetricEncodersSpec extends AnyFunSuite with ScalaCheckDrivenPropertyChecks with EitherValues {
   import DimensionalMetricEncodersSpec._
   import extruder.metrics.MetricEncodersSpec._
   import TestDimensionalEncoders._
@@ -116,35 +116,11 @@ class DimensionalMetricEncodersSpec extends FunSuite with GeneratorDrivenPropert
   }
 
   def testDifferentNumericTypeFail: Assertion = forAll { (dt: DifferentTypes) =>
-    assert(
-      Either
-        .catchNonFatal(
-          compileError("encodeF[extruder.data.Validation](dt)").check(
-            "",
-            "could not find implicit value for parameter encoder: extruder.core.Encoder" +
-              "[extruder.data.Validation,extruder.metrics.dimensional.DimensionalMetricEncodersSpec.TestDimensionalEncoders.Sett," +
-              "extruder.metrics.dimensional.DimensionalMetricEncodersSpec.DifferentTypes," +
-              "extruder.metrics.dimensional.DimensionalMetricEncodersSpec.TestDimensionalEncoders.EncodeData]"
-          )
-        )
-        .isRight
-    )
+    assert(Either.catchNonFatal("encodeF[extruder.data.Validation](dt)" shouldNot compile).isRight)
   }
 
   def testDifferentValueTypeFail: Assertion = forAll { (dt: DifferentTypes2) =>
-    assert(
-      Either
-        .catchNonFatal(
-          compileError("encodeF[extruder.data.Validation](dt)").check(
-            "",
-            "could not find implicit value for parameter encoder: extruder.core.Encoder" +
-              "[extruder.data.Validation,extruder.metrics.dimensional.DimensionalMetricEncodersSpec.TestDimensionalEncoders.Sett," +
-              "extruder.metrics.dimensional.DimensionalMetricEncodersSpec.DifferentTypes2," +
-              "extruder.metrics.dimensional.DimensionalMetricEncodersSpec.TestDimensionalEncoders.EncodeData]"
-          )
-        )
-        .isRight
-    )
+    assert(Either.catchNonFatal("encodeF[extruder.data.Validation](dt)" shouldNot compile).isRight)
   }
 
 }

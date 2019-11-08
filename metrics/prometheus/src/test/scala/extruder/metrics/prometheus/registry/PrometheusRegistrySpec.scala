@@ -4,10 +4,11 @@ import extruder.metrics.prometheus.TestUtils
 import extruder.metrics.snakeCaseTransformation
 import io.prometheus.client.CollectorRegistry
 import org.scalacheck.ScalacheckShapeless._
-import org.scalatest.prop.GeneratorDrivenPropertyChecks
-import org.scalatest.{Assertion, EitherValues, FunSuite}
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.{Assertion, EitherValues}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
-class PrometheusRegistrySpec extends FunSuite with GeneratorDrivenPropertyChecks with EitherValues {
+class PrometheusRegistrySpec extends AnyFunSuite with ScalaCheckDrivenPropertyChecks with EitherValues {
   import TestUtils._
 
   test("Can encode namespaced values")(encodeNamespaced)

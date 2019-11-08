@@ -16,6 +16,7 @@ import extruder.data.Validation
 import extruder.laws.EncoderDecoderGenericTests
 import extruder.map._
 import org.scalatest.FunSuite
+
 import org.typelevel.discipline.scalatest.Discipline
 
 class MapSuite extends FunSuite with Discipline {

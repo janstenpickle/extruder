@@ -7,8 +7,7 @@ import cats.syntax.functor._
 import extruder.data.PathElement
 import shapeless.{<:!<, Lazy, Refute}
 
-import scala.collection.TraversableOnce
-import scala.collection.generic.CanBuildFrom
+import scala.collection.compat._
 
 trait CombinedDecoderInstances {
 
@@ -17,7 +16,7 @@ trait CombinedDecoderInstances {
     ev1: Lazy[Decoder[F, S1, A, I1]],
     errors: ExtruderErrors[F],
     refute: Refute[CombinedRefute[A]],
-    neCol: A <:!< TraversableOnce[_],
+    neCol: A <:!< IterableOnce[_],
     neChain: A <:!< NonEmptyChain[_]
   ): Decoder[F, (S0, S1), A, (I0, I1)] =
     new Decoder[F, (S0, S1), A, (I0, I1)] {
@@ -44,15 +43,15 @@ trait CombinedDecoderInstances {
     errors.fallback(both)(errors.fallback(decoded0)(decoded1))
   }
 
-  implicit def combinedTraversableDecoder[F[_]: FlatMap, FF[T] <: TraversableOnce[T], A, S0, S1, I0, I1](
+  implicit def combinedTraversableDecoder[F[_]: FlatMap, FF[T] <: IterableOnce[T], A, S0, S1, I0, I1](
     implicit ev0: Lazy[Decoder[F, S0, FF[A], I0]],
     ev1: Lazy[Decoder[F, S1, FF[A], I1]],
     errors: ExtruderErrors[F],
-    cbf: CanBuildFrom[FF[A], A, FF[A]]
+    factory: Factory[A, FF[A]]
   ): Decoder[F, (S0, S1), FF[A], (I0, I1)] =
     Decoder.make(
       combineOrFallback[F, FF[A], S0, S1, I0, I1](
-        (d0, d1) => Parser.convertTraversable[A, FF](d0.toIterator ++ d1.toIterator)
+        (d0, d1) => Parser.convertTraversable[A, FF](d0.iterator ++ d1.iterator)
       )
     )
 

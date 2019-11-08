@@ -20,10 +20,9 @@ class CirceDataSourceSuite extends FunSuite with Discipline with EitherValues {
 
   checkAll("Json Monoid", MonoidTests[Json].monoid)
 
-  // have to use `asInstanceOf` to get the compiler to work on 2.11
   checkAll(
     "Circe data source derived test",
-    EncoderDecoderGenericTests[Validation, CirceSettings, Json, Json, Json](defaultSettings.asInstanceOf[CirceSettings])
+    EncoderDecoderGenericTests[Validation, CirceSettings, Json, Json, Json](defaultSettings)
       .derivedEncodeDecode[Int, String]
   )
 

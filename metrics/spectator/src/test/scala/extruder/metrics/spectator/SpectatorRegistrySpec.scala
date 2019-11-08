@@ -6,12 +6,13 @@ import extruder.metrics.data.{CounterValue, GaugeValue}
 import extruder.metrics.snakeCaseTransformation
 import org.scalacheck.ScalacheckShapeless._
 import org.scalacheck.{Arbitrary, Gen}
-import org.scalatest.prop.GeneratorDrivenPropertyChecks
-import org.scalatest.{Assertion, EitherValues, FunSuite}
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.{Assertion, EitherValues}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
 import scala.collection.JavaConverters._
 
-class SpectatorRegistrySpec extends FunSuite with GeneratorDrivenPropertyChecks with EitherValues {
+class SpectatorRegistrySpec extends AnyFunSuite with ScalaCheckDrivenPropertyChecks with EitherValues {
   import SpectatorRegistrySpec._
 
   test("Can encode namespaced values")(encodeNamespaced)

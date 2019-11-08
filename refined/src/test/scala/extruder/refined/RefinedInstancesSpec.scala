@@ -9,11 +9,11 @@ import extruder.core._
 import extruder.data.Validation
 import extruder.laws.EncoderDecoderTests
 import extruder.map._
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import org.typelevel.discipline.scalatest.Discipline
 import shapeless.nat._0
 
-class RefinedInstancesSpec extends FunSuite with Discipline {
+class RefinedInstancesSpec extends AnyFunSuite with Discipline {
   implicit def refinedEq[A: Eq, F[_, _], P](implicit refType: RefType[F]): Eq[F[A, P]] =
     Eq.by[F[A, P], A](refType.unwrap)
 

@@ -7,11 +7,11 @@ import cats.instances.string._
 import cats.laws.discipline.AlternativeTests
 import extruder.core.{Parser, Show}
 import org.scalacheck.Arbitrary
-import org.scalatest.FunSuite
-import org.scalatest.prop.GeneratorDrivenPropertyChecks
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import org.typelevel.discipline.scalatest.Discipline
 
-class ParserInstancesSuite extends FunSuite with Discipline with GeneratorDrivenPropertyChecks {
+class ParserInstancesSuite extends AnyFunSuite with ScalaCheckDrivenPropertyChecks with Discipline {
   import ParserInstancesSuite._
 
   checkAll("Parser", AlternativeTests[Parser].alternative[Int, Int, Int])

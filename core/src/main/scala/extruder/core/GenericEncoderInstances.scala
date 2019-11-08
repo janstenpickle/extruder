@@ -6,7 +6,7 @@ import extruder.data.PathElement
 import shapeless._
 import shapeless.labelled.FieldType
 
-import scala.reflect.runtime.universe.TypeTag
+import scala.reflect.ClassTag
 
 trait GenericEncoderInstances {
   implicit def cnilEncoder[F[_], S, O]: Encoder[F, S, CNil, O] = Encoder.make { (_, _, _) =>
@@ -77,7 +77,7 @@ trait GenericEncoderInstances {
 
   implicit def productEncoder[F[_], T, GenRepr <: HList, S, D](
     implicit gen: LabelledGeneric.Aux[T, GenRepr],
-    tag: TypeTag[T],
+    tag: ClassTag[T],
     encoder: Lazy[DerivedEncoder[F, T, GenRepr, S, D]],
     lp: LowPriority,
     refute: Refute[EncoderRefute[T, S, D]],
@@ -85,7 +85,7 @@ trait GenericEncoderInstances {
     refuteMultiShow: Refute[MultiShow[T]]
   ): Encoder[F, S, T, D] =
     Encoder.make[F, S, T, D] { (path, settings, value) =>
-      val newPath = path :+ PathElement.ClassName(tag.tpe.typeSymbol.name.toString)
+      val newPath = path :+ PathElement.ClassName(tag.runtimeClass.getSimpleName)
       encoder.value.write(newPath, settings, gen.to(value))
     }
 }

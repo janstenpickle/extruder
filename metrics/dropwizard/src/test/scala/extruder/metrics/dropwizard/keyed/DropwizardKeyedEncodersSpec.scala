@@ -4,10 +4,11 @@ import extruder.metrics._
 import extruder.metrics.data.{CounterValue, GaugeValue, TimerValue}
 import io.dropwizard.metrics5.{MetricName, MetricRegistry}
 import org.scalacheck.ScalacheckShapeless._
-import org.scalatest.prop.GeneratorDrivenPropertyChecks
-import org.scalatest.{Assertion, EitherValues, FunSuite}
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.{Assertion, EitherValues}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
-class DropwizardKeyedEncodersSpec extends FunSuite with GeneratorDrivenPropertyChecks with EitherValues {
+class DropwizardKeyedEncodersSpec extends AnyFunSuite with ScalaCheckDrivenPropertyChecks with EitherValues {
   import DropwizardKeyedEncodersSpec._
 
   test("Can encode namespaced values")(encodeNamespaced)

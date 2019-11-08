@@ -4,13 +4,13 @@ import cats.Applicative
 import cats.syntax.applicative._
 import extruder.core.{Decoder, ExtruderErrors, HasValue, Parser}
 import extruder.data.PathElement
-import io.circe.{Decoder => CDecoder, Json}
+import io.circe.{Json, Decoder => CDecoder}
 import shapeless.{<:!<, LowPriority}
 import cats.syntax.traverse._
 import cats.instances.vector._
 import cats.syntax.functor._
 
-import scala.collection.generic.CanBuildFrom
+import scala.collection.compat._
 
 trait CirceDecoderInstances {
   implicit def circeHasValue[F[_]: Applicative, S <: CirceSettings]: HasValue[F, S, Json] = new HasValue[F, S, Json] {
@@ -31,10 +31,11 @@ trait CirceDecoderInstances {
     }
   }
 
-  implicit def circeObjectArrayDecoder[F[_]: Applicative, FF[T] <: TraversableOnce[T], S <: CirceSettings, A](
+  implicit def circeObjectArrayDecoder[F[_]: Applicative, FF[T] <: IterableOnce[T], S <: CirceSettings, A](
     implicit error: ExtruderErrors[F],
     decoder: Decoder[F, S, A, Json],
-    cbf: CanBuildFrom[FF[A], A, FF[A]]
+    neOpt: FF[A] <:!< Option[_],
+    bf: Factory[A, FF[A]]
   ): Decoder[F, S, FF[A], Json] = Decoder.make { (path, settings, default, json) =>
     (focus(path, settings, json).flatMap(_.asArray), default) match {
       case (None, Some(d)) => d.pure[F]
@@ -42,7 +43,7 @@ trait CirceDecoderInstances {
         js.traverse[F, A] { j =>
             decoder.read(List.empty, settings, None, j)
           }
-          .map(Parser.convertTraversable(_))
+          .map(Parser.convertTraversable[A, FF](_))
       case (None, None) =>
         error.missing(s"Could not find value at '${settings.pathElementListToString(path)}' and no default available")
     }
