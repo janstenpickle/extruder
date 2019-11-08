@@ -69,12 +69,12 @@ jobs:
     docker:
     - image: circleci/openjdk:11-jdk
     environment:
-      SCALA_VERSION: 2.13.1
+      SCALA_VERSION: 2.12.10
     steps:
       - checkout
       - run: git fetch --tags
       - run: sbt -mem 2048 ++${SCALA_VERSION} publish
-  publish211:
+  publish213:
     <<: *base
     docker:
     - image: circleci/openjdk:11-jdk
@@ -136,7 +136,7 @@ workflows:
               only: master
             tags:
               only: /^v.*/
-      - publish211:
+      - publish213:
           requires:
             - build_212_JDK11
             - build_212_JDK8
@@ -151,7 +151,7 @@ workflows:
       - release:
           requires:
             - publish212
-            - publish211
+            - publish213
           filters:
             branches:
               only: master
